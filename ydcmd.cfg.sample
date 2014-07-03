@@ -1,0 +1,9 @@
+[ydcmd]
+token=1234567890
+
+# Linux
+ca-file=/etc/ssl/certs/ca-certificates.crt
+# FreeBSD
+#ca-file=/usr/local/share/certs/ca-root-nss.crt
+
+#ciphers=HIGH:!TLSv1.2:!aNULL:!MD5:!3DES:!CAMELLIA:@STRENGTH
