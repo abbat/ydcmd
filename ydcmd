@@ -34,7 +34,6 @@ class _ydHTTPSConnection(httplib.HTTPSConnection):
     """
     def __init__(self, host, **kwargs):
         self._options = kwargs.pop("options", None)
-
         httplib.HTTPSConnection.__init__(self, host, **kwargs)
 
 
@@ -224,7 +223,7 @@ def ydHeaders(token):
     """
     return {
         "Accept"        : "application/json",
-        "User-Agent"    : "ydcmd/%s" % __version__,
+        "User-Agent"    : "ydcmd/%s (%s)" % (__version__, "https://github.com/abbat/ydcmd"),
         "Authorization" : "OAuth %s" % token
     }
 
@@ -275,7 +274,6 @@ def ydHuman(value):
 class ydError(RuntimeError):
     """
     Внутреннее исключение, выбрасываемое в случаях:
-
         * Таймаут запроса к API
         * Исчерпание количества попыток запроса к API
         * Неверные аргументы, переданные в командной строке
@@ -357,6 +355,52 @@ def ydMD5(options, filename):
         return hasher.hexdigest()
 
 
+def ydEnsureLocal(options, path, type):
+    """
+    Метод проверки возможности создания локального объекта требуемого типа.
+    Если объект уже существует и типы не совпадают, производится удаление объекта.
+    Если требуемый тип является директорией, то в случае ее отсутствия производится ее создание.
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        path    (str)  -- Объект
+        type    (str)  -- Тип объекта (file|dir)
+
+    Результат (bool):
+        True если объект нужного типа уже существует, иначе False
+    """
+    if not (type == "dir" or type == "file"):
+        raise ValueError("Unsupported type: %s" % type)
+
+    if os.path.exists(path) == True:
+        if os.path.islink(path) == True:
+            ydDebug("rm %s" % path, options["debug"])
+            os.unlink(path)
+            return False
+        if type == "dir":
+            if os.path.isdir(path) == True:
+                return True
+            elif os.path.isfile(path) == True:
+                ydDebug("rm %s" % path, options["debug"])
+                os.remove(path)
+            else:
+                raise ydError(1, "Unsupported filesystem object: %s" % path)
+        elif type == "file":
+            if os.path.isfile(path) == True:
+                return True
+            elif os.path.isdir(path) == True:
+                ydDebug("rm -r %s" % path, options["debug"])
+                shutil.rmtree(path)
+            else:
+                raise ydError(1, "Unsupported filesystem object: %s" % path)
+    elif type == "dir":
+        ydDebug("mkdir %s" % path, options["debug"])
+        os.mkdir(path)
+        return True
+
+    return False
+
+
 def ydQueryRetry(options, method, url, data, headers, filename = None):
     """
     Реализация одной попытки запроса к API
@@ -395,12 +439,12 @@ def ydQueryRetry(options, method, url, data, headers, filename = None):
             fd = open(filename, "rb")
 
         request = urllib2.Request(url, fd, headers)
-        request.get_method = lambda: "PUT"
-    elif method == "DELETE":
+        request.get_method = lambda: method
+    elif method == "DELETE" or method == "POST":
         request = urllib2.Request(url, None, headers)
-        request.get_method = lambda: "DELETE"
+        request.get_method = lambda: method
     else:
-        raise RuntimeError("Unknown method")
+        raise ValueError("Unknown method: %s" % method)
 
     try:
         opener = urllib2.build_opener(_ydHTTPSHandler(options))
@@ -424,9 +468,13 @@ def ydQueryRetry(options, method, url, data, headers, filename = None):
     except urllib2.HTTPError as e:
         try:
             result = json.load(e)
-            errmsg = "HTTP-%d: %s" % (e.code, result["description"])
+
+            if description in result:
+                errmsg = "HTTP-%d: %s" % (e.code, result["description"])
+            else:
+                errmsg = "HTTP-%d: %s" % (e.code, e.msg)
         except:
-            errmsg = "HTTP-%d: %s" % (e.code, e.reason)
+            errmsg = "HTTP-%d: %s" % (e.code, e.msg)
 
         raise ydError(e.code, errmsg)
 
@@ -447,6 +495,36 @@ def ydQuery(options, method, url, data, headers, filename = None):
             if retry >= retries:
                 raise ydError(1, e)
             time.sleep(options["delay"])
+
+
+def ydWait(options, link):
+    """
+    Ожидание завершения операции
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        link    (dict) -- Ответ API на запрос операции
+    """
+    if options["async"] == True or not ("href" in link and "method" in link):
+        return
+
+    url     = link["href"]
+    method  = link["method"]
+    headers = ydHeaders(options["token"])
+
+    while True:
+        time.sleep(options["poll"])
+
+        result = ydQuery(options, method, url, None, headers)
+
+        if "status" in result:
+            status = result["status"]
+            if status == "in-progress":
+                continue
+            elif status == "success":
+                break
+            else:
+                raise RuntimeError("Unknown status: %s" % status)
 
 
 def ydStat(options, path):
@@ -478,6 +556,9 @@ def ydStat(options, path):
 
     if "_embedded" in part:
         del part["_embedded"]
+
+    if not ("type" in part and "name" in part):
+        raise RuntimeError("Incomplete response")
 
     return part
 
@@ -533,9 +614,17 @@ def ydList(options, path):
     while True:
         part = ydQuery(options, method, url, data, headers)
 
-        part = part["_embedded"]
+        if "_embedded" in part:
+            part = part["_embedded"]
+        elif "type" in part and "name" in part:
+            result[part["name"]] = part
+            return result
+        else:
+            raise RuntimeError("Incomplete response")
 
         for item in part["items"]:
+            if not ("type" in item and "name" in item):
+                raise RuntimeError("Incomplete response")
             result[item["name"]] = item
 
         if len(part["items"]) == int(part["limit"]):
@@ -601,19 +690,9 @@ def ydDelete(options, path):
     method = "DELETE"
     url    = options["base-url"] + "/resources"
 
-    result = ydQuery(options, method, url, data, headers)
+    link = ydQuery(options, method, url, data, headers)
 
-    if "href" in result and "method" in result and options["async"] == False:
-        url    = result["href"]
-        method = result["method"]
-
-        while True:
-            time.sleep(options["poll"])
-
-            result = ydQuery(options, method, url, None, headers)
-
-            if "status" in result and result["status"] == "success":
-                break
+    ydWait(options, link)
 
 
 def ydDeleteCmd(options, args):
@@ -629,6 +708,132 @@ def ydDeleteCmd(options, args):
 
     for arg in args:
         ydDelete(options, ydPath(arg))
+
+
+def ydEnsure(options, path, type, stat = None):
+    """
+    Метод проверки возможности создания объекта требуемого типа в хранилище.
+    Если объект уже существует и типы не совпадают, производится удаление объекта.
+    Если требуемый тип является директорией, то в случае ее отсутствия производится ее создание.
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        path    (str)  -- Объект в хранилище
+        type    (str)  -- Тип объекта в хранилище (file|dir)
+        stat    (dict) -- Информация об объекте (если уже имеется)
+    """
+    if not (type == "dir" or type == "file"):
+        raise ValueError("Unsupported type: %s", type)
+
+    if stat == None:
+        try:
+            stat = ydStat(options, path)
+        except ydError as e:
+            if e.errno != 404:
+                raise
+
+    if stat != None:
+        if not (stat["type"] == "dir" or stat["type"] == "file"):
+            raise RuntimeError("Unsupported type: %s" % stat["type"])
+
+        if stat["type"] != type:
+            ydDelete(options, path)
+            if type == "dir":
+                ydCreate(options, path)
+    elif type == "dir":
+        ydCreate(options, path)
+
+
+def ydCopy(options, source, target):
+    """
+    Копирование объекта в хранилище
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        source  (str)  -- Исходный объект хранилища
+        target  (str)  -- Конечный объект хранилища
+    """
+    ydVerbose("Copy: %s -> %s" % (source, target), options["verbose"])
+
+    headers = ydHeaders(options["token"])
+
+    data = {
+        "from"      : source,
+        "path"      : target,
+        "overwrite" : "true"
+    }
+
+    method = "POST"
+    url    = options["base-url"] + "/resources/copy"
+
+    link = ydQuery(options, method, url, data, headers)
+
+    ydWait(options, link)
+
+
+def ydCopyCmd(options, args):
+    """
+    Обработчик копироавния объекта в хранилище
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        args    (dict) -- Аргументы командной строки
+    """
+    if len(args) < 2:
+        raise ydError(1, "Source or target not specified")
+    if len(args) > 2:
+        raise ydError(1, "Too many arguments")
+
+    source = args[0]
+    target = args[1]
+
+    ydCopy(options, ydPath(source), ydPath(target))
+
+
+def ydMove(options, source, target):
+    """
+    Перемещение объекта в хранилище
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        source  (str)  -- Исходный объект хранилища
+        target  (str)  -- Конечный объект хранилища
+    """
+    ydVerbose("Move: %s -> %s" % (source, target), options["verbose"])
+
+    headers = ydHeaders(options["token"])
+
+    data = {
+        "from"      : source,
+        "path"      : target,
+        "overwrite" : "true"
+    }
+
+    method = "POST"
+    url    = options["base-url"] + "/resources/move"
+
+    link = ydQuery(options, method, url, data, headers)
+
+    ydWait(options, link)
+
+
+def ydMoveCmd(options, args):
+    """
+    Обработчик перемещения объекта в хранилище
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        args    (dict) -- Аргументы командной строки
+    """
+    if len(args) < 2:
+        raise ydError(1, "Source or target not specified")
+    if len(args) > 2:
+        raise ydError(1, "Too many arguments")
+
+    source = args[0]
+    target = args[1]
+
+    ydMove(options, ydPath(source), ydPath(target))
 
 
 def ydCreate(options, path):
@@ -698,7 +903,7 @@ def ydPutRetry(options, source, target):
 
         ydQueryRetry(options, method, url, None, headers, source)
     else:
-        raise RuntimeError("No method and href to upload in server reply")
+        raise RuntimeError("Incomplete response")
 
 
 def ydPut(options, source, target):
@@ -720,6 +925,47 @@ def ydPut(options, source, target):
             if retry >= retries:
                 raise ydError(1, e)
             time.sleep(options["delay"])
+
+
+def ydPutSync(options, source, target):
+    """
+    Синхронизация локальных файлов и директорий с находящимися в хранилище
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        source  (str)  -- Имя локальной директории (со слешем)
+        target  (str)  -- Имя директории в хранилище (со слешем)
+    """
+    flist = ydList(options, target)
+
+    for item in os.listdir(source):
+        sitem = source + item
+        titem = target + item
+
+        if os.path.islink(sitem) == False:
+            if os.path.isdir(sitem) == True:
+                ydEnsure(options, titem, "dir", flist[item])
+                ydPutSync(options, sitem + "/", titem + "/")
+            elif os.path.isfile(sitem):
+                force = True
+                if item in flist:
+                    ydEnsure(options, titem, "file", flist[item])
+                    if flist[item]["type"] == "file" and os.path.getsize(sitem) == flist[item]["size"] and ydMD5(options, sitem) == flist[item]["md5"]:
+                        force = False
+
+                if force == True:
+                    ydPut(options, sitem, titem)
+            else:
+                raise ydError(1, "Unsupported filesystem object: %s" % sitem)
+
+            if item in flist:
+                del flist[item]
+        else:
+            ydVerbose("Skip: %s" % sitem, options["verbose"])
+
+    if options["rsync"] == True:
+        for item in flist.itervalues():
+            ydDelete(options, target + item["name"])
 
 
 def ydPutCmd(options, args):
@@ -746,30 +992,21 @@ def ydPutCmd(options, args):
         target += os.path.basename(source)
 
     if os.path.islink(source) == False:
+        target = ydPath(target)
         if os.path.isdir(source):
             if os.path.basename(source) != "":
-                target = ydPath(target)
-
-                try:
-                    result = ydStat(options, target)
-                except ydError as e:
-                    if e.errno == 404:
-                        ydCreate(options, target)
-                    else:
-                        raise
-
                 source += "/"
+            if os.path.basename(target) != "":
                 target += "/"
-            elif os.path.basename(target) != "":
-                target += "/"
-
-            ydPutSync(options, source, ydPath(target))
+            ydEnsure(options, target, "dir")
+            ydPutSync(options, source, target)
         elif os.path.isfile(source) == True:
-            ydPut(options, source, ydPath(target))
+            ydEnsure(options, target, "file")
+            ydPut(options, source, target)
         else:
-            raise RuntimeError("Unknown object: %s" % source)
+            raise ydError(1, "Unsupported filesystem object: %s" % source)
     else:
-        ydDebug("Skip: %s" % source, options["debug"])
+        ydVerbose("Skip: %s" % source, options["verbose"])
 
 
 def ydGetRetry(options, source, target):
@@ -800,7 +1037,7 @@ def ydGetRetry(options, source, target):
 
         result = ydQueryRetry(options, method, url, None, headers, target)
     else:
-        raise RuntimeError("No method and href to download in server reply")
+        raise RuntimeError("Incomplete response")
 
 
 def ydGet(options, source, target):
@@ -824,6 +1061,52 @@ def ydGet(options, source, target):
             time.sleep(options["delay"])
 
 
+def ydGetSync(options, source, target):
+    """
+    Синхронизация файлов и директорий в хранилище с локальными
+
+    Аргументы:
+        options (dict) -- Опции приложения
+        source  (str)  -- Имя директории в хранилище (со слешем)
+        target  (str)  -- Имя локальной директории (со слешем)
+    """
+    flist = ydList(options, source)
+
+    for item in flist.itervalues():
+        sitem = source + item["name"]
+        titem = target + item["name"]
+
+        if item["type"] == "dir":
+            ydEnsureLocal(options, titem, "dir")
+            ydGetSync(options, sitem + "/", titem + "/")
+        elif item["type"] == "file":
+            force  = True
+            exists = ydEnsureLocal(options, titem, "file")
+            if exists == True and os.path.getsize(titem) == item["size"] and ydMD5(options, titem) == item["md5"]:
+                force = False
+
+            if force == True:
+                ydGet(options, sitem, titem)
+        else:
+            raise ydError(1, "Unknown type: %s" % item["type"])
+
+    if options["rsync"] == True:
+        for item in os.listdir(target):
+            if item not in flist:
+                titem = target + item
+                if os.path.islink(titem) == True:
+                    ydDebug("rm %s" % titem, options["debug"])
+                    os.remove(titem)
+                elif os.path.isfile(titem) == True:
+                    ydDebug("rm %s" % titem, options["debug"])
+                    os.remove(titem)
+                elif os.path.isdir(titem) == True:
+                    ydDebug("rm -r %s" % titem, options["debug"])
+                    shutil.rmtree(titem)
+                else:
+                    raise ydError(1, "Unsupported filesystem object: %s" % titem)
+
+
 def ydGetCmd(options, args):
     """
     Обработчик получения файла из хранилища
@@ -844,110 +1127,27 @@ def ydGetCmd(options, args):
     else:
         target = os.path.basename(source)
 
-    result = ydStat(options, source)
+    stat = ydStat(options, source)
 
-    if result["type"] == "file":
-        ydGet(options, ydPath(source), target)
-    else:
+    if stat["type"] == "dir":
         if target == "":
-            target = "./"
-
-        if os.path.isdir(target) == False:
-            os.mkdir(target)
+            target = "."
         if os.path.basename(source) != "":
             source += "/"
         if os.path.basename(target) != "":
             target += "/"
 
+        ydEnsureLocal(options, target, "dir")
         ydGetSync(options, source, target)
-
-
-def ydPutSync(options, source, target):
-    """
-    Синхронизация локальных файлов и директорий с находящимися в хранилище
-
-    Аргументы:
-        options (dict) -- Опции приложения
-        source  (str)  -- Имя локальной директории (со слешем)
-        target  (str)  -- Имя директории в хранилище (со слешем)
-    """
-    flist = ydList(options, target)
-
-    for item in os.listdir(source):
-        sitem = source + item
-        titem = target + item
-
-        if os.path.islink(sitem) == False:
-            if os.path.isdir(sitem) == True:
-                force = True
-                if item in flist and flist[item]["type"] == "dir":
-                    force = False
-
-                if force == True:
-                    ydCreate(options, titem)
-
-                ydPutSync(options, sitem + "/", titem + "/")
-            elif os.path.isfile(sitem):
-                force = True
-                if item in flist and flist[item]["type"] == "file" and os.path.getsize(sitem) == flist[item]["size"] and ydMD5(options, sitem) == flist[item]["md5"]:
-                    force = False
-
-                if force == True:
-                    ydPut(options, sitem, titem)
-            else:
-                raise RuntimeError("Unknown object: %s" % sitem)
-
-            if item in flist:
-                del flist[item]
-        else:
-            ydDebug("Skip: %s" % sitem, options["debug"])
-
-    if options["rsync"] == True:
-        for item in flist.itervalues():
-            ydDelete(options, target + item["name"])
-
-
-def ydGetSync(options, source, target):
-    """
-    Синхронизация файлов и директорий в хранилище с локальными
-
-    Аргументы:
-        options (dict) -- Опции приложения
-        source  (str)  -- Имя директории в хранилище (со слешем)
-        target  (str)  -- Имя локальной директории (со слешем)
-    """
-    flist = ydList(options, source)
-
-    for item in flist.itervalues():
-        sitem = source + item["name"]
-        titem = target + item["name"]
-
-        if item["type"] == "dir":
-            if os.path.exists(titem) == False:
-                os.mkdir(titem)
-            elif os.path.isfile(titem) == True:
-                os.remove(titem)
-                os.mkdir(titem)
-
-            ydGetSync(options, sitem + "/", titem + "/")
-        else:
-            force = True
-            if os.path.exists(titem) == True and os.path.isdir(titem) == True:
-                shutil.rmtree(titem)
-            elif os.path.isfile(titem) == True and os.path.getsize(titem) == item["size"] and ydMD5(options, titem) == item["md5"]:
-                force = False
-
-            if force == True:
-                ydGet(options, sitem, titem, item["size"])
-
-    if options["rsync"] == True:
-        for item in os.listdir(target):
-            if item not in flist:
-                titem = target + item
-                if os.path.isfile(titem) == True:
-                    os.remove(titem)
-                else:
-                    shutil.rmtree(titem)
+    elif stat["type"] == "file":
+        force  = True
+        exists = ydEnsureLocal(options, target, "file")
+        if exists == True and os.path.getsize(target) == stat["size"] and ydMD5(options, target) == stat["md5"]:
+            force = False
+        if force == True:
+            ydGet(options, source, target)
+    else:
+        raise RuntimeError("Incomplete response")
 
 
 def _ydPrintUsage(cmd = None):
@@ -965,10 +1165,12 @@ def _ydPrintUsage(cmd = None):
         print "Commands:"
         print "     help  -- describe the usage of this program or its subcommands"
         print "     ls    -- list files and directories"
-        print "     mkdir -- create directory"
         print "     rm    -- remove file or directory"
+        print "     cp    -- copy file or directory"
+        print "     mv    -- move file or directory"
         print "     put   -- upload file to cloud"
         print "     get   -- download file from cloud"
+        print "     mkdir -- create directory"
         print "     stat  -- show metainformation about cloud object"
         print ""
         print "Options:"
@@ -995,13 +1197,25 @@ def _ydPrintUsage(cmd = None):
         print ""
         print " * If target is not specified, target will be root '/' directory"
         print ""
-    elif cmd == "mkdir":
-        print "Usage:"
-        print "     %s mkdir <disk:/path1> [disk:/path2] ..." % sys.argv[0]
-        print ""
     elif cmd == "rm":
         print "Usage:"
         print "     %s rm <disk:/object1> [disk:/object2] ..." % sys.argv[0]
+        print ""
+        print "Options:"
+        print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
+        print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
+        print ""
+    elif cmd == "cp":
+        print "Usage:"
+        print "     %s cp <disk:/object1> <disk:/object2>" % sys.argv[0]
+        print ""
+        print "Options:"
+        print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
+        print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
+        print ""
+    elif cmd == "mv":
+        print "Usage:"
+        print "     %s mv <disk:/object1> <disk:/object2>" % sys.argv[0]
         print ""
         print "Options:"
         print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
@@ -1017,6 +1231,7 @@ def _ydPrintUsage(cmd = None):
         print " * If target is not specified, target will be root '/' directory"
         print " * If target specify a directory (ended with '/'), source file name will be added"
         print " * If target file exists, it will be silently overwritten"
+        print " * Symbolic links are ignored"
         print ""
     elif cmd == "get":
         print "Usage:"
@@ -1027,6 +1242,10 @@ def _ydPrintUsage(cmd = None):
         print ""
         print " * If target is not specified, source file name will be used"
         print " * If target exists, it will be silently overwritten"
+        print ""
+    elif cmd == "mkdir":
+        print "Usage:"
+        print "     %s mkdir <disk:/path1> [disk:/path2] ..." % sys.argv[0]
         print ""
     elif cmd == "stat":
         print "Usage:"
@@ -1110,10 +1329,12 @@ if __name__ == "__main__":
 
     handlers = {
         "ls"    : ydListCmd,
-        "mkdir" : ydCreateCmd,
         "rm"    : ydDeleteCmd,
+        "cp"    : ydCopyCmd,
+        "mv"    : ydMoveCmd,
         "put"   : ydPutCmd,
         "get"   : ydGetCmd,
+        "mkdir" : ydCreateCmd,
         "stat"  : ydStatCmd
     }
 
