@@ -7,7 +7,7 @@ __author__   = "Anton Batenev"
 __license__  = "BSD"
 
 
-__all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydBase", "ydCmd"]
+__all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydBase", "ydExtended", "ydCmd"]
 
 
 import array, os, sys, time
