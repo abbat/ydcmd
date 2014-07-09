@@ -1152,7 +1152,7 @@ class ydCmd(ydExtended):
                     source += "/"
                 if os.path.basename(target) != "":
                     target += "/"
-                self._ensure(target, "dir")
+                self._ensure_remote(target, "dir")
                 self._put_sync(source, target)
             elif os.path.isfile(source) == True:
                 self._ensure(target, "file")
