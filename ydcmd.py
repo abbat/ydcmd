@@ -55,21 +55,22 @@ class ydConfig(object):
             Конфигурация приложения по умолчанию, которая может быть перегружена в вызове ydLoadConfig
         """
         return {
-            "timeout"  : "30",
-            "poll"     : "1",
-            "retries"  : "3",
-            "delay"    : "30",
-            "limit"    : "100",   # default is 20
-            "chunk"    : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
-            "token"    : "",
-            "quiet"    : "no",
-            "verbose"  : "no",
-            "debug"    : "no",
-            "async"    : "no",
-            "rsync"    : "no",
-            "base-url" : "https://cloud-api.yandex.net/v1/disk",
-            "ca-file"  : "",
-            "ciphers"  : ssl._DEFAULT_CIPHERS
+            "timeout"   : "30",
+            "poll"      : "1",
+            "retries"   : "3",
+            "delay"     : "30",
+            "limit"     : "100",   # default is 20
+            "chunk"     : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
+            "token"     : "",
+            "quiet"     : "no",
+            "verbose"   : "no",
+            "debug"     : "no",
+            "async"     : "no",
+            "rsync"     : "no",
+            "base-url"  : "https://cloud-api.yandex.net/v1/disk",
+            "ca-file"   : "",
+            "ciphers"   : ssl._DEFAULT_CIPHERS,
+            "max-depth" : "1"
         }
 
 
@@ -128,6 +129,8 @@ class ydOptions(object):
         self.long  = True if "long"  in config else None
         self.human = True if "human" in config or (self.short == None and self.long == None) else None
 
+        self.max_depth = int(config["max-depth"])
+
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
@@ -153,6 +156,51 @@ class ydOptions(object):
             return True
 
         return False
+
+
+class ydItem(object):
+    """
+    Описатель элемента в хранилище
+    """
+    def __init__(self, info = None):
+        """
+        Аргументы:
+            info (dict) -- Описатель элемента
+        """
+        common_attr = ["name", "created", "modified", "path", "type"]
+        file_attr   = ["size", "mime_type", "md5"]
+
+        for attr in common_attr:
+            if attr not in info:
+                raise ValueError("%s not exists (incomplete response?)" % attr)
+
+        if info != None:
+            for key, value in info.iteritems():
+                self.__dict__[key] = value
+
+        if self.type == "file":
+            for attr in file_attr:
+                if attr not in info:
+                    raise ValueError("%s not exists (incomplete response?)" % attr)
+        elif self.type == "dir":
+            pass
+        else:
+            raise ValueError("Unknown item type: %s" % self.type)
+
+
+    def isdir(self):
+        return self.type == "dir"
+
+
+    def isfile(self):
+        return self.type == "file"
+
+
+    def __str__(self):
+        result = ""
+        for key, value in self.__dict__.iteritems():
+            result += "%10s: %s\n" % (key, value)
+        return result
 
 
 class ydBase(object):
@@ -496,7 +544,7 @@ class ydBase(object):
         Аргументы:
             path (str) -- Имя файла или директории в хранилище
 
-        Результат (dict):
+        Результат (ydItem):
             Метаинформация об объекте в хранилище
         """
         data = {
@@ -516,10 +564,7 @@ class ydBase(object):
         if "_embedded" in part:
             del part["_embedded"]
 
-        if not ("type" in part and "name" in part):
-            raise RuntimeError("Incomplete response")
-
-        return part
+        return ydItem(part)
 
 
     def list(self, path):
@@ -530,7 +575,7 @@ class ydBase(object):
             path (str) -- Объект хранилища
 
         Результат (dict):
-            Список имен объектов и метаинформации о них {"имя": {метаинформация}}
+            Список имен объектов и метаинформации о них {"имя": ydItem}
         """
         result = {}
 
@@ -551,16 +596,14 @@ class ydBase(object):
 
             if "_embedded" in part:
                 part = part["_embedded"]
-            elif "type" in part and "name" in part:
-                result[part["name"]] = part
-                return result
             else:
-                raise RuntimeError("Incomplete response")
+                item = ydItem(part)
+                result[item.name] = item
+                return result
 
             for item in part["items"]:
-                if not ("type" in item and "name" in item):
-                    raise RuntimeError("Incomplete response")
-                result[item["name"]] = item
+                item = ydItem(item)
+                result[item.name] = item
 
             if len(part["items"]) == int(part["limit"]):
                 data["offset"] += int(part["limit"])
@@ -799,9 +842,9 @@ class ydExtended(ydBase):
         Если требуемый тип является директорией, то в случае ее отсутствия производится ее создание.
 
         Аргументы:
-            path (str)  -- Объект в хранилище
-            type (str)  -- Тип объекта в хранилище (file|dir)
-            stat (dict) -- Информация об объекте (если уже имеется)
+            path (str)    -- Объект в хранилище
+            type (str)    -- Тип объекта в хранилище (file|dir)
+            stat (ydItem) -- Информация об объекте (если уже имеется)
         """
         if not (type == "dir" or type == "file"):
             raise ValueError("Unsupported type: %s", type)
@@ -814,10 +857,7 @@ class ydExtended(ydBase):
                     raise
 
         if stat != None:
-            if not (stat["type"] == "dir" or stat["type"] == "file"):
-                raise RuntimeError("Unsupported type: %s" % stat["type"])
-
-            if stat["type"] != type:
+            if stat.type != type:
                 self.delete(path)
                 if type == "dir":
                     self.create(path)
@@ -847,7 +887,7 @@ class ydExtended(ydBase):
                     force = True
                     if item in flist:
                         self._ensure_remote(titem, "file", flist[item])
-                        if flist[item]["type"] == "file" and os.path.getsize(sitem) == flist[item]["size"] and self.md5(sitem) == flist[item]["md5"]:
+                        if flist[item].isfile() == True and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
                             force = False
 
                     if force == True:
@@ -862,7 +902,7 @@ class ydExtended(ydBase):
 
         if self.options.rsync == True:
             for item in flist.itervalues():
-                self.delete(target + item["name"])
+                self.delete(target + item.name)
 
 
     def _ensure_local(self, path, type):
@@ -924,19 +964,17 @@ class ydExtended(ydBase):
             sitem = source + item["name"]
             titem = target + item["name"]
 
-            if item["type"] == "dir":
+            if item.isdir() == True:
                 self._ensure_local(titem, "dir")
                 self._get_sync(sitem + "/", titem + "/")
-            elif item["type"] == "file":
+            elif item.isfile() == True:
                 force  = True
                 exists = self._ensure_local(titem, "file")
-                if exists == True and os.path.getsize(titem) == item["size"] and self.md5(titem) == item["md5"]:
+                if exists == True and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
                     force = False
 
                 if force == True:
                     self.get(sitem, titem)
-            else:
-                raise ydError(1, "Unknown type: %s" % item["type"])
 
         if self.options.rsync == True:
             for item in os.listdir(target):
@@ -953,6 +991,36 @@ class ydExtended(ydBase):
                         shutil.rmtree(titem)
                     else:
                         raise ydError(1, "Unsupported filesystem object: %s" % titem)
+
+
+    def du(self, path, depth = 0):
+        """
+        Подсчет занимаемого места
+
+        Аргументы:
+            path  (str) -- Путь
+            depth (int) -- Текущая глубина обхода
+
+        Результат (list):
+            Список [(имя, размер)] объектов
+        """
+        size   = 0
+        result = []
+
+        list = self.list(path)
+
+        for item in list.itervalues():
+            if item.isfile() == True:
+                size += item.size
+            elif item.isdir() == True:
+                sub   = self.du(path + item.name + "/", depth + 1)
+                size += sub[-1][1]
+                if depth < self.options.max_depth:
+                    result.extend(sub)
+
+        result.append([path, size])
+
+        return result
 
 
 class ydCmd(ydExtended):
@@ -1023,10 +1091,7 @@ class ydCmd(ydExtended):
         if len(args) > 0:
             path = args[0]
 
-        result = self.stat(self.remote_path(path))
-
-        for key, value in result.iteritems():
-            print "%10s: %s" % (key, value)
+        print self.stat(self.remote_path(path))
 
 
     def list_cmd(self, args):
@@ -1046,17 +1111,19 @@ class ydCmd(ydExtended):
         result = self.list(self.remote_path(path))
 
         for item in result.itervalues():
-            if "size" not in item:
-                item["size"] = "<dir>"
+            if item.isdir() == True:
+                size = "<dir>"
             elif options.human == True:
-                item["size"] = self.human(item["size"])
+                size = self.human(item.size)
+            else:
+                size = item.size
 
             if options.long == True:
-                print "%(created)s %(modified)26s %(size)11s %(name)s" % item
+                print "%s %26s %11s %s" % (item.created, item.modified, size, item.name)
             elif options.short == True:
-                print "%(name)s" % item
+                print "%s" % item.name
             else:
-                print "%(size)5s  %(name)s" % item
+                print "%5s  %s" % (size, item.name)
 
 
     def delete_cmd(self, args):
@@ -1184,7 +1251,7 @@ class ydCmd(ydExtended):
 
         stat = self.stat(source)
 
-        if stat["type"] == "dir":
+        if stat.isdir() == True:
             if target == "":
                 target = "."
             if os.path.basename(source) != "":
@@ -1194,15 +1261,43 @@ class ydCmd(ydExtended):
 
             self._ensure_local(target, "dir")
             self._get_sync(source, target)
-        elif stat["type"] == "file":
+        elif stat.isfile() == True:
             force  = True
             exists = self._ensure_local(target, "file")
-            if exists == True and os.path.getsize(target) == stat["size"] and self.md5(target) == stat["md5"]:
+            if exists == True and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
                 force = False
             if force == True:
                 self.get(source, target)
+
+
+    def du_cmd(self, args):
+        """
+        Обработчик получения файла из хранилища
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) > 1:
+            raise ydError(1, "Too many arguments")
+
+        if len(args) == 1:
+            path = args[0]
         else:
-            raise RuntimeError("Incomplete response")
+            path = "/"
+
+        if os.path.basename(path) != "":
+            path += "/"
+
+        result = self.du(self.remote_path(path))
+
+        for name, size in result:
+            name = name[5:-1]
+            if len(name) == 0:
+                name = "/"
+            if options.human == True:
+                print "%5s  %s" % (self.human(size), name)
+            else:
+                print "%11s  %s" % (size, name)
 
 
     @staticmethod
@@ -1228,6 +1323,9 @@ class ydCmd(ydExtended):
             print "     get   -- download file from cloud"
             print "     mkdir -- create directory"
             print "     stat  -- show metainformation about cloud object"
+            print ""
+            print "Special commands:"
+            print "     du -- estimate files space usage"
             print ""
             print "Options:"
             print "     --timeout=<N> -- timeout for api requests in seconds (default: %s)" % default["timeout"]
@@ -1309,6 +1407,16 @@ class ydCmd(ydExtended):
             print ""
             print " * If target is not specified, target will be root '/' directory"
             print ""
+        elif cmd == "du":
+            print "Usage:"
+            print "     %s du [disk:/object]" % sys.argv[0]
+            print ""
+            print "Options:"
+            print "     --max-depth=<N> -- show size if dir is N or fewer levels below target (default: %s)" % default["max-depth"]
+            print "     --long          -- show sizes in bytes instead human-readable format"
+            print ""
+            print " * If target is not specified, target will be root '/' directory"
+            print ""
         else:
             sys.stderr.write("Unknown command %s\n" % cmd)
             sys.exit(1)
@@ -1364,6 +1472,8 @@ if __name__ == "__main__":
             cmd.create_cmd(args),
         elif command == "stat":
             cmd.stat_cmd(args)
+        elif command == "du":
+            cmd.du_cmd(args)
         else:
             ydCmd.print_usage(command)
     except ydError as e:
