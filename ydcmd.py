@@ -326,8 +326,11 @@ class ydBase(object):
             if hasattr(data, "read") and not isinstance(data, array.array):
                 datablock = data.read(self._options.chunk)
                 while datablock:
+                    self.sock.sendall(hex(len(datablock))[2:] + "\r\n")
                     self.sock.sendall(datablock)
+                    self.sock.sendall("\r\n")
                     datablock = data.read(self._options.chunk)
+                self.sock.sendall("0\r\n\r\n")
             else:
                 self.sock.sendall(data)
 
@@ -446,20 +449,16 @@ class ydBase(object):
         if re.match('^https:\/\/[a-z0-9\.\-]+\.yandex\.(net|ru|com)(:443){,1}\/', url, re.IGNORECASE) == None:
             raise RuntimeError("Malformed URL %s" % url)
 
-        if method == "GET":
-            request = urllib2.Request(url, None, headers)
-        elif method == "PUT":
-            fd = None
-            if filename != None:
-                fd = open(filename, "rb")
-
-            request = urllib2.Request(url, fd, headers)
-            request.get_method = lambda: method
-        elif method == "DELETE" or method == "POST":
-            request = urllib2.Request(url, None, headers)
-            request.get_method = lambda: method
-        else:
+        if method not in ["GET", "POST", "PUT", "DELETE"]:
             raise ValueError("Unknown method: %s" % method)
+
+        fd = None
+        if filename != None and method == "PUT":
+            fd = open(filename, "rb")
+
+        request = urllib2.Request(url, fd, headers)
+        request.get_method = lambda: method
+        request.has_header = lambda header_name: True
 
         try:
             opener = urllib2.build_opener(ydBase._ydBaseHTTPSHandler(self.options))
@@ -725,8 +724,8 @@ class ydBase(object):
             method = result["method"]
 
             headers = self._headers()
-            headers["Content-Type"]   = "application/octet-stream"
-            headers["Content-Length"] = os.path.getsize(source)
+            headers["Content-Type"]      = "application/octet-stream"
+            headers["Transfer-Encoding"] = "chunked"
 
             self.query_retry(method, url, None, headers, source)
         else:
@@ -1222,7 +1221,7 @@ class ydCmd(ydExtended):
                 self._ensure_remote(target, "dir")
                 self._put_sync(source, target)
             elif os.path.isfile(source) == True:
-                self._ensure(target, "file")
+                self._ensure_remote(target, "file")
                 self.put(source, target)
             else:
                 raise ydError(1, "Unsupported filesystem object: %s" % source)
