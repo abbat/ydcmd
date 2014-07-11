@@ -326,11 +326,8 @@ class ydBase(object):
             if hasattr(data, "read") and not isinstance(data, array.array):
                 datablock = data.read(self._options.chunk)
                 while datablock:
-                    self.sock.sendall(hex(len(datablock))[2:] + "\r\n")
                     self.sock.sendall(datablock)
-                    self.sock.sendall("\r\n")
                     datablock = data.read(self._options.chunk)
-                self.sock.sendall("0\r\n\r\n")
             else:
                 self.sock.sendall(data)
 
@@ -458,7 +455,6 @@ class ydBase(object):
 
         request = urllib2.Request(url, fd, headers)
         request.get_method = lambda: method
-        request.has_header = lambda header_name: True
 
         try:
             opener = urllib2.build_opener(ydBase._ydBaseHTTPSHandler(self.options))
@@ -724,8 +720,8 @@ class ydBase(object):
             method = result["method"]
 
             headers = self._headers()
-            headers["Content-Type"]      = "application/octet-stream"
-            headers["Transfer-Encoding"] = "chunked"
+            headers["Content-Type"]   = "application/octet-stream"
+            headers["Content-Length"] = os.path.getsize(source)
 
             self.query_retry(method, url, None, headers, source)
         else:
