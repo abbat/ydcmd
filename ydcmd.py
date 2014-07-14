@@ -10,12 +10,25 @@ __license__  = "BSD"
 __all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydBase", "ydExtended", "ydCmd"]
 
 
-import array, os, sys, time
+import array, os, sys
 import socket, ssl
 import urllib, httplib, urllib2
 import string, re, json
+import time, datetime
 import hashlib, shutil, ConfigParser
-import email.utils
+
+
+try:
+    import dateutil.parser
+    import dateutil.relativedelta
+except ImportError:
+    err = "Python module dateutil not found.\nPlease, install \"%s\"\n"
+    name = os.uname()[0]
+    if name == "FreeBSD":
+        sys.stderr.write(err % "devel/py-dateutil")
+    elif name == "Linux":
+        sys.stderr.write(err % "python-dateutil")
+    sys.exit(1)
 
 
 class ydError(RuntimeError):
@@ -55,22 +68,25 @@ class ydConfig(object):
             Конфигурация приложения по умолчанию, которая может быть перегружена в вызове ydLoadConfig
         """
         return {
-            "timeout"   : "30",
-            "poll"      : "1",
-            "retries"   : "3",
-            "delay"     : "30",
-            "limit"     : "100",   # default is 20
-            "chunk"     : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
-            "token"     : "",
-            "quiet"     : "no",
-            "verbose"   : "no",
-            "debug"     : "no",
-            "async"     : "no",
-            "rsync"     : "no",
-            "base-url"  : "https://cloud-api.yandex.net/v1/disk",
-            "ca-file"   : "",
-            "ciphers"   : ssl._DEFAULT_CIPHERS,
-            "max-depth" : "1"
+            "timeout"  : "30",
+            "poll"     : "1",
+            "retries"  : "3",
+            "delay"    : "30",
+            "limit"    : "100",   # default is 20
+            "chunk"    : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
+            "token"    : "",
+            "quiet"    : "no",
+            "verbose"  : "no",
+            "debug"    : "no",
+            "async"    : "no",
+            "rsync"    : "no",
+            "base-url" : "https://cloud-api.yandex.net/v1/disk",
+            "ca-file"  : "",
+            "ciphers"  : ssl._DEFAULT_CIPHERS,
+            "depth"    : "1",
+            "dry"      : "no",
+            "type"     : "all",
+            "keep"     : ""
         }
 
 
@@ -98,6 +114,7 @@ class ydConfig(object):
 
 
 class ydOptions(object):
+
     """
     Опции приложения
     """
@@ -125,11 +142,14 @@ class ydOptions(object):
         if self.cafile == "":
             self.cafile = None
 
+        self.depth = int(config["depth"])
+        self.dry   = self._bool(config["dry"])
+        self.type  = str(config["type"])
+        self.keep  = str(config["keep"])
+
         self.short = True if "short" in config else None
         self.long  = True if "long"  in config else None
         self.human = True if "human" in config or (self.short == None and self.long == None) else None
-
-        self.max_depth = int(config["max-depth"])
 
 
     def __repr__(self):
@@ -203,6 +223,10 @@ class ydItem(object):
         return result
 
 
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
+
+
 class ydBase(object):
     """
     Базовые методы работы с API
@@ -252,7 +276,13 @@ class ydBase(object):
             notafter = cert.get("notAfter", None)
             if notafter == None:
                 raise ydCertError("No appropriate notAfter field were found in certificate")
-            if time.mktime(email.utils.parsedate(notafter)) < time.time():
+
+            try:
+                expire = dateutil.parser.parse(notafter).astimezone(dateutil.tz.tzutc())
+            except:
+                raise ydCertError("Can not parse cirtificate notAfter field")
+
+            if expire < datetime.datetime.now(dateutil.tz.tzutc()).replace(microsecond = 0):
                 raise ydCertError("Cirtificate expired at %s" % notafter)
 
             san      = cert.get("subjectAltName", ())
@@ -1010,12 +1040,86 @@ class ydExtended(ydBase):
             elif item.isdir() == True:
                 sub   = self.du(path + item.name + "/", depth + 1)
                 size += sub[-1][1]
-                if depth < self.options.max_depth:
+                if depth < self.options.depth:
                     result.extend(sub)
 
         result.append([path, size])
 
         return result
+
+
+    def clean(self, path):
+        """
+        Очистка файлов и директорий
+
+        Аргументы:
+            path (str) -- Путь
+        """
+        if self.options.keep == "" or self.options.type not in ["all", "file", "dir"]:
+            return
+
+        flist = self.list(path).values()
+
+        if self.options.type != "all":
+            tlist = []
+            for item in flist:
+                if item.type == self.options.type:
+                    tlist.append(item)
+            flist = tlist
+
+        for item in flist:
+            item.modified = dateutil.parser.parse(item.modified).astimezone(dateutil.tz.tzutc())
+
+        flist.sort(key = lambda x: x.modified)
+
+        if re.match("^[0-9]+$", self.options.keep, re.IGNORECASE) != None:
+            self.verbose("Clean: <%s> keep last %s" % (self.options.type, self.options.keep), self.options.verbose)
+            flist = flist[:-int(self.options.keep)]
+        elif re.match("^[0-9]+[dwmy]$", self.options.keep, re.IGNORECASE):
+            m = re.split("^([0-9]+)([dwmy])$", self.options.keep, re.IGNORECASE)
+            if m != None and len(m) == 4:
+                count    = int(m[1])
+                interval = str(m[2])
+
+                relative = None
+                if interval == "d":
+                    relative = dateutil.relativedelta.relativedelta(days = -count)
+                elif interval == "w":
+                    relative = dateutil.relativedelta.relativedelta(weeks = -count)
+                elif interval == "m":
+                    relative = dateutil.relativedelta.relativedelta(months = -count)
+                elif interval == "y":
+                    relative = dateutil.relativedelta.relativedelta(years = -count)
+
+                relative = datetime.datetime.now(dateutil.tz.tzutc()).replace(microsecond = 0) + relative
+
+                self.verbose("Clean: <%s> before %s" % (self.options.type, relative.isoformat()), self.options.verbose)
+
+                tlist = []
+                for item in flist:
+                    if item.modified < relative:
+                        tlist.append(item)
+
+                flist = tlist
+        elif len(self.options.keep) >= 10:   # YYYY-MM-DD
+            relative =  dateutil.parser.parse(self.options.keep).astimezone(dateutil.tz.tzutc())
+
+            self.verbose("Clean: <%s> before %s" % (self.options.type, relative.isoformat()), self.options.verbose)
+
+            tlist = []
+            for item in flist:
+                if item.modified < relative:
+                    tlist.append(item)
+
+            flist = tlist
+        else:
+            return
+
+        for item in flist:
+            if self.options.dry == True:
+                print "%25s %7s %s" % (item.modified.isoformat(), ("<%s>" % item.type), item.name)
+            else:
+                self.delete(path + item.name)
 
 
 class ydCmd(ydExtended):
@@ -1108,14 +1212,14 @@ class ydCmd(ydExtended):
         for item in result.itervalues():
             if item.isdir() == True:
                 size = "<dir>"
-            elif options.human == True:
+            elif self.options.human == True:
                 size = self.human(item.size)
             else:
                 size = item.size
 
-            if options.long == True:
+            if self.options.long == True:
                 print "%s %26s %11s %s" % (item.created, item.modified, size, item.name)
-            elif options.short == True:
+            elif self.options.short == True:
                 print "%s" % item.name
             else:
                 print "%5s  %s" % (size, item.name)
@@ -1267,7 +1371,7 @@ class ydCmd(ydExtended):
 
     def du_cmd(self, args):
         """
-        Обработчик получения файла из хранилища
+        Обработчик оценки занимаемого места
 
         Аргументы:
             args (dict) -- Аргументы командной строки
@@ -1295,6 +1399,27 @@ class ydCmd(ydExtended):
                 print "%11s  %s" % (size, name)
 
 
+    def clean_cmd(self, args):
+        """
+        Обработчик очистки файлов и директорий
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) > 1:
+            raise ydError(1, "Too many arguments")
+
+        if len(args) == 1:
+            path = args[0]
+        else:
+            path = "/"
+
+        if os.path.basename(path) != "":
+            path += "/"
+
+        self.clean(path)
+
+
     @staticmethod
     def print_usage(cmd = None):
         """
@@ -1320,7 +1445,8 @@ class ydCmd(ydExtended):
             print "     stat  -- show metainformation about cloud object"
             print ""
             print "Special commands:"
-            print "     du -- estimate files space usage"
+            print "     du    -- estimate files space usage"
+            print "     clean -- delete old files and/or directories"
             print ""
             print "Options:"
             print "     --timeout=<N> -- timeout for api requests in seconds (default: %s)" % default["timeout"]
@@ -1407,10 +1533,25 @@ class ydCmd(ydExtended):
             print "     %s du [disk:/object]" % sys.argv[0]
             print ""
             print "Options:"
-            print "     --max-depth=<N> -- show size if dir is N or fewer levels below target (default: %s)" % default["max-depth"]
-            print "     --long          -- show sizes in bytes instead human-readable format"
+            print "     --depth=<N> -- show size if dir is N or fewer levels below target (default: %s)" % default["depth"]
+            print "     --long      -- show sizes in bytes instead human-readable format"
             print ""
             print " * If target is not specified, target will be root '/' directory"
+            print ""
+        elif cmd == "clean":
+            print "Usage:"
+            print "     %s clean <options> [disk:/object]" % sys.argv[0]
+            print ""
+            print "Options:"
+            print "     --dry      -- just print list of object to delete (default: %s)" % default["dry"]
+            print "     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: %s)" % default["type"]
+            print "     --keep=<S> -- keep criteria (default: none):"
+            print "                   * date ('2014-02-12T12:19:05+04:00')"
+            print "                   * relative interval ('7d', '4w', '1m', '1y')"
+            print "                   * number of objects ('31')"
+            print ""
+            print " * If target is not specified, target will be root '/' directory"
+            print " * Objects sorted and filtered by modified date (not created date)"
             print ""
         else:
             sys.stderr.write("Unknown command %s\n" % cmd)
@@ -1469,6 +1610,8 @@ if __name__ == "__main__":
             cmd.stat_cmd(args)
         elif command == "du":
             cmd.du_cmd(args)
+        elif command == "clean":
+            cmd.clean_cmd(args)
         else:
             ydCmd.print_usage(command)
     except ydError as e:
