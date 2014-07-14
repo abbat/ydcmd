@@ -1508,14 +1508,6 @@ class ydCmd(ydExtended):
             print "     --ca-file=<S> -- file with trusted CAs (default: none)"
             print "     --ciphers=<S> -- ciphers sute (default: %s)" % default["ciphers"]
             print ""
-            print "Special options:"
-            print "     --async       -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
-            print "     --encrypt     -- encrypt uploaded (put) files using --encrypt-cmd (default: %s)" % default["encrypt"]
-            print "     --decrypt     -- decrypt downloaded (get) files using --decrypt-cmd (default: %s)" % default["decrypt"]
-            print "     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)"
-            print "     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)"
-            print "     --temp-dir    -- directory to store encrypted temporary files (default: system default)"
-            print ""
         elif cmd == "ls":
             print "Usage:"
             print "     %s ls [options] [disk:/object]" % sys.argv[0]
@@ -1534,6 +1526,7 @@ class ydCmd(ydExtended):
             print ""
             print "Options:"
             print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
+            print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
             print ""
         elif cmd == "cp":
             print "Usage:"
@@ -1541,6 +1534,7 @@ class ydCmd(ydExtended):
             print ""
             print "Options:"
             print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
+            print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
             print ""
         elif cmd == "mv":
             print "Usage:"
@@ -1548,13 +1542,17 @@ class ydCmd(ydExtended):
             print ""
             print "Options:"
             print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
+            print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
             print ""
         elif cmd == "put":
             print "Usage:"
             print "     %s put <file> [disk:/object]" % sys.argv[0]
             print ""
             print "Options:"
-            print "     --rsync -- sync remote tree with local"
+            print "     --rsync       -- sync remote tree with local"
+            print "     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: %s)" % default["encrypt"]
+            print "     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)"
+            print "     --temp-dir    -- directory to store encrypted temporary files (default: system default)"
             print ""
             print " * If target is not specified, target will be root '/' directory"
             print " * If target specify a directory (ended with '/'), source file name will be added"
@@ -1566,7 +1564,10 @@ class ydCmd(ydExtended):
             print "     %s get <disk:/object> [file]" % sys.argv[0]
             print ""
             print "Options:"
-            print "     --rsync -- sync local tree with remote"
+            print "     --rsync       -- sync local tree with remote"
+            print "     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: %s)" % default["decrypt"]
+            print "     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)"
+            print "     --temp-dir    -- directory to store encrypted temporary files (default: system default)"
             print ""
             print " * If target is not specified, source file name will be used"
             print " * If target exists, it will be silently overwritten"
