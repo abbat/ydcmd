@@ -7,3 +7,7 @@ ca-file=/etc/ssl/certs/ca-certificates.crt
 #ca-file=/usr/local/share/certs/ca-root-nss.crt
 
 #ciphers=HIGH:!TLSv1.2:!aNULL:!MD5:!3DES:!CAMELLIA:@STRENGTH
+
+# Be careful with pipes - check pipefail
+#encrypt-cmd=openssl enc -e -z -aes-256-cbc -kfile ~/.ydcmd.passwd
+#decrypt-cmd=openssl enc -d -z -aes-256-cbc -kfile ~/.ydcmd.passwd

@@ -15,6 +15,7 @@ import socket, ssl
 import urllib, httplib, urllib2
 import string, re, json
 import time, datetime
+import subprocess, tempfile
 import hashlib, shutil, ConfigParser
 
 
@@ -68,25 +69,30 @@ class ydConfig(object):
             Конфигурация приложения по умолчанию, которая может быть перегружена в вызове ydLoadConfig
         """
         return {
-            "timeout"  : "30",
-            "poll"     : "1",
-            "retries"  : "3",
-            "delay"    : "30",
-            "limit"    : "100",   # default is 20
-            "chunk"    : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
-            "token"    : "",
-            "quiet"    : "no",
-            "verbose"  : "no",
-            "debug"    : "no",
-            "async"    : "no",
-            "rsync"    : "no",
-            "base-url" : "https://cloud-api.yandex.net/v1/disk",
-            "ca-file"  : "",
-            "ciphers"  : ssl._DEFAULT_CIPHERS,
-            "depth"    : "1",
-            "dry"      : "no",
-            "type"     : "all",
-            "keep"     : ""
+            "timeout"     : "30",
+            "poll"        : "1",
+            "retries"     : "3",
+            "delay"       : "30",
+            "limit"       : "100",   # default is 20
+            "chunk"       : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
+            "token"       : "",
+            "quiet"       : "no",
+            "verbose"     : "no",
+            "debug"       : "no",
+            "async"       : "no",
+            "rsync"       : "no",
+            "base-url"    : "https://cloud-api.yandex.net/v1/disk",
+            "ca-file"     : "",
+            "ciphers"     : ssl._DEFAULT_CIPHERS,
+            "depth"       : "1",
+            "dry"         : "no",
+            "type"        : "all",
+            "keep"        : "",
+            "encrypt"     : "no",
+            "decrypt"     : "no",
+            "encrypt-cmd" : "",
+            "decrypt-cmd" : "",
+            "temp-dir"    : ""
         }
 
 
@@ -147,6 +153,15 @@ class ydOptions(object):
         self.type  = str(config["type"])
         self.keep  = str(config["keep"])
 
+        self.encrypt    = self._bool(config["encrypt"])
+        self.decrypt    = self._bool(config["decrypt"])
+        self.encryptcmd = str(config["encrypt-cmd"])
+        self.decryptcmd = str(config["decrypt-cmd"])
+        self.tempdir    = str(config["temp-dir"])
+
+        if self.tempdir == "":
+            self.tempdir = None
+
         self.short = True if "short" in config else None
         self.long  = True if "long"  in config else None
         self.human = True if "human" in config or (self.short == None and self.long == None) else None
@@ -188,7 +203,7 @@ class ydItem(object):
             info (dict) -- Описатель элемента
         """
         common_attr = ["name", "created", "modified", "path", "type"]
-        file_attr   = ["size", "mime_type", "md5"]
+        file_attr   = ["mime_type", "md5"]
 
         for attr in common_attr:
             if attr not in info:
@@ -202,6 +217,8 @@ class ydItem(object):
             for attr in file_attr:
                 if attr not in info:
                     raise ValueError("%s not exists (incomplete response?)" % attr)
+            if "size" not in info:
+                self.__dict__["size"] = 0
         elif self.type == "dir":
             pass
         else:
@@ -762,6 +779,18 @@ class ydBase(object):
         """
         Реализация нескольких попыток загрузки файла в хранилище
         """
+        if self.options.encrypt == True:
+            if self.options.encryptcmd == "":
+                raise ydError(1, "Encrypt error: --encrypt-cmd not defined but --encrypt used")
+            try:
+                dst = tempfile.NamedTemporaryFile(dir = self.options.tempdir, prefix = "ydcmd-", suffix = ".tmp")
+                self.verbose("Encrypt: %s -> %s" % (source, dst.name), self.options.verbose)
+                src = open(source, "rb")
+                subprocess.check_call(self.options.encryptcmd, stdin = src, stdout = dst, shell = True)
+                source = dst.name
+            except Exception as e:
+                raise ydError(1, "Encrypt error: %s" % e)
+
         self.verbose("Transfer: %s -> %s" % (source, target), self.options.verbose)
 
         retry = 0
@@ -810,6 +839,16 @@ class ydBase(object):
         """
         Реализация нескольких попыток получения файла из хранилища
         """
+        if self.options.decrypt == True:
+            if self.options.decryptcmd == "":
+                raise ydError(1, "Decrypt error: --decrypt-cmd not defined but --decrypt used")
+            try:
+                src    = tempfile.NamedTemporaryFile(dir = self.options.tempdir, prefix = "ydcmd-", suffix = ".tmp")
+                dst    = target
+                target = src.name
+            except Exception as e:
+                raise ydError(1, "Decrypt error: %s" % e)
+
         self.verbose("Transfer: %s -> %s" % (source, target), self.options.verbose)
 
         retry = 0
@@ -823,6 +862,15 @@ class ydBase(object):
                 if retry >= self.options.retries:
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
+
+        if self.options.decrypt == True:
+            try:
+                target = dst
+                self.verbose("Decrypt: %s -> %s" % (src.name, target), self.options.verbose)
+                dst = open(target, "wb")
+                subprocess.check_call(self.options.decryptcmd, stdin = src, stdout = dst, shell = True)
+            except Exception as e:
+                raise ydError(1, "Decrypt error: %s" % e)
 
 
 class ydExtended(ydBase):
@@ -1461,7 +1509,12 @@ class ydCmd(ydExtended):
             print "     --ciphers=<S> -- ciphers sute (default: %s)" % default["ciphers"]
             print ""
             print "Special options:"
-            print "     --async -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
+            print "     --async       -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
+            print "     --encrypt     -- encrypt uploaded (put) files using --encrypt-cmd (default: %s)" % default["encrypt"]
+            print "     --decrypt     -- decrypt downloaded (get) files using --decrypt-cmd (default: %s)" % default["decrypt"]
+            print "     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)"
+            print "     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)"
+            print "     --temp-dir    -- directory to store encrypted temporary files (default: system default)"
             print ""
         elif cmd == "ls":
             print "Usage:"
