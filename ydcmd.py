@@ -954,13 +954,13 @@ class ydExtended(ydBase):
 
             if os.path.islink(sitem) == False:
                 if os.path.isdir(sitem) == True:
-                    self._ensure_remote(titem, "dir", flist[item])
+                    self._ensure_remote(titem, "dir", flist[item] if item in flist else None)
                     self._put_sync(sitem + "/", titem + "/")
                 elif os.path.isfile(sitem):
                     force = True
                     if item in flist:
                         self._ensure_remote(titem, "file", flist[item])
-                        if flist[item].isfile() == True and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
+                        if self.options.encrypt == False and flist[item].isfile() == True and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
                             force = False
 
                     if force == True:
@@ -1034,8 +1034,8 @@ class ydExtended(ydBase):
         flist = self.list(source)
 
         for item in flist.itervalues():
-            sitem = source + item["name"]
-            titem = target + item["name"]
+            sitem = source + item.name
+            titem = target + item.name
 
             if item.isdir() == True:
                 self._ensure_local(titem, "dir")
@@ -1043,7 +1043,7 @@ class ydExtended(ydBase):
             elif item.isfile() == True:
                 force  = True
                 exists = self._ensure_local(titem, "file")
-                if exists == True and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
+                if self.options.decrypt == False and exists == True and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
                     force = False
 
                 if force == True:
@@ -1411,7 +1411,7 @@ class ydCmd(ydExtended):
         elif stat.isfile() == True:
             force  = True
             exists = self._ensure_local(target, "file")
-            if exists == True and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
+            if self.options.decrypt == False and exists == True and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
                 force = False
             if force == True:
                 self.get(source, target)
