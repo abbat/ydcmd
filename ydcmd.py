@@ -918,6 +918,9 @@ class ydExtended(ydBase):
             path (str)    -- Объект в хранилище
             type (str)    -- Тип объекта в хранилище (file|dir)
             stat (ydItem) -- Информация об объекте (если уже имеется)
+
+        Результат (ydItem):
+            Метаинформация об объекте, если он уже существует и его тип совпадает с аргументом type.
         """
         if not (type == "dir" or type == "file"):
             raise ValueError("Unsupported type: %s", type)
@@ -934,8 +937,12 @@ class ydExtended(ydBase):
                 self.delete(path)
                 if type == "dir":
                     self.create(path)
+            else:
+                return stat
         elif type == "dir":
             self.create(path)
+
+        return None
 
 
     def _put_sync(self, source, target):
@@ -1369,8 +1376,12 @@ class ydCmd(ydExtended):
                 self._ensure_remote(target, "dir")
                 self._put_sync(source, target)
             elif os.path.isfile(source) == True:
-                self._ensure_remote(target, "file")
-                self.put(source, target)
+                force = True
+                stat  = self._ensure_remote(target, "file")
+                if self.options.encrypt == False and stat != None and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
+                    force = False
+                if force == True:
+                    self.put(source, target)
             else:
                 raise ydError(1, "Unsupported filesystem object: %s" % source)
         else:
