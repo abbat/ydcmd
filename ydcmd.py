@@ -1488,7 +1488,7 @@ class ydCmd(ydExtended):
             cmd (str) -- Имя команды для которой выводится справка (пустое значение для справки по командам)
         """
         default = ydConfig.default_config()
-        if cmd == None:
+        if cmd == None or cmd == "help":
             print "Usage:"
             print "     %s <command> [options] [args]" % sys.argv[0]
             print ""
@@ -1511,6 +1511,7 @@ class ydCmd(ydExtended):
             print "     --timeout=<N> -- timeout for api requests in seconds (default: %s)" % default["timeout"]
             print "     --retries=<N> -- api call retries count (default: %s)" % default["retries"]
             print "     --delay=<N>   -- api call delay between retries in seconds (default: %s)" % default["delay"]
+            print "     --limit=<N>   -- limit rows by one api call for listing files and directories (default: %s)" % default["limit"]
             print "     --token=<S>   -- oauth token (default: none)"
             print "     --quiet       -- suppress all errors (default: %s)" % default["quiet"]
             print "     --verbose     -- verbose output (default: %s)" % default["verbose"]
@@ -1527,7 +1528,6 @@ class ydCmd(ydExtended):
             print "     --human -- human-readable file size"
             print "     --short -- short format (names only)"
             print "     --long  -- long format (created, modified, size, name)"
-            print "     --limit -- limit rows by one api call (default: %s)" % default["limit"]
             print ""
             print " * If target is not specified, target will be root '/' directory"
             print ""
