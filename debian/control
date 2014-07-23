@@ -1,0 +1,16 @@
+Source: ydcmd
+Section: utils
+Priority: optional
+Maintainer: Anton Batenev <antonbatenev@yandex.ru>
+Build-Depends: debhelper (>= 8.0.0), python
+Standards-Version: 3.9.5
+Vcs-Git: https://github.com/abbat/ydcmd.git
+Vcs-Browser: https://github.com/abbat/ydcmd
+Homepage: https://github.com/abbat/ydcmd
+
+Package: ydcmd
+Architecture: all
+Depends: ${python:Depends}, ${misc:Depends}, python-dateutil
+Description: Command-line Yandex.Disk client
+ Command-line tool to upload, retrieve and manage data in Yandex.Disk
+ service (https://disk.yandex.com/), designed for use in scripts.
