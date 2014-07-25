@@ -1262,9 +1262,10 @@ class ydCmd(ydExtended):
         if len(args) > 0:
             path = args[0]
 
-        result = self.list(self.remote_path(path))
+        result = self.list(self.remote_path(path)).values()
+        result.sort(key = lambda x: x.name)
 
-        for item in result.itervalues():
+        for item in result:
             if item.isdir() == True:
                 size = "<dir>"
             elif self.options.human == True:
