@@ -166,6 +166,9 @@ class ydOptions(object):
         self.long  = True if "long"  in config else None
         self.human = True if "human" in config or (self.short == None and self.long == None) else None
 
+        if "YDCMD_TOKEN" in os.environ:
+            self.token = str(os.environ["YDCMD_TOKEN"])
+
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
@@ -1263,7 +1266,7 @@ class ydCmd(ydExtended):
             path = args[0]
 
         result = self.list(self.remote_path(path)).values()
-        result.sort(key = lambda x: x.name)
+        result.sort(key = lambda x: (x.type, x.name))
 
         for item in result:
             if item.isdir() == True:
