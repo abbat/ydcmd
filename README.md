@@ -196,6 +196,7 @@ ydcmd clean <опции> [disk:/объект]
 Например:
 
 ```
+[ydcmd]
 token   = 1234567890
 verbose = yes
 ca-file = /etc/ssl/certs/ca-certificates.crt
