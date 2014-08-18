@@ -478,7 +478,7 @@ class ydBase(object):
             Результат вызова API, преобразованный из JSON
 
         Исключения:
-            ydError            -- При возврате HTTP кода отличного от HTTP-200 (errno будет равен HTTP коду)
+            ydError     -- При возврате HTTP кода отличного от HTTP-200 (errno будет равен HTTP коду)
             ydCertError -- При ошибке проверки сертификата сервера
         """
         if headers == None:
