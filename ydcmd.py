@@ -120,7 +120,6 @@ class ydConfig(object):
 
 
 class ydOptions(object):
-
     """
     Опции приложения
     """
