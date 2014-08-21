@@ -1,0 +1,211 @@
+.TH ydcmd 1 "July 22, 2014"
+.nh
+.ad left
+.SH NAME
+ydcmd \- command line client for interacting with cloud storage Yandex.Disk by means of REST API.
+.SH SYNTAX
+.B ydcmd
+.RI [ command ] " " [ options ] " " [ args ]
+.SH COMMANDS
+.TP
+.B help
+Returns brief info on application's commands and options.
+.TP
+.B ls
+Returns a list of files and directories.
+.TP
+.B rm
+Deletes a file or directory.
+.TP
+.B cp
+Copies a file or directory.
+.TP
+.B mv
+Moves a file or directory.
+.TP
+.B put
+Uploads a file or directory into the storage.
+.TP
+.B get
+Retrieves a file or directory from the storage.
+.TP
+.B mkdir
+Creates a directory.
+.TP
+.B stat
+Returns meta-information about an object.
+.TP
+.B du
+Evaluates the disk space used by files within the storage.
+.TP
+.B clean
+Cleans files and directories.
+.SH OPTIONS
+.TP
+.B --timeout=<N>
+Timeout (in seconds) for establishing a network connection.
+.TP
+.B --retries=<N>
+Number of attempts of API method invocation before returning an error code.
+.TP
+.B --delay=<N>
+Timeout (in seconds) between attempts of API method invocation.
+.TP
+.B --limit=<N>
+The number of items returned after a single invocation of a method for obtaining a list of files and directories.
+.TP
+.B --token=<S>
+OAuth token (for security purposes, should be specified in the configuration file or through an environment variable YDCMD_TOKEN). Instructions on obtaining a debugging token can be found on the following page http://api.yandex.com/oauth/doc/dg/tasks/get-oauth-token.xml.
+.TP
+.B --quiet
+Error output suppression.
+.TP
+.B --verbose
+Returns expanded information.
+.TP
+.B --debug
+Returns debug information.
+.TP
+.B --chunk=<N>
+Data block size (in KB) for I/O operations.
+.TP
+.B --ca-file=<S>
+File name with certificates of trusted certification authorities (if the value is null, certificate validation is not performed).
+.TP
+.B --ciphers=<S>
+Set of encryption algorithms (see ciphers(1)).
+.SH ADDITIONAL OPTIONS
+.SS ls
+.TP
+.B --human
+Returns file size (in human-readable form).
+.TP
+.B --short
+Returns a list of files and directories without additional information (one name per line).
+.TP
+.B --long
+Returns an extended list (creation time, modification time, size, file name).
+.TP
+If a target object is not specified, then the storage's root directory will be used.
+.SS rm
+.TP
+.B --poll=<N>
+Interval (in seconds) between status polls during an asynchronous operation.
+.TP
+.B --async
+Runs a command without waiting for operation to terminate (poll).
+.TP
+Files are deleted permanently. Directories are deleted recursively (including sub files and sub directories).
+.SS cp
+.TP
+.B --poll=<N>
+Interval (in seconds) between status polls during an asynchronous operation.
+.TP
+.B --async
+Runs a command without waiting for operation to terminate (poll).
+.TP
+In case of name coincidence, directories and files will be overwritten. Directories are copied recursively (including sub folders and sub directories).
+.SS mv
+.TP
+.B --poll=<N>
+Interval (in seconds) between status polls during an asynchronous operation.
+.TP
+.B --async
+Runs a command without waiting for operation to terminate (poll).
+.TP
+In case of name coincidence, directories and files will be overwritten.
+.SS put
+.TP
+.B --rsync
+Synchronizes a tree of files and directories in the storage with a local tree
+.TP
+.B --encrypt
+Encryption of files using --encrypt-cmd before uploading to the storage.
+.TP
+.B --encrypt-cmd
+Command sending to stdin the contents of the local (unencrypted) file and sending its encrypted version to stdout.
+.TP
+.B --temp-dir
+A directory for storing temporary encrypted files.
+.TP
+If a target object is not specified, then the storage's root directory will be used for uploading a file. If a target object denotes a directory (ends with '/'), then the source file name will be added to the directory's name. If a target object exists, it will be overwritten without a confirmation prompt. Symbolic links are ignored.
+.SS get
+.TP
+.B --rsync
+Synchronizes a local tree of files and directories with a tree in the storage.
+.TP
+.B --decrypt
+Decryption of files using --decrypt-cmd after obtaining them from the storage.
+.TP
+.B --decrypt-cmd
+Command sending to stdin the contents of an encrypted file from the storage and sending its unencrypted version to stdout.
+.TP
+.B --temp-dir
+A directory for storing temporary encrypted files.
+.TP
+If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
+.SS du
+.TP
+.B --depth=<N>
+Returns the sizes of directories up to the level N.
+.TP
+.B --long
+Returns sizes in bytes instead of human-readable form.
+.TP
+If a target object is not specified, then the storage's root directory will be used.
+.SS clean
+.TP
+.B --dry
+Returns a list of objects for removal, instead of deleting.
+.TP
+.B --type=<S>
+The type of objects for removal ('file' - files, 'dir' - directories, 'all' - all).
+.TP
+.B --keep=<S>
+Value of selection criteria related to objects to be saved:
+.br
+* A date string in ISO format can be used to select a date up to which you want to delete the data (for example, '2014-02-12T12:19:05+04:00');
+.br
+* For selecting a relative time, you can use a number and a dimension (for example, '7d', '4w', '1m', '1y');
+.br
+* For selecting the number of copies, you can use a number without a dimension (for example, '31').
+.SH CONFIGURATION
+.TP
+For convenience, we recommend creating a configuration file named ~/.ydcmd.cfg and granting it file permissions 0600 or 0400. File format:
+.P
+.RS
+[ydcmd]
+.br
+# comment
+.br
+<option> = <value>
+.RE
+.TP
+For example:
+.P
+.RS
+[ydcmd]
+.br
+token   = 1234567890
+.br
+verbose = yes
+.br
+ca-file = /etc/ssl/certs/ca-certificates.crt
+.RE
+.SH ENVIRONMENT VARIABLES
+.TP
+.B YDCMD_TOKEN
+OAuth token. Has priority over the option --token.
+.SH EXIT CODE
+.TP
+.B 0
+Successful completion.
+.TP
+.B 1
+General application error.
+.TP
+.B 4xx
+HTTP status code 4xx (client error).
+.TP
+.B 5xx
+HTTP status code 5xx (server error).

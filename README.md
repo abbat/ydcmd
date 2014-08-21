@@ -1,5 +1,7 @@
 # ydcmd
 
+[English version](https://github.com/abbat/ydcmd/blob/master/README.en.md)
+
 Консольный клиент Linux/FreeBSD для работы с облачным хранилищем [Яндекс.Диск](https://disk.yandex.ru/) посредством [REST API](http://api.yandex.ru/disk/api/concepts/about.xml).
 
 ## Подготовка к работе
