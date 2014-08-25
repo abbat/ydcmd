@@ -592,13 +592,10 @@ class ydBase(object):
             Метаинформация об объекте в хранилище
         """
         data = {
-            "path"   : "/",
+            "path"   : path,
             "offset" : 0,
             "limit"  : 0
         }
-
-        if len(path) > 0:
-            data["path"] = path
 
         method = "GET"
         url    = self.options.baseurl + "/resources"
@@ -624,13 +621,10 @@ class ydBase(object):
         result = {}
 
         data = {
-            "path"   : "/",
+            "path"   : path,
             "offset" : 0,
             "limit"  : self.options.limit
         }
-
-        if len(path) > 0:
-            data["path"] = path
 
         method = "GET"
         url    = self.options.baseurl + "/resources"
