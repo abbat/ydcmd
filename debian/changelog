@@ -2,7 +2,7 @@ ydcmd (0.2) unstable; urgency=low
 
   * Добавление команды info для вывода метаинформации о хранилище.
 
- -- Anton Batenev <antonbatenev@yandex.ru>  Tue, 29 Aug 2014 21:43:56 +0400
+ -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 29 Aug 2014 21:43:56 +0400
 
 ydcmd (0.1) unstable; urgency=low
 
