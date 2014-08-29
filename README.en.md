@@ -39,6 +39,7 @@ ydcmd [command] [options] [arguments]
 * `get` - retrieves a file or directory from the storage;
 * `mkdir` - creates a directory;
 * `stat` - returns meta-information about an object;
+* `info` - returns meta-information about a storage;
 * `du` - evaluates the disk space used by files within the storage;
 * `clean` - cleans files and directories.
 
@@ -152,6 +153,16 @@ ydcmd stat [disk:/object]
 ```
 
 If a target object is not specified, then the storage's root directory will be used.
+
+### Obtaining meta-information about a storage
+
+```
+ydcmd info
+```
+
+**Options**:
+
+* `--long` - returns sizes in bytes instead of human-readable form.
 
 ### Evaluating the disk space used
 

@@ -35,6 +35,9 @@ Creates a directory.
 .B stat
 Returns meta-information about an object.
 .TP
+.B info
+Returns meta-information about a storage.
+.TP
 .B du
 Evaluates the disk space used by files within the storage.
 .TP
@@ -144,6 +147,10 @@ Command sending to stdin the contents of an encrypted file from the storage and 
 A directory for storing temporary encrypted files.
 .TP
 If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
+.SS info
+.TP
+.B --long
+Returns sizes in bytes instead of human-readable form.
 .SS du
 .TP
 .B --depth=<N>

@@ -238,7 +238,7 @@ class ydItem(object):
     def __str__(self):
         result = ""
         for key, value in self.__dict__.iteritems():
-            result += "%10s: %s\n" % (key, value)
+            result += "%12s: %s\n" % (key, value)
         return result
 
 
@@ -579,6 +579,19 @@ class ydBase(object):
                     break
                 else:
                     raise RuntimeError("Unknown status: %s" % status)
+
+
+    def info(self):
+        """
+        Получение метаинформации о хранилище
+
+        Результат (dict):
+            Метаинформация о хранилище
+        """
+        method = "GET"
+        url    = self.options.baseurl + "/"
+
+        return self.query(method, url, None)
 
 
     def stat(self, path):
@@ -1227,6 +1240,28 @@ class ydCmd(ydExtended):
         return path
 
 
+    def info_cmd(self, args):
+        """
+        Вывод метаинформации о хранилище
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) > 0:
+            raise ydError(1, "Too many arguments")
+
+        result = self.info()
+
+        result["used_space_pct"] = int(result["used_space"]) * 100 / int(result["total_space"])
+
+        if self.options.human == True:
+            result["used_space"]  = self.human(result["used_space"])
+            result["total_space"] = self.human(result["total_space"])
+
+        print "%7s: %s (%s%%)" % ("Used", result["used_space"], result["used_space_pct"])
+        print "%7s: %s" % ("Total", result["total_space"])
+
+
     def stat_cmd(self, args):
         """
         Вывод метаинформации об объекте в хранилище
@@ -1499,6 +1534,7 @@ class ydCmd(ydExtended):
             print "     get   -- download file from storage"
             print "     mkdir -- create directory"
             print "     stat  -- show metainformation about cloud object"
+            print "     info  -- show metainformation about cloud storage"
             print "     du    -- estimate files space usage"
             print "     clean -- delete old files and/or directories"
             print ""
@@ -1588,6 +1624,13 @@ class ydCmd(ydExtended):
             print ""
             print " * If target is not specified, target will be root '/' directory"
             print ""
+        elif cmd == "info":
+            print "Usage:"
+            print "     %s info" % sys.argv[0]
+            print ""
+            print "Options:"
+            print "     --long -- show sizes in bytes instead human-readable format"
+            print ""
         elif cmd == "du":
             print "Usage:"
             print "     %s du [disk:/object]" % sys.argv[0]
@@ -1668,6 +1711,8 @@ if __name__ == "__main__":
             cmd.create_cmd(args),
         elif command == "stat":
             cmd.stat_cmd(args)
+        elif command == "info":
+            cmd.info_cmd(args),
         elif command == "du":
             cmd.du_cmd(args)
         elif command == "clean":
