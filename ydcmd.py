@@ -509,7 +509,6 @@ class ydBase(object):
             opener = urllib2.build_opener(ydBase._ydBaseHTTPSHandler(self.options))
             result = opener.open(request, timeout = self.options.timeout)
             code   = result.getcode()
-            respt  = result.info().gettype()
 
             if code == 204 or code == 201:
                 return {}
