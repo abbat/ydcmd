@@ -1696,19 +1696,19 @@ if __name__ == "__main__":
     try:
         cmd = ydCmd(options)
         if command == "ls":
-            cmd.list_cmd(args),
+            cmd.list_cmd(args)
         elif command == "rm":
-            cmd.delete_cmd(args),
+            cmd.delete_cmd(args)
         elif command == "cp":
-            cmd.copy_cmd(args),
+            cmd.copy_cmd(args)
         elif command == "mv":
-            cmd.move_cmd(args),
+            cmd.move_cmd(args)
         elif command == "put":
-            cmd.put_cmd(args),
+            cmd.put_cmd(args)
         elif command == "get":
-            cmd.get_cmd(args),
+            cmd.get_cmd(args)
         elif command == "mkdir":
-            cmd.create_cmd(args),
+            cmd.create_cmd(args)
         elif command == "stat":
             cmd.stat_cmd(args)
         elif command == "info":
