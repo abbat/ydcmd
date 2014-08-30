@@ -1712,7 +1712,7 @@ if __name__ == "__main__":
         elif command == "stat":
             cmd.stat_cmd(args)
         elif command == "info":
-            cmd.info_cmd(args),
+            cmd.info_cmd(args)
         elif command == "du":
             cmd.du_cmd(args)
         elif command == "clean":
