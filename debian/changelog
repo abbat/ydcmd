@@ -1,3 +1,9 @@
+ydcmd (0.3) unstable; urgency=low
+
+  * Исправление ошибок --rsync при работе с не ascii именами файлов
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 01 Sep 2014 23:43:56 +0400
+
 ydcmd (0.2) unstable; urgency=low
 
   * Добавление команды info для вывода метаинформации о хранилище.
