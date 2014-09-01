@@ -521,7 +521,20 @@ class ydBase(object):
                         fd.write(part)
                 return {}
             else:
-                return json.load(result)
+                def _json_convert(input):
+                    """
+                    Конвертер unicode строк в utf-8 при вызове json.load
+                    """
+                    if isinstance(input, dict):
+                        return dict([(_json_convert(key), _json_convert(value)) for key, value in input.iteritems()])
+                    elif isinstance(input, list):
+                        return [_json_convert(element) for element in input]
+                    elif isinstance(input, unicode):
+                        return input.encode("utf-8")
+                    else:
+                        return input
+
+                return json.load(result, object_hook = _json_convert)
         except urllib2.HTTPError as e:
             try:
                 result = json.load(e)
