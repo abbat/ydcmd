@@ -2,7 +2,7 @@ Source: ydcmd
 Section: utils
 Priority: optional
 Maintainer: Anton Batenev <antonbatenev@yandex.ru>
-Build-Depends: debhelper (>= 8.0.0), python
+Build-Depends: debhelper (>= 7), python
 Standards-Version: 3.9.5
 Vcs-Git: https://github.com/abbat/ydcmd.git
 Vcs-Browser: https://github.com/abbat/ydcmd

@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+WITH_PYTHON2 = $(shell test -f /usr/bin/dh_python2 && echo "--with python2")
+
 %:
-	dh $@ --with python2
+	dh $@ ${WITH_PYTHON2}
