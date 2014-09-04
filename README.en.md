@@ -2,6 +2,18 @@
 
 Linux/FreeBSD command line client for interacting with cloud storage [Yandex.Disk](https://disk.yandex.com/) by means of [REST API](http://api.yandex.com/disk/api/concepts/about.xml).
 
+## Download / Install
+
+* [Debian, Ubuntu](http://software.opensuse.org/download.html?project=home:antonbatenev&package=ydcmd)
+* [Fedora, openSUSE, CentOS](http://software.opensuse.org/download.html?project=home:antonbatenev&package=ydcmd)
+* [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
+* From source code:
+
+```
+$ git clone https://github.com/abbat/ydcmd.git
+$ sudo cp ydcmd/ydcmd.py /usr/local/bin/ydcmd
+```
+
 ## Pre-starting procedure
 
 To run the client you need a OAuth debugging token. To obtain one, [register the application on Yandex](https://oauth.yandex.com/client/new):

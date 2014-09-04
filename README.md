@@ -4,6 +4,18 @@
 
 Консольный клиент Linux/FreeBSD для работы с облачным хранилищем [Яндекс.Диск](https://disk.yandex.ru/) посредством [REST API](http://api.yandex.ru/disk/api/concepts/about.xml).
 
+## Загрузка / Установка
+
+* [Debian, Ubuntu](http://software.opensuse.org/download.html?project=home:antonbatenev&package=ydcmd)
+* [Fedora, openSUSE, CentOS](http://software.opensuse.org/download.html?project=home:antonbatenev&package=ydcmd)
+* [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
+* Из исходного кода:
+
+```
+$ git clone https://github.com/abbat/ydcmd.git
+$ sudo cp ydcmd/ydcmd.py /usr/local/bin/ydcmd
+```
+
 ## Подготовка к работе
 
 Для работы клиента необходимо получить отладочный OAuth токен. Для его получения, [зарегистрируйте приложение на Яндексе](https://oauth.yandex.ru/client/new):
