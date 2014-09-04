@@ -10,7 +10,7 @@ Requires:      python >= 2.6, python-dateutil
 BuildRequires: python-devel >= 2.6
 
 %if 0%{?suse_version}
-	BuildRequires: fdupes
+BuildRequires: fdupes
 %endif
 
 Source0:       https://build.opensuse.org/source/home:antonbatenev/ydcmd/ydcmd_%{version}.tar.bz2
@@ -44,8 +44,8 @@ install -m644 man/ydcmd.1    %{buildroot}%{_mandir}/man1/ydcmd.1
 install -m644 man/ydcmd.ru.1 %{buildroot}%{_mandir}/ru/man1/ydcmd.1
 
 %if 0%{?suse_version}
-	%py_compile -O %{buildroot}%{python_sitelib}
-	%fdupes %{buildroot}%{python_sitelib}
+%py_compile -O %{buildroot}%{python_sitelib}
+%fdupes %{buildroot}%{python_sitelib}
 %endif
 
 
