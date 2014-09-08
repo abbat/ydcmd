@@ -13,7 +13,7 @@ BuildRequires: python-devel >= 2.6
 BuildRequires: fdupes
 %endif
 
-Source0:       https://build.opensuse.org/source/home:antonbatenev/ydcmd/ydcmd_%{version}.tar.bz2
+Source0:       https://build.opensuse.org/source/home:antonbatenev:ydcmd/ydcmd/ydcmd_%{version}.tar.bz2
 BuildRoot:     %{_tmppath}/%{name}-%{version}-build
 
 
