@@ -97,7 +97,7 @@ class ydConfig(object):
 
 
     @staticmethod
-    def load_config(config = default_config.__func__(), filename = os.path.expanduser("~") + "/.ydcmd.cfg"):
+    def load_config(config = None, filename = os.path.expanduser("~") + "/.ydcmd.cfg"):
         """
         Чтение секции ydcmd INI файла ~/.ydcmd.cfg
 
@@ -105,6 +105,9 @@ class ydConfig(object):
             config   (dict) -- Базовая конфигурация
             filename (str)  -- Имя INI файла
         """
+        if config == None:
+            config = ydConfig.default_config()
+
         config = config.copy()
 
         parser = ConfigParser.ConfigParser()
