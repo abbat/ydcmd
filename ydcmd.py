@@ -83,7 +83,7 @@ class ydConfig(object):
             "rsync"       : "no",
             "base-url"    : "https://cloud-api.yandex.net/v1/disk",
             "ca-file"     : "",
-            "ciphers"     : ssl._DEFAULT_CIPHERS,
+            "ciphers"     : "",
             "depth"       : "1",
             "dry"         : "no",
             "type"        : "all",
@@ -146,6 +146,9 @@ class ydOptions(object):
         self.baseurl  = str(config["base-url"])
         self.cafile   = str(config["ca-file"])
         self.ciphers  = str(config["ciphers"])
+
+        if self.ciphers == "":
+            self.ciphers = None
 
         if self.cafile == "":
             self.cafile = None
@@ -350,7 +353,10 @@ class ydBase(object):
                     ca_certs  = self._options.cafile
                 )
 
-            self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, ssl_version = ssl.PROTOCOL_TLSv1, ciphers = self._options.ciphers, **kwargs)
+            if sys.version_info >= (2, 7) and self._options.ciphers != None:
+                kwargs.update(ciphers = self._options.ciphers)
+
+            self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, ssl_version = ssl.PROTOCOL_TLSv1, **kwargs)
 
             if self._options.debug == True:
                 ciphers = self.sock.cipher()
@@ -1564,7 +1570,7 @@ class ydCmd(ydExtended):
             print "     --debug       -- debug output (default: %s)" % default["debug"]
             print "     --chunk=<N>   -- chunk size in KB for io operations (default: %s)" % default["chunk"]
             print "     --ca-file=<S> -- file with trusted CAs (default: none)"
-            print "     --ciphers=<S> -- ciphers sute (default: %s)" % default["ciphers"]
+            print "     --ciphers=<S> -- ciphers sute (default: none)"
             print ""
         elif cmd == "ls":
             print "Usage:"
