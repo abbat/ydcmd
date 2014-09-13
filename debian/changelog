@@ -1,3 +1,9 @@
+ydcmd (0.4) unstable; urgency=low
+
+  * Исправление работы под CentOS
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 13 Sep 2014 18:52:00 +0400
+
 ydcmd (0.3) unstable; urgency=low
 
   * Исправление ошибок --rsync при работе с не ascii именами файлов
