@@ -52,6 +52,7 @@ ydcmd [command] [options] [arguments]
 * `mkdir` - creates a directory;
 * `stat` - returns meta-information about an object;
 * `info` - returns meta-information about a storage;
+* `last` - returns meta-information about last uploaded files;
 * `du` - evaluates the disk space used by files within the storage;
 * `clean` - cleans files and directories.
 
@@ -175,6 +176,20 @@ ydcmd info
 **Options**:
 
 * `--long` - returns sizes in bytes instead of human-readable form.
+
+### Obtaining meta-information about last uploaded files
+
+```
+ydcmd last [N]
+```
+
+**Options**:
+
+* `--human` - returns file size (in human-readable form);
+* `--short` - returns a list of files without additional information (one name per line);
+* `--long` - returns an extended list (creation time, modification time, size, file name).
+
+If argument N is not specified, default REST API value will be used.
 
 ### Evaluating the disk space used
 

@@ -1,18 +1,24 @@
+ydcmd (0.6) unstable; urgency=low
+
+  * Добавление команды last для получения информации о последних загруженных файлах.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 26 Sep 2014 19:42:00 +0400
+
 ydcmd (0.5) unstable; urgency=low
 
-  * Исправления для поддержки python 2.6
+  * Исправления для поддержки python 2.6.
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 14 Sep 2014 01:42:00 +0400
 
 ydcmd (0.4) unstable; urgency=low
 
-  * Исправление работы под CentOS
+  * Исправление работы под CentOS.
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 13 Sep 2014 18:52:00 +0400
 
 ydcmd (0.3) unstable; urgency=low
 
-  * Исправление ошибок --rsync при работе с не ascii именами файлов
+  * Исправление ошибок --rsync при работе с не ascii именами файлов.
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 01 Sep 2014 23:43:56 +0400
 

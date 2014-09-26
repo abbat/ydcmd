@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "0.5"
+__version__  = "0.6"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -650,7 +650,7 @@ class ydBase(object):
             path (str) -- Объект хранилища
 
         Результат (dict):
-            Список имен объектов и метаинформации о них {"имя": ydItem}
+            Список имен объектов и метаинформации о них { "имя" : ydItem }
         """
         result = {}
 
@@ -681,6 +681,37 @@ class ydBase(object):
                 data["offset"] += int(part["limit"])
             else:
                 break
+
+        return result
+
+
+    def last(self, limit):
+        """
+        Получение списка последних загруженных файлов
+
+        Аргументы:
+            limit (int) -- Количество файлов в списке
+
+        Результат (dict):
+            Список имен объектов и метаинформации о них { "имя" : ydItem }
+        """
+        result = {}
+
+        data = None
+
+        if limit > 0:
+            data = {
+                "limit" : limit
+            }
+
+        method = "GET"
+        url    = self.options.baseurl + "/resources/last-uploaded"
+
+        part = self.query(method, url, data)
+
+        for item in part["items"]:
+            item = ydItem(item)
+            result[item.name] = item
 
         return result
 
@@ -1333,6 +1364,39 @@ class ydCmd(ydExtended):
                 print "%5s  %s" % (size, item.name)
 
 
+    def last_cmd(self, args):
+        """
+        Вывод метаинформации о последних загруженных файлах
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) > 1:
+            raise ydError(1, "Too many arguments")
+
+        limit = 0
+        if len(args) > 0:
+            limit = int(args[0])
+            if limit < 1:
+                raise ydError(1, "Limit must be greater than zero")
+
+        result = self.last(limit).values()
+        result.sort(key = lambda x: (x.modified, x.created, x.name))
+
+        for item in result:
+            if self.options.human == True:
+                size = self.human(item.size)
+            else:
+                size = item.size
+
+            if self.options.long == True:
+                print "%s %26s %11s %s" % (item.created, item.modified, size, item.path[5:])
+            elif self.options.short == True:
+                print "%s" % item.path[5:]
+            else:
+                print "%5s  %s" % (size, item.path[5:])
+
+
     def delete_cmd(self, args):
         """
         Обработчик удаления объекта хранилище
@@ -1556,6 +1620,7 @@ class ydCmd(ydExtended):
             print "     mkdir -- create directory"
             print "     stat  -- show metainformation about cloud object"
             print "     info  -- show metainformation about cloud storage"
+            print "     last  -- show metainformation about last uploaded files"
             print "     du    -- estimate files space usage"
             print "     clean -- delete old files and/or directories"
             print ""
@@ -1652,6 +1717,17 @@ class ydCmd(ydExtended):
             print "Options:"
             print "     --long -- show sizes in bytes instead human-readable format"
             print ""
+        elif cmd == "last":
+            print "Usage:"
+            print "     %s last [N]" % sys.argv[0]
+            print ""
+            print "Options:"
+            print "     --human -- human-readable file size"
+            print "     --short -- short format (names only)"
+            print "     --long  -- long format (created, modified, size, name)"
+            print ""
+            print " * If argument N is not specified, default REST API value will be used."
+            print ""
         elif cmd == "du":
             print "Usage:"
             print "     %s du [disk:/object]" % sys.argv[0]
@@ -1734,6 +1810,8 @@ if __name__ == "__main__":
             cmd.stat_cmd(args)
         elif command == "info":
             cmd.info_cmd(args)
+        elif command == "last":
+            cmd.last_cmd(args)
         elif command == "du":
             cmd.du_cmd(args)
         elif command == "clean":

@@ -38,6 +38,9 @@ Returns meta-information about an object.
 .B info
 Returns meta-information about a storage.
 .TP
+.B last
+Returns meta-information about last uploaded files.
+.TP
 .B du
 Evaluates the disk space used by files within the storage.
 .TP
@@ -151,6 +154,18 @@ If the target file's name is not specified, the file's name within the storage w
 .TP
 .B --long
 Returns sizes in bytes instead of human-readable form.
+.SS last
+.TP
+.B --human
+Returns file size (in human-readable form).
+.TP
+.B --short
+Returns a list of files without additional information (one name per line).
+.TP
+.B --long
+Returns an extended list (creation time, modification time, size, file name).
+.TP
+If argument N is not specified, default REST API value will be used.
 .SS du
 .TP
 .B --depth=<N>
