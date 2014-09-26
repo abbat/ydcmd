@@ -1376,9 +1376,12 @@ class ydCmd(ydExtended):
 
         limit = 0
         if len(args) > 0:
-            limit = int(args[0])
-            if limit < 1:
-                raise ydError(1, "Limit must be greater than zero")
+            try:
+                limit = int(args[0])
+                if limit < 1:
+                    raise ydError(1, "Limit must be greater than zero")
+            except ValueError as e:
+                raise ydError(1, "Limit must be integer")
 
         result = self.last(limit).values()
         result.sort(key = lambda x: (x.modified, x.created, x.name))
