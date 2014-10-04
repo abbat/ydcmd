@@ -1408,7 +1408,7 @@ class ydCmd(ydExtended):
             args (dict) -- Аргументы командной строки
         """
         if len(args) < 1:
-             raise ydError(1, "File or directory not specified")
+            raise ydError(1, "File or directory not specified")
 
         for arg in args:
             self.delete(self.remote_path(arg))
