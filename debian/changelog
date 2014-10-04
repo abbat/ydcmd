@@ -1,3 +1,9 @@
+ydcmd (0.7) unstable; urgency=low
+
+  * Исправление ошибок статических анализаторов.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 05 Oct 2014 02:18:00 +0400
+
 ydcmd (0.6) unstable; urgency=low
 
   * Добавление команды last для получения информации о последних загруженных файлах.
