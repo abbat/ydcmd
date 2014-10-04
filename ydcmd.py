@@ -379,7 +379,7 @@ class ydBase(object):
                 if self.auto_open:
                     self.connect()
                 else:
-                    raise NotConnected()
+                    raise httplib.NotConnected()
 
             if hasattr(data, "read") and not isinstance(data, array.array):
                 datablock = data.read(self._options.chunk)
@@ -548,7 +548,7 @@ class ydBase(object):
             try:
                 result = json.load(e)
 
-                if description in result:
+                if "description" in result:
                     errmsg = "HTTP-%d: %s" % (e.code, result["description"])
                 else:
                     errmsg = "HTTP-%d: %s" % (e.code, e.msg)
@@ -1380,7 +1380,7 @@ class ydCmd(ydExtended):
                 limit = int(args[0])
                 if limit < 1:
                     raise ydError(1, "Limit must be greater than zero")
-            except ValueError as e:
+            except ValueError:
                 raise ydError(1, "Limit must be integer")
 
         result = self.last(limit).values()
