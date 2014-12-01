@@ -452,7 +452,7 @@ class ydBase(object):
             errmsg (str)  -- Сообщение для вывода в stderr
             flag   (bool) -- Флаг, разрешающий вывод сообщения
         """
-        if flag == True:
+        if flag:
             sys.stderr.write("{0}\n".format(errmsg))
 
 
@@ -465,7 +465,7 @@ class ydBase(object):
             errmsg (str)  -- Сообщение для вывода в stderr
             flag   (bool) -- Флаг, разрешающий вывод сообщения
         """
-        if flag == True:
+        if flag:
             sys.stderr.write("--> {0}\n".format(errmsg))
 
 
@@ -506,7 +506,7 @@ class ydBase(object):
 
         url += ("" if data == None else "?{0}".format(urllib.urlencode(data)))
 
-        if self.options.debug == True:
+        if self.options.debug:
             self.debug("{0} {1}".format(method, url))
             if filename != None:
                 self.debug("File: {0}".format(filename))
@@ -592,7 +592,7 @@ class ydBase(object):
         Аргументы:
             link (dict) -- Ответ API на запрос операции
         """
-        if self.options.async == True or not ("href" in link and "method" in link):
+        if self.options.async or not ("href" in link and "method" in link):
             return
 
         url    = link["href"]
@@ -851,7 +851,7 @@ class ydBase(object):
         """
         Реализация нескольких попыток загрузки файла в хранилище
         """
-        if self.options.encrypt == True:
+        if self.options.encrypt:
             if self.options.encryptcmd == "":
                 raise ydError(1, "Encrypt error: --encrypt-cmd not defined but --encrypt used")
             try:
@@ -911,7 +911,7 @@ class ydBase(object):
         """
         Реализация нескольких попыток получения файла из хранилища
         """
-        if self.options.decrypt == True:
+        if self.options.decrypt:
             if self.options.decryptcmd == "":
                 raise ydError(1, "Decrypt error: --decrypt-cmd not defined but --decrypt used")
             try:
@@ -935,7 +935,7 @@ class ydBase(object):
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
 
-        if self.options.decrypt == True:
+        if self.options.decrypt:
             try:
                 target = dst
                 self.verbose("Decrypt: {0} -> {1}".format(src.name, target), self.options.verbose)
@@ -1031,18 +1031,18 @@ class ydExtended(ydBase):
             sitem = source + item
             titem = target + item
 
-            if os.path.islink(sitem) == False:
-                if os.path.isdir(sitem) == True:
+            if os.path.islink(sitem):
+                if os.path.isdir(sitem):
                     self._ensure_remote(titem, "dir", flist[item] if item in flist else None)
                     self._put_sync(sitem + "/", titem + "/")
                 elif os.path.isfile(sitem):
                     force = True
                     if item in flist:
                         self._ensure_remote(titem, "file", flist[item])
-                        if self.options.encrypt == False and flist[item].isfile() == True and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
+                        if self.options.encrypt and flist[item].isfile() and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
                             force = False
 
-                    if force == True:
+                    if force:
                         self.put(sitem, titem)
                 else:
                     raise ydError(1, "Unsupported filesystem object: {0}".format(sitem))
@@ -1052,7 +1052,7 @@ class ydExtended(ydBase):
             else:
                 self.verbose("Skip: {0}".format(sitem), self.options.verbose)
 
-        if self.options.rsync == True:
+        if self.options.rsync:
             for item in flist.itervalues():
                 self.delete(target + item.name)
 
@@ -1073,23 +1073,23 @@ class ydExtended(ydBase):
         if not (type == "dir" or type == "file"):
             raise ValueError("Unsupported type: {0}".format(type))
 
-        if os.path.exists(path) == True:
-            if os.path.islink(path) == True:
+        if os.path.exists(path):
+            if os.path.islink(path):
                 self.debug("rm {0}".format(path), self.options.debug)
                 os.unlink(path)
                 return False
             if type == "dir":
-                if os.path.isdir(path) == True:
+                if os.path.isdir(path):
                     return True
-                elif os.path.isfile(path) == True:
+                elif os.path.isfile(path):
                     self.debug("rm {0}".format(path), self.options.debug)
                     os.remove(path)
                 else:
                     raise ydError(1, "Unsupported filesystem object: {0}".format(path))
             elif type == "file":
-                if os.path.isfile(path) == True:
+                if os.path.isfile(path):
                     return True
-                elif os.path.isdir(path) == True:
+                elif os.path.isdir(path):
                     self.debug("rm -r {0}".format(path), self.options.debug)
                     shutil.rmtree(path)
                 else:
@@ -1116,29 +1116,29 @@ class ydExtended(ydBase):
             sitem = source + item.name
             titem = target + item.name
 
-            if item.isdir() == True:
+            if item.isdir():
                 self._ensure_local(titem, "dir")
                 self._get_sync(sitem + "/", titem + "/")
-            elif item.isfile() == True:
+            elif item.isfile():
                 force  = True
                 exists = self._ensure_local(titem, "file")
-                if self.options.decrypt == False and exists == True and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
+                if self.options.decrypt and exists and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
                     force = False
 
-                if force == True:
+                if force:
                     self.get(sitem, titem)
 
-        if self.options.rsync == True:
+        if self.options.rsync:
             for item in os.listdir(target):
                 if item not in flist:
                     titem = target + item
-                    if os.path.islink(titem) == True:
+                    if os.path.islink(titem):
                         self.debug("rm {0}".format(titem), self.options.debug)
                         os.remove(titem)
-                    elif os.path.isfile(titem) == True:
+                    elif os.path.isfile(titem):
                         self.debug("rm {0}".format(titem), self.options.debug)
                         os.remove(titem)
-                    elif os.path.isdir(titem) == True:
+                    elif os.path.isdir(titem):
                         self.debug("rm -r {0}".format(titem), self.options.debug)
                         shutil.rmtree(titem)
                     else:
@@ -1162,9 +1162,9 @@ class ydExtended(ydBase):
         items = self.list(path)
 
         for item in items.itervalues():
-            if item.isfile() == True:
+            if item.isfile():
                 size += item.size
-            elif item.isdir() == True:
+            elif item.isdir():
                 sub   = self.du(path + item.name + "/", depth + 1)
                 size += sub[-1][1]
                 if depth < self.options.depth:
@@ -1243,7 +1243,7 @@ class ydExtended(ydBase):
             return
 
         for item in flist:
-            if self.options.dry == True:
+            if self.options.dry:
                 ydBase.echo("{0:25} {1:7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
             else:
                 self.delete(path + item.name)
@@ -1317,7 +1317,7 @@ class ydCmd(ydExtended):
 
         result["used_space_pct"] = int(result["used_space"]) * 100 / int(result["total_space"])
 
-        if self.options.human == True:
+        if self.options.human:
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
@@ -1360,16 +1360,16 @@ class ydCmd(ydExtended):
         result.sort(key = lambda x: (x.type, x.name))
 
         for item in result:
-            if item.isdir() == True:
+            if item.isdir():
                 size = "<dir>"
-            elif self.options.human == True:
+            elif self.options.human:
                 size = self.human(item.size)
             else:
                 size = item.size
 
-            if self.options.long == True:
+            if self.options.long:
                 ydBase.echo("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.name))
-            elif self.options.short == True:
+            elif self.options.short:
                 ydBase.echo("{0}".format(item.name))
             else:
                 ydBase.echo("{0:5}  {1}".format(size, item.name))
@@ -1398,14 +1398,14 @@ class ydCmd(ydExtended):
         result.sort(key = lambda x: (x.modified, x.created, x.name))
 
         for item in result:
-            if self.options.human == True:
+            if self.options.human:
                 size = self.human(item.size)
             else:
                 size = item.size
 
-            if self.options.long == True:
+            if self.options.long:
                 ydBase.echo("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.path[5:]))
-            elif self.options.short == True:
+            elif self.options.short:
                 ydBase.echo("{0}".format(item.path[5:]))
             else:
                 ydBase.echo("{0:5}  {1}".format(size, item.path[5:]))
@@ -1497,7 +1497,7 @@ class ydCmd(ydExtended):
         if os.path.basename(target) == "":
             target += os.path.basename(source)
 
-        if os.path.islink(source) == False:
+        if os.path.islink(source):
             target = self.remote_path(target)
             if os.path.isdir(source):
                 if os.path.basename(source) != "":
@@ -1506,12 +1506,12 @@ class ydCmd(ydExtended):
                     target += "/"
                 self._ensure_remote(target, "dir")
                 self._put_sync(source, target)
-            elif os.path.isfile(source) == True:
+            elif os.path.isfile(source):
                 force = True
                 stat  = self._ensure_remote(target, "file")
-                if self.options.encrypt == False and stat != None and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
+                if self.options.encrypt and stat != None and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
                     force = False
-                if force == True:
+                if force:
                     self.put(source, target)
             else:
                 raise ydError(1, "Unsupported filesystem object: {0}".format(source))
@@ -1540,7 +1540,7 @@ class ydCmd(ydExtended):
 
         stat = self.stat(source)
 
-        if stat.isdir() == True:
+        if stat.isdir():
             if target == "":
                 target = "."
             if os.path.basename(source) != "":
@@ -1550,12 +1550,12 @@ class ydCmd(ydExtended):
 
             self._ensure_local(target, "dir")
             self._get_sync(source, target)
-        elif stat.isfile() == True:
+        elif stat.isfile():
             force  = True
             exists = self._ensure_local(target, "file")
-            if self.options.decrypt == False and exists == True and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
+            if self.options.decrypt and exists and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
                 force = False
-            if force == True:
+            if force:
                 self.get(source, target)
 
 
@@ -1583,7 +1583,7 @@ class ydCmd(ydExtended):
             name = name[5:-1]
             if len(name) == 0:
                 name = "/"
-            if options.human == True:
+            if options.human:
                 ydBase.echo("{0:5}  {1}".format(self.human(size), name))
             else:
                 ydBase.echo("{0:11}  {1}".format(size, name))
@@ -1833,11 +1833,11 @@ if __name__ == "__main__":
         else:
             ydCmd.print_usage(command)
     except ydError as e:
-        if options.quiet == False:
+        if options.quiet:
             sys.stderr.write("{0}\n".format(e.errmsg))
         sys.exit(e.errno)
     except ydCertError as e:
-        if options.quiet == False:
+        if options.quiet:
             sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
     except KeyboardInterrupt:
