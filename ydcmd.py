@@ -1159,9 +1159,9 @@ class ydExtended(ydBase):
         size   = 0
         result = []
 
-        list = self.list(path)
+        items = self.list(path)
 
-        for item in list.itervalues():
+        for item in items.itervalues():
             if item.isfile() == True:
                 size += item.size
             elif item.isdir() == True:
