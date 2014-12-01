@@ -1233,7 +1233,7 @@ class ydExtended(ydBase):
 
         for item in flist:
             if self.options.dry == True:
-                print "%25s %7s %s" % (item.modified.isoformat(), ("<%s>" % item.type), item.name)
+                print("%25s %7s %s" % (item.modified.isoformat(), ("<%s>" % item.type), item.name))
             else:
                 self.delete(path + item.name)
 
@@ -1310,8 +1310,8 @@ class ydCmd(ydExtended):
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
-        print "%7s: %s (%s%%)" % ("Used", result["used_space"], result["used_space_pct"])
-        print "%7s: %s" % ("Total", result["total_space"])
+        print("%7s: %s (%s%%)" % ("Used", result["used_space"], result["used_space_pct"]))
+        print("%7s: %s" % ("Total", result["total_space"]))
 
 
     def stat_cmd(self, args):
@@ -1328,7 +1328,7 @@ class ydCmd(ydExtended):
         if len(args) > 0:
             path = args[0]
 
-        print self.stat(self.remote_path(path))
+        print(self.stat(self.remote_path(path)))
 
 
     def list_cmd(self, args):
@@ -1357,11 +1357,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long == True:
-                print "%s %26s %11s %s" % (item.created, item.modified, size, item.name)
+                print("%s %26s %11s %s" % (item.created, item.modified, size, item.name))
             elif self.options.short == True:
-                print "%s" % item.name
+                print("%s" % item.name)
             else:
-                print "%5s  %s" % (size, item.name)
+                print("%5s  %s" % (size, item.name))
 
 
     def last_cmd(self, args):
@@ -1393,11 +1393,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long == True:
-                print "%s %26s %11s %s" % (item.created, item.modified, size, item.path[5:])
+                print("%s %26s %11s %s" % (item.created, item.modified, size, item.path[5:]))
             elif self.options.short == True:
-                print "%s" % item.path[5:]
+                print("%s" % item.path[5:])
             else:
-                print "%5s  %s" % (size, item.path[5:])
+                print("%5s  %s" % (size, item.path[5:]))
 
 
     def delete_cmd(self, args):
@@ -1573,9 +1573,9 @@ class ydCmd(ydExtended):
             if len(name) == 0:
                 name = "/"
             if options.human == True:
-                print "%5s  %s" % (self.human(size), name)
+                print("%5s  %s" % (self.human(size), name))
             else:
-                print "%11s  %s" % (size, name)
+                print("%11s  %s" % (size, name))
 
 
     def clean_cmd(self, args):
@@ -1609,153 +1609,153 @@ class ydCmd(ydExtended):
         """
         default = ydConfig.default_config()
         if cmd == None or cmd == "help":
-            print "Usage:"
-            print "     %s <command> [options] [args]" % sys.argv[0]
-            print ""
-            print "Commands:"
-            print "     help  -- describe the usage of this program or its subcommands"
-            print "     ls    -- list files and directories"
-            print "     rm    -- remove file or directory"
-            print "     cp    -- copy file or directory"
-            print "     mv    -- move file or directory"
-            print "     put   -- upload file to storage"
-            print "     get   -- download file from storage"
-            print "     mkdir -- create directory"
-            print "     stat  -- show metainformation about cloud object"
-            print "     info  -- show metainformation about cloud storage"
-            print "     last  -- show metainformation about last uploaded files"
-            print "     du    -- estimate files space usage"
-            print "     clean -- delete old files and/or directories"
-            print ""
-            print "Options:"
-            print "     --timeout=<N> -- timeout for api requests in seconds (default: %s)" % default["timeout"]
-            print "     --retries=<N> -- api call retries count (default: %s)" % default["retries"]
-            print "     --delay=<N>   -- api call delay between retries in seconds (default: %s)" % default["delay"]
-            print "     --limit=<N>   -- limit rows by one api call for listing files and directories (default: %s)" % default["limit"]
-            print "     --token=<S>   -- oauth token (default: none)"
-            print "     --quiet       -- suppress all errors (default: %s)" % default["quiet"]
-            print "     --verbose     -- verbose output (default: %s)" % default["verbose"]
-            print "     --debug       -- debug output (default: %s)" % default["debug"]
-            print "     --chunk=<N>   -- chunk size in KB for io operations (default: %s)" % default["chunk"]
-            print "     --ca-file=<S> -- file with trusted CAs (default: none)"
-            print "     --ciphers=<S> -- ciphers sute (default: none)"
-            print ""
+            print("Usage:")
+            print("     %s <command> [options] [args]" % sys.argv[0])
+            print("")
+            print("Commands:")
+            print("     help  -- describe the usage of this program or its subcommands")
+            print("     ls    -- list files and directories")
+            print("     rm    -- remove file or directory")
+            print("     cp    -- copy file or directory")
+            print("     mv    -- move file or directory")
+            print("     put   -- upload file to storage")
+            print("     get   -- download file from storage")
+            print("     mkdir -- create directory")
+            print("     stat  -- show metainformation about cloud object")
+            print("     info  -- show metainformation about cloud storage")
+            print("     last  -- show metainformation about last uploaded files")
+            print("     du    -- estimate files space usage")
+            print("     clean -- delete old files and/or directories")
+            print("")
+            print("Options:")
+            print("     --timeout=<N> -- timeout for api requests in seconds (default: %s)" % default["timeout"])
+            print("     --retries=<N> -- api call retries count (default: %s)" % default["retries"])
+            print("     --delay=<N>   -- api call delay between retries in seconds (default: %s)" % default["delay"])
+            print("     --limit=<N>   -- limit rows by one api call for listing files and directories (default: %s)" % default["limit"])
+            print("     --token=<S>   -- oauth token (default: none)")
+            print("     --quiet       -- suppress all errors (default: %s)" % default["quiet"])
+            print("     --verbose     -- verbose output (default: %s)" % default["verbose"])
+            print("     --debug       -- debug output (default: %s)" % default["debug"])
+            print("     --chunk=<N>   -- chunk size in KB for io operations (default: %s)" % default["chunk"])
+            print("     --ca-file=<S> -- file with trusted CAs (default: none)")
+            print("     --ciphers=<S> -- ciphers sute (default: none)")
+            print("")
         elif cmd == "ls":
-            print "Usage:"
-            print "     %s ls [options] [disk:/object]" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --human -- human-readable file size"
-            print "     --short -- short format (names only)"
-            print "     --long  -- long format (created, modified, size, name)"
-            print ""
-            print " * If target is not specified, target will be root '/' directory"
-            print ""
+            print("Usage:")
+            print("     %s ls [options] [disk:/object]" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --human -- human-readable file size")
+            print("     --short -- short format (names only)")
+            print("     --long  -- long format (created, modified, size, name)")
+            print("")
+            print(" * If target is not specified, target will be root '/' directory")
+            print("")
         elif cmd == "rm":
-            print "Usage:"
-            print "     %s rm <disk:/object1> [disk:/object2] ..." % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
-            print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
-            print ""
+            print("Usage:")
+            print("     %s rm <disk:/object1> [disk:/object2] ..." % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"])
+            print("     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"])
+            print("")
         elif cmd == "cp":
-            print "Usage:"
-            print "     %s cp <disk:/object1> <disk:/object2>" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
-            print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
-            print ""
+            print("Usage:")
+            print("     %s cp <disk:/object1> <disk:/object2>" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"])
+            print("     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"])
+            print("")
         elif cmd == "mv":
-            print "Usage:"
-            print "     %s mv <disk:/object1> <disk:/object2>" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"]
-            print "     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"]
-            print ""
+            print("Usage:")
+            print("     %s mv <disk:/object1> <disk:/object2>" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"])
+            print("     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"])
+            print("")
         elif cmd == "put":
-            print "Usage:"
-            print "     %s put <file> [disk:/object]" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --rsync       -- sync remote tree with local"
-            print "     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: %s)" % default["encrypt"]
-            print "     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)"
-            print "     --temp-dir    -- directory to store encrypted temporary files (default: system default)"
-            print ""
-            print " * If target is not specified, target will be root '/' directory"
-            print " * If target specify a directory (ended with '/'), source file name will be added"
-            print " * If target file exists, it will be silently overwritten"
-            print " * Symbolic links are ignored"
-            print ""
+            print("Usage:")
+            print("     %s put <file> [disk:/object]" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --rsync       -- sync remote tree with local")
+            print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: %s)" % default["encrypt"])
+            print("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
+            print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
+            print("")
+            print(" * If target is not specified, target will be root '/' directory")
+            print(" * If target specify a directory (ended with '/'), source file name will be added")
+            print(" * If target file exists, it will be silently overwritten")
+            print(" * Symbolic links are ignored")
+            print("")
         elif cmd == "get":
-            print "Usage:"
-            print "     %s get <disk:/object> [file]" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --rsync       -- sync local tree with remote"
-            print "     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: %s)" % default["decrypt"]
-            print "     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)"
-            print "     --temp-dir    -- directory to store encrypted temporary files (default: system default)"
-            print ""
-            print " * If target is not specified, source file name will be used"
-            print " * If target exists, it will be silently overwritten"
-            print ""
+            print("Usage:")
+            print("     %s get <disk:/object> [file]" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --rsync       -- sync local tree with remote")
+            print("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: %s)" % default["decrypt"])
+            print("     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)")
+            print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
+            print("")
+            print(" * If target is not specified, source file name will be used")
+            print(" * If target exists, it will be silently overwritten")
+            print("")
         elif cmd == "mkdir":
-            print "Usage:"
-            print "     %s mkdir <disk:/path1> [disk:/path2] ..." % sys.argv[0]
-            print ""
+            print("Usage:")
+            print("     %s mkdir <disk:/path1> [disk:/path2] ..." % sys.argv[0])
+            print("")
         elif cmd == "stat":
-            print "Usage:"
-            print "     %s stat [disk:/object]" % sys.argv[0]
-            print ""
-            print " * If target is not specified, target will be root '/' directory"
-            print ""
+            print("Usage:")
+            print("     %s stat [disk:/object]" % sys.argv[0])
+            print("")
+            print(" * If target is not specified, target will be root '/' directory")
+            print("")
         elif cmd == "info":
-            print "Usage:"
-            print "     %s info" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --long -- show sizes in bytes instead human-readable format"
-            print ""
+            print("Usage:")
+            print("     %s info" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --long -- show sizes in bytes instead human-readable format")
+            print("")
         elif cmd == "last":
-            print "Usage:"
-            print "     %s last [N]" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --human -- human-readable file size"
-            print "     --short -- short format (names only)"
-            print "     --long  -- long format (created, modified, size, name)"
-            print ""
-            print " * If argument N is not specified, default REST API value will be used."
-            print ""
+            print("Usage:")
+            print("     %s last [N]" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --human -- human-readable file size")
+            print("     --short -- short format (names only)")
+            print("     --long  -- long format (created, modified, size, name)")
+            print("")
+            print(" * If argument N is not specified, default REST API value will be used.")
+            print("")
         elif cmd == "du":
-            print "Usage:"
-            print "     %s du [disk:/object]" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --depth=<N> -- show size if dir is N or fewer levels below target (default: %s)" % default["depth"]
-            print "     --long      -- show sizes in bytes instead human-readable format"
-            print ""
-            print " * If target is not specified, target will be root '/' directory"
-            print ""
+            print("Usage:")
+            print("     %s du [disk:/object]" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --depth=<N> -- show size if dir is N or fewer levels below target (default: %s)" % default["depth"])
+            print("     --long      -- show sizes in bytes instead human-readable format")
+            print("")
+            print(" * If target is not specified, target will be root '/' directory")
+            print("")
         elif cmd == "clean":
-            print "Usage:"
-            print "     %s clean <options> [disk:/object]" % sys.argv[0]
-            print ""
-            print "Options:"
-            print "     --dry      -- just print list of object to delete (default: %s)" % default["dry"]
-            print "     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: %s)" % default["type"]
-            print "     --keep=<S> -- keep criteria (default: none):"
-            print "                   * date ('2014-02-12T12:19:05+04:00')"
-            print "                   * relative interval ('7d', '4w', '1m', '1y')"
-            print "                   * number of objects ('31')"
-            print ""
-            print " * If target is not specified, target will be root '/' directory"
-            print " * Objects sorted and filtered by modified date (not created date)"
-            print ""
+            print("Usage:")
+            print("     %s clean <options> [disk:/object]" % sys.argv[0])
+            print("")
+            print("Options:")
+            print("     --dry      -- just print list of object to delete (default: %s)" % default["dry"])
+            print("     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: %s)" % default["type"])
+            print("     --keep=<S> -- keep criteria (default: none):")
+            print("                   * date ('2014-02-12T12:19:05+04:00')")
+            print("                   * relative interval ('7d', '4w', '1m', '1y')")
+            print("                   * number of objects ('31')")
+            print("")
+            print(" * If target is not specified, target will be root '/' directory")
+            print(" * Objects sorted and filtered by modified date (not created date)")
+            print("")
         else:
             sys.stderr.write("Unknown command %s\n" % cmd)
             sys.exit(1)
