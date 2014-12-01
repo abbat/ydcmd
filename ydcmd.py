@@ -1775,14 +1775,14 @@ class ydCmd(ydExtended):
 
 
 if __name__ == "__main__":
-    sys.argc = len(sys.argv)
-    if sys.argc < 2:
+    argc = len(sys.argv)
+    if argc < 2:
         ydCmd.print_usage()
 
     config = ydConfig.load_config()
 
     args = []
-    for i in xrange(1, sys.argc):
+    for i in range(1, argc):
         arg = sys.argv[i]
         opt = re.split("^--(\S+?)(=(.*)){,1}$", arg)
         if len(opt) == 5:
@@ -1797,7 +1797,7 @@ if __name__ == "__main__":
     command = string.lower(args.pop(0))
     if command == "help":
         command = None
-        if sys.argc > 2:
+        if argc > 2:
             command = string.lower(args.pop(0))
         ydCmd.print_usage(command)
 
