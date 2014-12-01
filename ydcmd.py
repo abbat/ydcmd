@@ -434,13 +434,13 @@ class ydBase(object):
 
     @staticmethod
     def echo(msg):
-	"""
-	Вывод сообщения
-	
-	Аргументы:
-	    msg (str) -- Сообщение для вывода в stdout
-	"""
-	sys.stdout.write("{0}\n".format(msg))
+        """
+        Вывод сообщения
+
+        Аргументы:
+            msg (str) -- Сообщение для вывода в stdout
+        """
+        sys.stdout.write("{0}\n".format(msg))
 
 
     @staticmethod
