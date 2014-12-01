@@ -433,6 +433,17 @@ class ydBase(object):
 
 
     @staticmethod
+    def echo(msg):
+	"""
+	Вывод сообщения
+	
+	Аргументы:
+	    msg (str) -- Сообщение для вывода в stdout
+	"""
+	sys.stdout.write("{0}\n".format(msg))
+
+
+    @staticmethod
     def verbose(errmsg, flag = True):
         """
         Вывод расширенной информации
@@ -1233,7 +1244,7 @@ class ydExtended(ydBase):
 
         for item in flist:
             if self.options.dry == True:
-                print("{0:25} {1:7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
+                ydBase.echo("{0:25} {1:7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
             else:
                 self.delete(path + item.name)
 
@@ -1310,8 +1321,8 @@ class ydCmd(ydExtended):
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
-        print("{0:7}: {1} ({2}%%)".format("Used", result["used_space"], result["used_space_pct"]))
-        print("{0:7}: {1}".format("Total", result["total_space"]))
+        ydBase.echo("{0:7}: {1} ({2}%%)".format("Used", result["used_space"], result["used_space_pct"]))
+        ydBase.echo("{0:7}: {1}".format("Total", result["total_space"]))
 
 
     def stat_cmd(self, args):
@@ -1328,7 +1339,7 @@ class ydCmd(ydExtended):
         if len(args) > 0:
             path = args[0]
 
-        print(self.stat(self.remote_path(path)))
+        ydBase.echo(self.stat(self.remote_path(path)))
 
 
     def list_cmd(self, args):
@@ -1357,11 +1368,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long == True:
-                print("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.name))
+                ydBase.echo("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.name))
             elif self.options.short == True:
-                print("{0}".format(item.name))
+                ydBase.echo("{0}".format(item.name))
             else:
-                print("{0:5}  {1}".format(size, item.name))
+                ydBase.echo("{0:5}  {1}".format(size, item.name))
 
 
     def last_cmd(self, args):
@@ -1393,11 +1404,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long == True:
-                print("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.path[5:]))
+                ydBase.echo("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.path[5:]))
             elif self.options.short == True:
-                print("{0}".format(item.path[5:]))
+                ydBase.echo("{0}".format(item.path[5:]))
             else:
-                print("{0:5}  {1}".format(size, item.path[5:]))
+                ydBase.echo("{0:5}  {1}".format(size, item.path[5:]))
 
 
     def delete_cmd(self, args):
@@ -1573,9 +1584,9 @@ class ydCmd(ydExtended):
             if len(name) == 0:
                 name = "/"
             if options.human == True:
-                print("{0:5}  {1}".format(self.human(size), name))
+                ydBase.echo("{0:5}  {1}".format(self.human(size), name))
             else:
-                print("{0:11}  {1}".format(size, name))
+                ydBase.echo("{0:11}  {1}".format(size, name))
 
 
     def clean_cmd(self, args):
@@ -1609,153 +1620,153 @@ class ydCmd(ydExtended):
         """
         default = ydConfig.default_config()
         if cmd == None or cmd == "help":
-            print("Usage:")
-            print("     {0} <command> [options] [args]".format(sys.argv[0]))
-            print("")
-            print("Commands:")
-            print("     help  -- describe the usage of this program or its subcommands")
-            print("     ls    -- list files and directories")
-            print("     rm    -- remove file or directory")
-            print("     cp    -- copy file or directory")
-            print("     mv    -- move file or directory")
-            print("     put   -- upload file to storage")
-            print("     get   -- download file from storage")
-            print("     mkdir -- create directory")
-            print("     stat  -- show metainformation about cloud object")
-            print("     info  -- show metainformation about cloud storage")
-            print("     last  -- show metainformation about last uploaded files")
-            print("     du    -- estimate files space usage")
-            print("     clean -- delete old files and/or directories")
-            print("")
-            print("Options:")
-            print("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
-            print("     --retries=<N> -- api call retries count (default: {0})".format(default["retries"]))
-            print("     --delay=<N>   -- api call delay between retries in seconds (default: {0})".format(default["delay"]))
-            print("     --limit=<N>   -- limit rows by one api call for listing files and directories (default: {0})".format(default["limit"]))
-            print("     --token=<S>   -- oauth token (default: none)")
-            print("     --quiet       -- suppress all errors (default: {0})".format(default["quiet"]))
-            print("     --verbose     -- verbose output (default: {0})".format(default["verbose"]))
-            print("     --debug       -- debug output (default: {0})".format(default["debug"]))
-            print("     --chunk=<N>   -- chunk size in KB for io operations (default: {0})".format(default["chunk"]))
-            print("     --ca-file=<S> -- file with trusted CAs (default: none)")
-            print("     --ciphers=<S> -- ciphers sute (default: none)")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} <command> [options] [args]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Commands:")
+            ydBase.echo("     help  -- describe the usage of this program or its subcommands")
+            ydBase.echo("     ls    -- list files and directories")
+            ydBase.echo("     rm    -- remove file or directory")
+            ydBase.echo("     cp    -- copy file or directory")
+            ydBase.echo("     mv    -- move file or directory")
+            ydBase.echo("     put   -- upload file to storage")
+            ydBase.echo("     get   -- download file from storage")
+            ydBase.echo("     mkdir -- create directory")
+            ydBase.echo("     stat  -- show metainformation about cloud object")
+            ydBase.echo("     info  -- show metainformation about cloud storage")
+            ydBase.echo("     last  -- show metainformation about last uploaded files")
+            ydBase.echo("     du    -- estimate files space usage")
+            ydBase.echo("     clean -- delete old files and/or directories")
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
+            ydBase.echo("     --retries=<N> -- api call retries count (default: {0})".format(default["retries"]))
+            ydBase.echo("     --delay=<N>   -- api call delay between retries in seconds (default: {0})".format(default["delay"]))
+            ydBase.echo("     --limit=<N>   -- limit rows by one api call for listing files and directories (default: {0})".format(default["limit"]))
+            ydBase.echo("     --token=<S>   -- oauth token (default: none)")
+            ydBase.echo("     --quiet       -- suppress all errors (default: {0})".format(default["quiet"]))
+            ydBase.echo("     --verbose     -- verbose output (default: {0})".format(default["verbose"]))
+            ydBase.echo("     --debug       -- debug output (default: {0})".format(default["debug"]))
+            ydBase.echo("     --chunk=<N>   -- chunk size in KB for io operations (default: {0})".format(default["chunk"]))
+            ydBase.echo("     --ca-file=<S> -- file with trusted CAs (default: none)")
+            ydBase.echo("     --ciphers=<S> -- ciphers sute (default: none)")
+            ydBase.echo("")
         elif cmd == "ls":
-            print("Usage:")
-            print("     {0} ls [options] [disk:/object]".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --human -- human-readable file size")
-            print("     --short -- short format (names only)")
-            print("     --long  -- long format (created, modified, size, name)")
-            print("")
-            print(" * If target is not specified, target will be root '/' directory")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} ls [options] [disk:/object]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --human -- human-readable file size")
+            ydBase.echo("     --short -- short format (names only)")
+            ydBase.echo("     --long  -- long format (created, modified, size, name)")
+            ydBase.echo("")
+            ydBase.echo(" * If target is not specified, target will be root '/' directory")
+            ydBase.echo("")
         elif cmd == "rm":
-            print("Usage:")
-            print("     {0} rm <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
-            print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} rm <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+            ydBase.echo("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
+            ydBase.echo("")
         elif cmd == "cp":
-            print("Usage:")
-            print("     {0} cp <disk:/object1> <disk:/object2>".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
-            print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} cp <disk:/object1> <disk:/object2>".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+            ydBase.echo("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
+            ydBase.echo("")
         elif cmd == "mv":
-            print("Usage:")
-            print("     {0} mv <disk:/object1> <disk:/object2>".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
-            print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} mv <disk:/object1> <disk:/object2>".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+            ydBase.echo("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
+            ydBase.echo("")
         elif cmd == "put":
-            print("Usage:")
-            print("     {0} put <file> [disk:/object]".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --rsync       -- sync remote tree with local")
-            print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
-            print("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
-            print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
-            print("")
-            print(" * If target is not specified, target will be root '/' directory")
-            print(" * If target specify a directory (ended with '/'), source file name will be added")
-            print(" * If target file exists, it will be silently overwritten")
-            print(" * Symbolic links are ignored")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} put <file> [disk:/object]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --rsync       -- sync remote tree with local")
+            ydBase.echo("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
+            ydBase.echo("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
+            ydBase.echo("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
+            ydBase.echo("")
+            ydBase.echo(" * If target is not specified, target will be root '/' directory")
+            ydBase.echo(" * If target specify a directory (ended with '/'), source file name will be added")
+            ydBase.echo(" * If target file exists, it will be silently overwritten")
+            ydBase.echo(" * Symbolic links are ignored")
+            ydBase.echo("")
         elif cmd == "get":
-            print("Usage:")
-            print("     {0} get <disk:/object> [file]".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --rsync       -- sync local tree with remote")
-            print("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: {0})".format(default["decrypt"]))
-            print("     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)")
-            print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
-            print("")
-            print(" * If target is not specified, source file name will be used")
-            print(" * If target exists, it will be silently overwritten")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} get <disk:/object> [file]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --rsync       -- sync local tree with remote")
+            ydBase.echo("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: {0})".format(default["decrypt"]))
+            ydBase.echo("     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)")
+            ydBase.echo("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
+            ydBase.echo("")
+            ydBase.echo(" * If target is not specified, source file name will be used")
+            ydBase.echo(" * If target exists, it will be silently overwritten")
+            ydBase.echo("")
         elif cmd == "mkdir":
-            print("Usage:")
-            print("     {0} mkdir <disk:/path1> [disk:/path2] ...".format(sys.argv[0]))
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} mkdir <disk:/path1> [disk:/path2] ...".format(sys.argv[0]))
+            ydBase.echo("")
         elif cmd == "stat":
-            print("Usage:")
-            print("     {0} stat [disk:/object]".format(sys.argv[0]))
-            print("")
-            print(" * If target is not specified, target will be root '/' directory")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} stat [disk:/object]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo(" * If target is not specified, target will be root '/' directory")
+            ydBase.echo("")
         elif cmd == "info":
-            print("Usage:")
-            print("     {0} info".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --long -- show sizes in bytes instead human-readable format")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} info".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --long -- show sizes in bytes instead human-readable format")
+            ydBase.echo("")
         elif cmd == "last":
-            print("Usage:")
-            print("     {0} last [N]".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --human -- human-readable file size")
-            print("     --short -- short format (names only)")
-            print("     --long  -- long format (created, modified, size, name)")
-            print("")
-            print(" * If argument N is not specified, default REST API value will be used.")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} last [N]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --human -- human-readable file size")
+            ydBase.echo("     --short -- short format (names only)")
+            ydBase.echo("     --long  -- long format (created, modified, size, name)")
+            ydBase.echo("")
+            ydBase.echo(" * If argument N is not specified, default REST API value will be used.")
+            ydBase.echo("")
         elif cmd == "du":
-            print("Usage:")
-            print("     {0} du [disk:/object]".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --depth=<N> -- show size if dir is N or fewer levels below target (default: {0})".format(default["depth"]))
-            print("     --long      -- show sizes in bytes instead human-readable format")
-            print("")
-            print(" * If target is not specified, target will be root '/' directory")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} du [disk:/object]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --depth=<N> -- show size if dir is N or fewer levels below target (default: {0})".format(default["depth"]))
+            ydBase.echo("     --long      -- show sizes in bytes instead human-readable format")
+            ydBase.echo("")
+            ydBase.echo(" * If target is not specified, target will be root '/' directory")
+            ydBase.echo("")
         elif cmd == "clean":
-            print("Usage:")
-            print("     {0} clean <options> [disk:/object]".format(sys.argv[0]))
-            print("")
-            print("Options:")
-            print("     --dry      -- just print list of object to delete (default: {0})".format(default["dry"]))
-            print("     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: {0})".format(default["type"]))
-            print("     --keep=<S> -- keep criteria (default: none):")
-            print("                   * date ('2014-02-12T12:19:05+04:00')")
-            print("                   * relative interval ('7d', '4w', '1m', '1y')")
-            print("                   * number of objects ('31')")
-            print("")
-            print(" * If target is not specified, target will be root '/' directory")
-            print(" * Objects sorted and filtered by modified date (not created date)")
-            print("")
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} clean <options> [disk:/object]".format(sys.argv[0]))
+            ydBase.echo("")
+            ydBase.echo("Options:")
+            ydBase.echo("     --dry      -- just print list of object to delete (default: {0})".format(default["dry"]))
+            ydBase.echo("     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: {0})".format(default["type"]))
+            ydBase.echo("     --keep=<S> -- keep criteria (default: none):")
+            ydBase.echo("                   * date ('2014-02-12T12:19:05+04:00')")
+            ydBase.echo("                   * relative interval ('7d', '4w', '1m', '1y')")
+            ydBase.echo("                   * number of objects ('31')")
+            ydBase.echo("")
+            ydBase.echo(" * If target is not specified, target will be root '/' directory")
+            ydBase.echo(" * Objects sorted and filtered by modified date (not created date)")
+            ydBase.echo("")
         else:
             sys.stderr.write("Unknown command {0}\n".format(cmd))
             sys.exit(1)
