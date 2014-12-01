@@ -23,12 +23,12 @@ try:
     import dateutil.parser
     import dateutil.relativedelta
 except ImportError:
-    err = "Python module dateutil not found.\nPlease, install \"%s\"\n"
+    err = "Python module dateutil not found.\nPlease, install \"{0}\"\n"
     name = os.uname()[0]
     if name == "FreeBSD":
-        sys.stderr.write(err % "devel/py-dateutil")
+        sys.stderr.write(err.format("devel/py-dateutil"))
     elif name == "Linux":
-        sys.stderr.write(err % "python-dateutil")
+        sys.stderr.write(err.format("python-dateutil"))
     sys.exit(1)
 
 
@@ -46,7 +46,7 @@ class ydError(RuntimeError):
             errmsg (str) -- Текст ошибки
         """
         self.errno  = errno
-        self.errmsg = "%s" % errmsg
+        self.errmsg = "{0}".format(errmsg)
 
 
 class ydCertError(ValueError):
@@ -176,7 +176,7 @@ class ydOptions(object):
 
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__, self.__dict__)
+        return "{0!s}({1!r})".format(self.__class__, self.__dict__)
 
 
     @staticmethod
@@ -215,7 +215,7 @@ class ydItem(object):
 
         for attr in common_attr:
             if attr not in info:
-                raise ValueError("%s not exists (incomplete response?)" % attr)
+                raise ValueError("{0} not exists (incomplete response?)".format(attr))
 
         if info != None:
             for key, value in info.iteritems():
@@ -224,13 +224,13 @@ class ydItem(object):
         if self.type == "file":
             for attr in file_attr:
                 if attr not in info:
-                    raise ValueError("%s not exists (incomplete response?)" % attr)
+                    raise ValueError("{0} not exists (incomplete response?)".format(attr))
             if "size" not in info:
                 self.__dict__["size"] = 0
         elif self.type == "dir":
             pass
         else:
-            raise ValueError("Unknown item type: %s" % self.type)
+            raise ValueError("Unknown item type: {0}".format(self.type))
 
 
     def isdir(self):
@@ -244,12 +244,12 @@ class ydItem(object):
     def __str__(self):
         result = ""
         for key, value in self.__dict__.iteritems():
-            result += "%12s: %s\n" % (key, value)
+            result += "{0:12}: {1}\n".format(key, value)
         return result
 
 
     def __repr__(self):
-        return "%s(%r)" % (self.__class__, self.__dict__)
+        return "{0!s}({1!r})".format(self.__class__, self.__dict__)
 
 
 class ydBase(object):
@@ -308,7 +308,7 @@ class ydBase(object):
                 raise ydCertError("Can not parse cirtificate notAfter field")
 
             if expire < datetime.datetime.now(dateutil.tz.tzutc()).replace(microsecond = 0):
-                raise ydCertError("Cirtificate expired at %s" % notafter)
+                raise ydCertError("Cirtificate expired at {0}".format(notafter))
 
             san      = cert.get("subjectAltName", ())
             dnsnames = []
@@ -328,9 +328,9 @@ class ydBase(object):
                             dnsnames.append(value)
 
             if len(dnsnames) > 1:
-                raise ydCertError("Certificate hostname %r doesn't match either of %s" % (hostname, ", ".join(map(repr, dnsnames))))
+                raise ydCertError("Certificate hostname {0!r} doesn't match either of {1!s}".format(hostname, ", ".join(map(repr, dnsnames))))
             elif len(dnsnames) == 1:
-                raise ydCertError("Certificate hostname %r doesn't match %r" % (hostname, dnsnames[0]))
+                raise ydCertError("Certificate hostname {0!r} doesn't match {1!r}".format(hostname, dnsnames[0]))
             else:
                 raise ydCertError("No appropriate commonName or subjectAltName fields were found in certificate")
 
@@ -360,7 +360,7 @@ class ydBase(object):
 
             if self._options.debug == True:
                 ciphers = self.sock.cipher()
-                ydBase.debug("Connected to %s:%d (%s %s)" % (self.host, self.port, ciphers[1], ciphers[0]))
+                ydBase.debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, ciphers[1], ciphers[0]))
 
             if self._options.cafile != None:
                 try:
@@ -442,7 +442,7 @@ class ydBase(object):
             flag   (bool) -- Флаг, разрешающий вывод сообщения
         """
         if flag == True:
-            sys.stderr.write("%s\n" % errmsg)
+            sys.stderr.write("{0}\n".format(errmsg))
 
 
     @staticmethod
@@ -455,7 +455,7 @@ class ydBase(object):
             flag   (bool) -- Флаг, разрешающий вывод сообщения
         """
         if flag == True:
-            sys.stderr.write("--> %s\n" % errmsg)
+            sys.stderr.write("--> {0}\n".format(errmsg))
 
 
     def _headers(self):
@@ -467,8 +467,8 @@ class ydBase(object):
         """
         return {
             "Accept"        : "application/json",
-            "User-Agent"    : "ydcmd/%s (%s)" % (__version__, "https://github.com/abbat/ydcmd"),
-            "Authorization" : "OAuth %s" % self.options.token
+            "User-Agent"    : "ydcmd/{0} ({1})".format(__version__, "https://github.com/abbat/ydcmd"),
+            "Authorization" : "OAuth {0}".format(self.options.token)
         }
 
 
@@ -493,19 +493,19 @@ class ydBase(object):
         if headers == None:
             headers = self._headers()
 
-        url += ("" if data == None else "?%s" % urllib.urlencode(data))
+        url += ("" if data == None else "?{0}".format(urllib.urlencode(data)))
 
         if self.options.debug == True:
-            self.debug("%s %s" % (method, url))
+            self.debug("{0} {1}".format(method, url))
             if filename != None:
-                self.debug("File: %s" % filename)
+                self.debug("File: {0}".format(filename))
 
         # страховка
         if re.match('^https:\/\/[a-z0-9\.\-]+\.yandex\.(net|ru|com)(:443){,1}\/', url, re.IGNORECASE) == None:
-            raise RuntimeError("Malformed URL %s" % url)
+            raise RuntimeError("Malformed URL {0}".format(url))
 
         if method not in ["GET", "POST", "PUT", "DELETE"]:
-            raise ValueError("Unknown method: %s" % method)
+            raise ValueError("Unknown method: {0}".format(method))
 
         fd = None
         if filename != None and method == "PUT":
@@ -549,11 +549,11 @@ class ydBase(object):
                 result = json.load(e)
 
                 if "description" in result:
-                    errmsg = "HTTP-%d: %s" % (e.code, result["description"])
+                    errmsg = "HTTP-{0}: {1}".format(e.code, result["description"])
                 else:
-                    errmsg = "HTTP-%d: %s" % (e.code, e.msg)
+                    errmsg = "HTTP-{0}: {1}".format(e.code, e.msg)
             except:
-                errmsg = "HTTP-%d: %s" % (e.code, e.msg)
+                errmsg = "HTTP-{0}: {1}".format(e.code, e.msg)
 
             raise ydError(e.code, errmsg)
 
@@ -568,7 +568,7 @@ class ydBase(object):
                 return self.query_retry(method, url, data, headers, filename)
             except (urllib2.URLError, ssl.SSLError) as e:
                 retry += 1
-                self.debug("Retry %d/%d: %s" % (retry, self.options.retries, e), self.options.debug)
+                self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
                 if retry >= self.options.retries:
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
@@ -599,7 +599,7 @@ class ydBase(object):
                 elif status == "success":
                     break
                 else:
-                    raise RuntimeError("Unknown status: %s" % status)
+                    raise RuntimeError("Unknown status: {0}".format(status))
 
 
     def info(self):
@@ -723,7 +723,7 @@ class ydBase(object):
         Аргументы:
             path (str) -- Объект хранилища
         """
-        self.verbose("Delete: %s" % path, self.options.verbose)
+        self.verbose("Delete: {0}".format(path), self.options.verbose)
 
         data = {
             "path"        : path,
@@ -746,7 +746,7 @@ class ydBase(object):
             source (str) -- Исходный объект хранилища
             target (str) -- Конечный объект хранилища
         """
-        self.verbose("Copy: %s -> %s" % (source, target), self.options.verbose)
+        self.verbose("Copy: {0} -> {1}".format(source, target), self.options.verbose)
 
         data = {
             "from"      : source,
@@ -770,7 +770,7 @@ class ydBase(object):
             source (str) -- Исходный объект хранилища
             target (str) -- Конечный объект хранилища
         """
-        self.verbose("Move: %s -> %s" % (source, target), self.options.verbose)
+        self.verbose("Move: {0} -> {1}".format(source, target), self.options.verbose)
 
         data = {
             "from"      : source,
@@ -793,7 +793,7 @@ class ydBase(object):
         Аргументы:
             path (str) -- Имя директории в хранилище
         """
-        self.verbose("Create: %s" % path, self.options.verbose)
+        self.verbose("Create: {0}".format(path), self.options.verbose)
 
         data = {
             "path" : path
@@ -845,14 +845,14 @@ class ydBase(object):
                 raise ydError(1, "Encrypt error: --encrypt-cmd not defined but --encrypt used")
             try:
                 dst = tempfile.NamedTemporaryFile(dir = self.options.tempdir, prefix = "ydcmd-", suffix = ".tmp")
-                self.verbose("Encrypt: %s -> %s" % (source, dst.name), self.options.verbose)
+                self.verbose("Encrypt: {0} -> {1}".format(source, dst.name), self.options.verbose)
                 src = open(source, "rb")
                 subprocess.check_call(self.options.encryptcmd, stdin = src, stdout = dst, shell = True)
                 source = dst.name
             except Exception as e:
-                raise ydError(1, "Encrypt error: %s" % e)
+                raise ydError(1, "Encrypt error: {0}".format(e))
 
-        self.verbose("Transfer: %s -> %s" % (source, target), self.options.verbose)
+        self.verbose("Transfer: {0} -> {1}".format(source, target), self.options.verbose)
 
         retry = 0
         while True:
@@ -861,7 +861,7 @@ class ydBase(object):
                 break
             except (urllib2.URLError, ssl.SSLError) as e:
                 retry += 1
-                self.debug("Retry %d/%d: %s" % (retry, self.options.retries, e), self.options.debug)
+                self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
                 if retry >= self.options.retries:
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
@@ -908,9 +908,9 @@ class ydBase(object):
                 dst    = target
                 target = src.name
             except Exception as e:
-                raise ydError(1, "Decrypt error: %s" % e)
+                raise ydError(1, "Decrypt error: {0}".format(e))
 
-        self.verbose("Transfer: %s -> %s" % (source, target), self.options.verbose)
+        self.verbose("Transfer: {0} -> {1}".format(source, target), self.options.verbose)
 
         retry = 0
         while True:
@@ -919,7 +919,7 @@ class ydBase(object):
                 break
             except (urllib2.URLError, ssl.SSLError) as e:
                 retry += 1
-                self.debug("Retry %d/%d: %s" % (retry, self.options.retries, e), self.options.debug)
+                self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
                 if retry >= self.options.retries:
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
@@ -927,11 +927,11 @@ class ydBase(object):
         if self.options.decrypt == True:
             try:
                 target = dst
-                self.verbose("Decrypt: %s -> %s" % (src.name, target), self.options.verbose)
+                self.verbose("Decrypt: {0} -> {1}".format(src.name, target), self.options.verbose)
                 dst = open(target, "wb")
                 subprocess.check_call(self.options.decryptcmd, stdin = src, stdout = dst, shell = True)
             except Exception as e:
-                raise ydError(1, "Decrypt error: %s" % e)
+                raise ydError(1, "Decrypt error: {0}".format(e))
 
 
 class ydExtended(ydBase):
@@ -1034,12 +1034,12 @@ class ydExtended(ydBase):
                     if force == True:
                         self.put(sitem, titem)
                 else:
-                    raise ydError(1, "Unsupported filesystem object: %s" % sitem)
+                    raise ydError(1, "Unsupported filesystem object: {0}".format(sitem))
 
                 if item in flist:
                     del flist[item]
             else:
-                self.verbose("Skip: %s" % sitem, self.options.verbose)
+                self.verbose("Skip: {0}".format(sitem), self.options.verbose)
 
         if self.options.rsync == True:
             for item in flist.itervalues():
@@ -1060,31 +1060,31 @@ class ydExtended(ydBase):
             True если объект нужного типа уже существует, иначе False
         """
         if not (type == "dir" or type == "file"):
-            raise ValueError("Unsupported type: %s" % type)
+            raise ValueError("Unsupported type: {0}".format(type))
 
         if os.path.exists(path) == True:
             if os.path.islink(path) == True:
-                self.debug("rm %s" % path, self.options.debug)
+                self.debug("rm {0}".format(path), self.options.debug)
                 os.unlink(path)
                 return False
             if type == "dir":
                 if os.path.isdir(path) == True:
                     return True
                 elif os.path.isfile(path) == True:
-                    self.debug("rm %s" % path, self.options.debug)
+                    self.debug("rm {0}".format(path), self.options.debug)
                     os.remove(path)
                 else:
-                    raise ydError(1, "Unsupported filesystem object: %s" % path)
+                    raise ydError(1, "Unsupported filesystem object: {0}".format(path))
             elif type == "file":
                 if os.path.isfile(path) == True:
                     return True
                 elif os.path.isdir(path) == True:
-                    self.debug("rm -r %s" % path, self.options.debug)
+                    self.debug("rm -r {0}".format(path), self.options.debug)
                     shutil.rmtree(path)
                 else:
-                    raise ydError(1, "Unsupported filesystem object: %s" % path)
+                    raise ydError(1, "Unsupported filesystem object: {0}".format(path))
         elif type == "dir":
-            self.debug("mkdir %s" % path, self.options.debug)
+            self.debug("mkdir {0}".format(path), self.options.debug)
             os.mkdir(path)
             return True
 
@@ -1122,16 +1122,16 @@ class ydExtended(ydBase):
                 if item not in flist:
                     titem = target + item
                     if os.path.islink(titem) == True:
-                        self.debug("rm %s" % titem, self.options.debug)
+                        self.debug("rm {0}".format(titem), self.options.debug)
                         os.remove(titem)
                     elif os.path.isfile(titem) == True:
-                        self.debug("rm %s" % titem, self.options.debug)
+                        self.debug("rm {0}".format(titem), self.options.debug)
                         os.remove(titem)
                     elif os.path.isdir(titem) == True:
-                        self.debug("rm -r %s" % titem, self.options.debug)
+                        self.debug("rm -r {0}".format(titem), self.options.debug)
                         shutil.rmtree(titem)
                     else:
-                        raise ydError(1, "Unsupported filesystem object: %s" % titem)
+                        raise ydError(1, "Unsupported filesystem object: {0}".format(titem))
 
 
     def du(self, path, depth = 0):
@@ -1189,7 +1189,7 @@ class ydExtended(ydBase):
         flist.sort(key = lambda x: x.modified)
 
         if re.match("^[0-9]+$", self.options.keep, re.IGNORECASE) != None:
-            self.verbose("Clean: <%s> keep last %s" % (self.options.type, self.options.keep), self.options.verbose)
+            self.verbose("Clean: <{0}> keep last {1}".format(self.options.type, self.options.keep), self.options.verbose)
             flist = flist[:-int(self.options.keep)]
         elif re.match("^[0-9]+[dwmy]$", self.options.keep, re.IGNORECASE):
             m = re.split("^([0-9]+)([dwmy])$", self.options.keep, re.IGNORECASE)
@@ -1209,7 +1209,7 @@ class ydExtended(ydBase):
 
                 relative = datetime.datetime.now(dateutil.tz.tzutc()).replace(microsecond = 0) + relative
 
-                self.verbose("Clean: <%s> before %s" % (self.options.type, relative.isoformat()), self.options.verbose)
+                self.verbose("Clean: <{0}> before {1}".format(self.options.type, relative.isoformat()), self.options.verbose)
 
                 tlist = []
                 for item in flist:
@@ -1220,7 +1220,7 @@ class ydExtended(ydBase):
         elif len(self.options.keep) >= 10:   # YYYY-MM-DD
             relative =  dateutil.parser.parse(self.options.keep).astimezone(dateutil.tz.tzutc())
 
-            self.verbose("Clean: <%s> before %s" % (self.options.type, relative.isoformat()), self.options.verbose)
+            self.verbose("Clean: <{0}> before {1}".format(self.options.type, relative.isoformat()), self.options.verbose)
 
             tlist = []
             for item in flist:
@@ -1233,7 +1233,7 @@ class ydExtended(ydBase):
 
         for item in flist:
             if self.options.dry == True:
-                print("%25s %7s %s" % (item.modified.isoformat(), ("<%s>" % item.type), item.name))
+                print("{0:25} {1:7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
             else:
                 self.delete(path + item.name)
 
@@ -1262,15 +1262,15 @@ class ydCmd(ydExtended):
             Человекочитаемое значение с размерностью
         """
         if val < 1024:
-            return "%d" % (val)
+            return "{0}".format(val)
         elif val < 1024 * 1024:
-            return "%dK" % (val / 1024)
+            return "{0}K".format(val / 1024)
         elif val < 1024 * 1024 * 1024:
-            return "%dM" % (val / 1024 / 1024)
+            return "{0}M".format(val / 1024 / 1024)
         elif val < 1024 * 1024 * 1024 * 1024:
-            return "%dG" % (val / 1024 / 1024 / 1024)
+            return "{0}G".format(val / 1024 / 1024 / 1024)
 
-        return "%dT" % (val / 1024 / 1024 / 1024 / 1024)
+        return "{0}T".format(val / 1024 / 1024 / 1024 / 1024)
 
 
     @staticmethod
@@ -1286,8 +1286,8 @@ class ydCmd(ydExtended):
         """
         if path.find("disk:") != 0:
             if path[0] != "/":
-                path = "/%s" % path
-            path = "disk:%s" % path
+                path = "/{0}".format(path)
+            path = "disk:{0}".format(path)
 
         return path
 
@@ -1310,8 +1310,8 @@ class ydCmd(ydExtended):
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
-        print("%7s: %s (%s%%)" % ("Used", result["used_space"], result["used_space_pct"]))
-        print("%7s: %s" % ("Total", result["total_space"]))
+        print("{0:7}: {1} ({2}%%)".format("Used", result["used_space"], result["used_space_pct"]))
+        print("{0:7}: {1}".format("Total", result["total_space"]))
 
 
     def stat_cmd(self, args):
@@ -1357,11 +1357,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long == True:
-                print("%s %26s %11s %s" % (item.created, item.modified, size, item.name))
+                print("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.name))
             elif self.options.short == True:
-                print("%s" % item.name)
+                print("{0}".format(item.name))
             else:
-                print("%5s  %s" % (size, item.name))
+                print("{0:5}  {1}".format(size, item.name))
 
 
     def last_cmd(self, args):
@@ -1393,11 +1393,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long == True:
-                print("%s %26s %11s %s" % (item.created, item.modified, size, item.path[5:]))
+                print("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.path[5:]))
             elif self.options.short == True:
-                print("%s" % item.path[5:])
+                print("{0}".format(item.path[5:]))
             else:
-                print("%5s  %s" % (size, item.path[5:]))
+                print("{0:5}  {1}".format(size, item.path[5:]))
 
 
     def delete_cmd(self, args):
@@ -1503,9 +1503,9 @@ class ydCmd(ydExtended):
                 if force == True:
                     self.put(source, target)
             else:
-                raise ydError(1, "Unsupported filesystem object: %s" % source)
+                raise ydError(1, "Unsupported filesystem object: {0}".format(source))
         else:
-            self.verbose("Skip: %s" % source, self.options.verbose)
+            self.verbose("Skip: {0}".format(source), self.options.verbose)
 
 
     def get_cmd(self, args):
@@ -1573,9 +1573,9 @@ class ydCmd(ydExtended):
             if len(name) == 0:
                 name = "/"
             if options.human == True:
-                print("%5s  %s" % (self.human(size), name))
+                print("{0:5}  {1}".format(self.human(size), name))
             else:
-                print("%11s  %s" % (size, name))
+                print("{0:11}  {1}".format(size, name))
 
 
     def clean_cmd(self, args):
@@ -1610,7 +1610,7 @@ class ydCmd(ydExtended):
         default = ydConfig.default_config()
         if cmd == None or cmd == "help":
             print("Usage:")
-            print("     %s <command> [options] [args]" % sys.argv[0])
+            print("     {0} <command> [options] [args]".format(sys.argv[0]))
             print("")
             print("Commands:")
             print("     help  -- describe the usage of this program or its subcommands")
@@ -1628,21 +1628,21 @@ class ydCmd(ydExtended):
             print("     clean -- delete old files and/or directories")
             print("")
             print("Options:")
-            print("     --timeout=<N> -- timeout for api requests in seconds (default: %s)" % default["timeout"])
-            print("     --retries=<N> -- api call retries count (default: %s)" % default["retries"])
-            print("     --delay=<N>   -- api call delay between retries in seconds (default: %s)" % default["delay"])
-            print("     --limit=<N>   -- limit rows by one api call for listing files and directories (default: %s)" % default["limit"])
+            print("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
+            print("     --retries=<N> -- api call retries count (default: {0})".format(default["retries"]))
+            print("     --delay=<N>   -- api call delay between retries in seconds (default: {0})".format(default["delay"]))
+            print("     --limit=<N>   -- limit rows by one api call for listing files and directories (default: {0})".format(default["limit"]))
             print("     --token=<S>   -- oauth token (default: none)")
-            print("     --quiet       -- suppress all errors (default: %s)" % default["quiet"])
-            print("     --verbose     -- verbose output (default: %s)" % default["verbose"])
-            print("     --debug       -- debug output (default: %s)" % default["debug"])
-            print("     --chunk=<N>   -- chunk size in KB for io operations (default: %s)" % default["chunk"])
+            print("     --quiet       -- suppress all errors (default: {0})".format(default["quiet"]))
+            print("     --verbose     -- verbose output (default: {0})".format(default["verbose"]))
+            print("     --debug       -- debug output (default: {0})".format(default["debug"]))
+            print("     --chunk=<N>   -- chunk size in KB for io operations (default: {0})".format(default["chunk"]))
             print("     --ca-file=<S> -- file with trusted CAs (default: none)")
             print("     --ciphers=<S> -- ciphers sute (default: none)")
             print("")
         elif cmd == "ls":
             print("Usage:")
-            print("     %s ls [options] [disk:/object]" % sys.argv[0])
+            print("     {0} ls [options] [disk:/object]".format(sys.argv[0]))
             print("")
             print("Options:")
             print("     --human -- human-readable file size")
@@ -1653,35 +1653,35 @@ class ydCmd(ydExtended):
             print("")
         elif cmd == "rm":
             print("Usage:")
-            print("     %s rm <disk:/object1> [disk:/object2] ..." % sys.argv[0])
+            print("     {0} rm <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
             print("")
             print("Options:")
-            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"])
-            print("     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"])
+            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+            print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
             print("")
         elif cmd == "cp":
             print("Usage:")
-            print("     %s cp <disk:/object1> <disk:/object2>" % sys.argv[0])
+            print("     {0} cp <disk:/object1> <disk:/object2>".format(sys.argv[0]))
             print("")
             print("Options:")
-            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"])
-            print("     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"])
+            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+            print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
             print("")
         elif cmd == "mv":
             print("Usage:")
-            print("     %s mv <disk:/object1> <disk:/object2>" % sys.argv[0])
+            print("     {0} mv <disk:/object1> <disk:/object2>".format(sys.argv[0]))
             print("")
             print("Options:")
-            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: %s)" % default["poll"])
-            print("     --async    -- do not wait (poll cheks) for completion (default: %s)" % default["async"])
+            print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+            print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
             print("")
         elif cmd == "put":
             print("Usage:")
-            print("     %s put <file> [disk:/object]" % sys.argv[0])
+            print("     {0} put <file> [disk:/object]".format(sys.argv[0]))
             print("")
             print("Options:")
             print("     --rsync       -- sync remote tree with local")
-            print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: %s)" % default["encrypt"])
+            print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
             print("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
             print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
             print("")
@@ -1692,11 +1692,11 @@ class ydCmd(ydExtended):
             print("")
         elif cmd == "get":
             print("Usage:")
-            print("     %s get <disk:/object> [file]" % sys.argv[0])
+            print("     {0} get <disk:/object> [file]".format(sys.argv[0]))
             print("")
             print("Options:")
             print("     --rsync       -- sync local tree with remote")
-            print("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: %s)" % default["decrypt"])
+            print("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: {0})".format(default["decrypt"]))
             print("     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)")
             print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
             print("")
@@ -1705,24 +1705,24 @@ class ydCmd(ydExtended):
             print("")
         elif cmd == "mkdir":
             print("Usage:")
-            print("     %s mkdir <disk:/path1> [disk:/path2] ..." % sys.argv[0])
+            print("     {0} mkdir <disk:/path1> [disk:/path2] ...".format(sys.argv[0]))
             print("")
         elif cmd == "stat":
             print("Usage:")
-            print("     %s stat [disk:/object]" % sys.argv[0])
+            print("     {0} stat [disk:/object]".format(sys.argv[0]))
             print("")
             print(" * If target is not specified, target will be root '/' directory")
             print("")
         elif cmd == "info":
             print("Usage:")
-            print("     %s info" % sys.argv[0])
+            print("     {0} info".format(sys.argv[0]))
             print("")
             print("Options:")
             print("     --long -- show sizes in bytes instead human-readable format")
             print("")
         elif cmd == "last":
             print("Usage:")
-            print("     %s last [N]" % sys.argv[0])
+            print("     {0} last [N]".format(sys.argv[0]))
             print("")
             print("Options:")
             print("     --human -- human-readable file size")
@@ -1733,21 +1733,21 @@ class ydCmd(ydExtended):
             print("")
         elif cmd == "du":
             print("Usage:")
-            print("     %s du [disk:/object]" % sys.argv[0])
+            print("     {0} du [disk:/object]".format(sys.argv[0]))
             print("")
             print("Options:")
-            print("     --depth=<N> -- show size if dir is N or fewer levels below target (default: %s)" % default["depth"])
+            print("     --depth=<N> -- show size if dir is N or fewer levels below target (default: {0})".format(default["depth"]))
             print("     --long      -- show sizes in bytes instead human-readable format")
             print("")
             print(" * If target is not specified, target will be root '/' directory")
             print("")
         elif cmd == "clean":
             print("Usage:")
-            print("     %s clean <options> [disk:/object]" % sys.argv[0])
+            print("     {0} clean <options> [disk:/object]".format(sys.argv[0]))
             print("")
             print("Options:")
-            print("     --dry      -- just print list of object to delete (default: %s)" % default["dry"])
-            print("     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: %s)" % default["type"])
+            print("     --dry      -- just print list of object to delete (default: {0})".format(default["dry"]))
+            print("     --type=<S> -- type of objects - 'file', 'dir' or 'all' (default: {0})".format(default["type"]))
             print("     --keep=<S> -- keep criteria (default: none):")
             print("                   * date ('2014-02-12T12:19:05+04:00')")
             print("                   * relative interval ('7d', '4w', '1m', '1y')")
@@ -1757,7 +1757,7 @@ class ydCmd(ydExtended):
             print(" * Objects sorted and filtered by modified date (not created date)")
             print("")
         else:
-            sys.stderr.write("Unknown command %s\n" % cmd)
+            sys.stderr.write("Unknown command {0}\n".format(cmd))
             sys.exit(1)
 
         sys.exit(0)
@@ -1823,11 +1823,11 @@ if __name__ == "__main__":
             ydCmd.print_usage(command)
     except ydError as e:
         if options.quiet == False:
-            sys.stderr.write("%s\n" % e.errmsg)
+            sys.stderr.write("{0}\n".format(e.errmsg))
         sys.exit(e.errno)
     except ydCertError as e:
         if options.quiet == False:
-            sys.stderr.write("%s\n" % e)
+            sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
