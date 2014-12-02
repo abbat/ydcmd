@@ -16,7 +16,7 @@ import urllib, httplib, urllib2
 import string, re, json
 import time, datetime
 import subprocess, tempfile
-import hashlib, shutil, ConfigParser
+import hashlib, shutil
 
 
 try:
@@ -30,6 +30,28 @@ except ImportError:
     elif name == "Linux":
         sys.stderr.write(err.format("python-dateutil"))
     sys.exit(1)
+
+
+# PEP-8
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
+
+
+# PEP-469
+try:
+    dict.iteritems
+except AttributeError:
+    def itervalues(d):
+        return iter(d.values())
+    def iteritems(d):
+        return iter(d.items())
+else:
+    def itervalues(d):
+        return d.itervalues()
+    def iteritems(d):
+        return d.iteritems()
 
 
 class ydError(RuntimeError):
@@ -110,7 +132,7 @@ class ydConfig(object):
 
         config = config.copy()
 
-        parser = ConfigParser.ConfigParser()
+        parser = configparser.ConfigParser()
         parser.read(filename)
 
         for section in parser.sections():
@@ -218,7 +240,7 @@ class ydItem(object):
                 raise ValueError("{0} not exists (incomplete response?)".format(attr))
 
         if info != None:
-            for key, value in info.iteritems():
+            for key, value in iteritems(info):
                 self.__dict__[key] = value
 
         if self.type == "file":
@@ -243,7 +265,7 @@ class ydItem(object):
 
     def __str__(self):
         result = ""
-        for key, value in self.__dict__.iteritems():
+        for key, value in iteritems(self.__dict__):
             result += "{0:>12}: {1}\n".format(key, value)
         return result
 
@@ -546,7 +568,7 @@ class ydBase(object):
                     Конвертер unicode строк в utf-8 при вызове json.load
                     """
                     if isinstance(input, dict):
-                        return dict([(_json_convert(key), _json_convert(value)) for key, value in input.iteritems()])
+                        return dict([(_json_convert(key), _json_convert(value)) for key, value in iteritems(input)])
                     elif isinstance(input, list):
                         return [_json_convert(element) for element in input]
                     elif isinstance(input, unicode):
@@ -1053,7 +1075,7 @@ class ydExtended(ydBase):
                 self.verbose("Skip: {0}".format(sitem), self.options.verbose)
 
         if self.options.rsync:
-            for item in flist.itervalues():
+            for item in itervalues(flist):
                 self.delete(target + item.name)
 
 
@@ -1112,7 +1134,7 @@ class ydExtended(ydBase):
         """
         flist = self.list(source)
 
-        for item in flist.itervalues():
+        for item in itervalues(flist):
             sitem = source + item.name
             titem = target + item.name
 
@@ -1161,7 +1183,7 @@ class ydExtended(ydBase):
 
         items = self.list(path)
 
-        for item in items.itervalues():
+        for item in itervalues(items):
             if item.isfile():
                 size += item.size
             elif item.isdir():
