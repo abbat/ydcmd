@@ -1321,7 +1321,7 @@ class ydCmd(ydExtended):
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
-        ydBase.echo("{0:7}: {1} ({2}%%)".format("Used", result["used_space"], result["used_space_pct"]))
+        ydBase.echo("{0:7}: {1} ({2}%)".format("Used", result["used_space"], result["used_space_pct"]))
         ydBase.echo("{0:7}: {1}".format("Total", result["total_space"]))
 
 
