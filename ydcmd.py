@@ -244,7 +244,7 @@ class ydItem(object):
     def __str__(self):
         result = ""
         for key, value in self.__dict__.iteritems():
-            result += "{0:12}: {1}\n".format(key, value)
+            result += "{0:>12}: {1}\n".format(key, value)
         return result
 
 
@@ -1244,7 +1244,7 @@ class ydExtended(ydBase):
 
         for item in flist:
             if self.options.dry:
-                ydBase.echo("{0:25} {1:7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
+                ydBase.echo("{0:>25} {1:>7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
             else:
                 self.delete(path + item.name)
 
@@ -1321,8 +1321,8 @@ class ydCmd(ydExtended):
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
-        ydBase.echo("{0:7}: {1} ({2}%)".format("Used", result["used_space"], result["used_space_pct"]))
-        ydBase.echo("{0:7}: {1}".format("Total", result["total_space"]))
+        ydBase.echo("{0:>7}: {1} ({2}%)".format("Used", result["used_space"], result["used_space_pct"]))
+        ydBase.echo("{0:>7}: {1}".format("Total", result["total_space"]))
 
 
     def stat_cmd(self, args):
@@ -1368,11 +1368,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long:
-                ydBase.echo("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.name))
+                ydBase.echo("{0} {1:>26} {2:>11} {3}".format(item.created, item.modified, size, item.name))
             elif self.options.short:
                 ydBase.echo("{0}".format(item.name))
             else:
-                ydBase.echo("{0:5}  {1}".format(size, item.name))
+                ydBase.echo("{0:>5}  {1}".format(size, item.name))
 
 
     def last_cmd(self, args):
@@ -1404,11 +1404,11 @@ class ydCmd(ydExtended):
                 size = item.size
 
             if self.options.long:
-                ydBase.echo("{0} {1:26} {2:11} {3}".format(item.created, item.modified, size, item.path[5:]))
+                ydBase.echo("{0} {1:>26} {2:>11} {3}".format(item.created, item.modified, size, item.path[5:]))
             elif self.options.short:
                 ydBase.echo("{0}".format(item.path[5:]))
             else:
-                ydBase.echo("{0:5}  {1}".format(size, item.path[5:]))
+                ydBase.echo("{0:>5}  {1}".format(size, item.path[5:]))
 
 
     def delete_cmd(self, args):
@@ -1584,9 +1584,9 @@ class ydCmd(ydExtended):
             if len(name) == 0:
                 name = "/"
             if options.human:
-                ydBase.echo("{0:5}  {1}".format(self.human(size), name))
+                ydBase.echo("{0:>5}  {1}".format(self.human(size), name))
             else:
-                ydBase.echo("{0:11}  {1}".format(size, name))
+                ydBase.echo("{0:>11}  {1}".format(size, name))
 
 
     def clean_cmd(self, args):
@@ -1794,6 +1794,7 @@ if __name__ == "__main__":
 
     options = ydOptions(config)
 
+    # TODO: check args count like ydcmd --short
     command = string.lower(args.pop(0))
     if command == "help":
         command = None
