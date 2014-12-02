@@ -12,7 +12,7 @@ __all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydItem", "ydBase"
 
 import array, os, sys
 import socket, ssl
-import re, json
+import re, codecs, json
 import time, datetime
 import subprocess, tempfile
 import hashlib, shutil
@@ -603,6 +603,8 @@ class ydBase(object):
                         return input.encode("utf-8")
                     else:
                         return input
+
+                #reader = codecs.getreader("utf-8")
 
                 return json.load(result, object_hook = _json_convert)
         except ydHTTPError as e:
