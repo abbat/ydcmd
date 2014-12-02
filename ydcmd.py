@@ -1325,13 +1325,13 @@ class ydCmd(ydExtended):
         if val < 1024:
             return "{0}".format(val)
         elif val < 1024 * 1024:
-            return "{0}K".format(val / 1024)
+            return "{0:.0f}K".format(val / 1024)
         elif val < 1024 * 1024 * 1024:
-            return "{0}M".format(val / 1024 / 1024)
+            return "{0:.0f}M".format(val / 1024 / 1024)
         elif val < 1024 * 1024 * 1024 * 1024:
-            return "{0}G".format(val / 1024 / 1024 / 1024)
+            return "{0:.0f}G".format(val / 1024 / 1024 / 1024)
 
-        return "{0}T".format(val / 1024 / 1024 / 1024 / 1024)
+        return "{0:.0f}T".format(val / 1024 / 1024 / 1024 / 1024)
 
 
     @staticmethod
