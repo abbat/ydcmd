@@ -1045,7 +1045,7 @@ class ydExtended(ydBase):
             Метаинформация об объекте, если он уже существует и его тип совпадает с аргументом type.
         """
         if not (type == "dir" or type == "file"):
-            raise ValueError("Unsupported type: %s", type)
+            raise ValueError("Unsupported type: {}".format(type))
 
         if stat == None:
             try:
@@ -1371,7 +1371,7 @@ class ydCmd(ydExtended):
             result["used_space"]  = self.human(result["used_space"])
             result["total_space"] = self.human(result["total_space"])
 
-        ydBase.echo("{0:>7}: {1} ({2}%)".format("Used", result["used_space"], result["used_space_pct"]))
+        ydBase.echo("{0:>7}: {1} ({2:.0f}%)".format("Used", result["used_space"], result["used_space_pct"]))
         ydBase.echo("{0:>7}: {1}".format("Total", result["total_space"]))
 
 
