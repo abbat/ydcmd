@@ -12,7 +12,7 @@ __all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydItem", "ydBase"
 
 import array, os, sys
 import socket, ssl
-import string, re, json
+import re, json
 import time, datetime
 import subprocess, tempfile
 import hashlib, shutil
@@ -164,10 +164,10 @@ class ydConfig(object):
         parser.read(filename)
 
         for section in parser.sections():
-            name = string.lower(section)
+            name = section.lower()
             if name == "ydcmd":
                 for option in parser.options(section):
-                    config[string.lower(option)] = string.strip(parser.get(section, option))
+                    config[option.lower()] = parser.get(section, option).strip()
 
         return config
 
@@ -243,7 +243,7 @@ class ydOptions(object):
         if type(value) is bool:
             return value
 
-        value = string.lower(value).strip()
+        value = value.lower().strip()
 
         if value == "true" or value == "yes" or value == "t" or value == "y" or value == "1":
             return True
@@ -1838,7 +1838,7 @@ if __name__ == "__main__":
         if len(opt) == 5:
             if opt[3] == None:
                 opt[3] = True
-            config[string.lower(opt[1])] = opt[3]
+            config[opt[1].lower()] = opt[3]
         else:
             args.append(arg)
 
@@ -1847,11 +1847,11 @@ if __name__ == "__main__":
 
     options = ydOptions(config)
 
-    command = string.lower(args.pop(0))
+    command = args.pop(0).lower()
     if command == "help":
         command = None
         if argc > 2:
-            command = string.lower(args.pop(0))
+            command = args.pop(0).lower()
         ydCmd.print_usage(command)
 
     if options.cafile == None:
