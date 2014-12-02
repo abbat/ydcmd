@@ -12,7 +12,6 @@ __all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydItem", "ydBase"
 
 import array, os, sys
 import socket, ssl
-import urllib, httplib, urllib2
 import string, re, json
 import time, datetime
 import subprocess, tempfile
@@ -47,11 +46,40 @@ except AttributeError:
         return iter(d.values())
     def iteritems(d):
         return iter(d.items())
+    def listvalues(d):
+        return list(d.values())
+    def listitems(d):
+        return list(d.items())
 else:
     def itervalues(d):
         return d.itervalues()
     def iteritems(d):
         return d.iteritems()
+    def listvalues(d):
+        return d.values()
+    def listitems(d):
+        return d.items()
+
+
+# PEP-3108
+try:
+    from http.client    import HTTPSConnection as ydHTTPSConnection
+    from http.client    import NotConnected    as ydNotConnected
+    from urllib.request import HTTPSHandler    as ydHTTPSHandler
+    from urllib.request import Request         as ydRequest
+    from urllib.request import build_opener    as yd_build_opener
+    from urllib.error   import HTTPError       as ydHTTPError
+    from urllib.error   import URLError        as ydURLError
+    from urllib.parse   import urlencode       as yd_urlencode
+except ImportError:
+    from httplib        import HTTPSConnection as ydHTTPSConnection
+    from httplib        import NotConnected    as ydNotConnected
+    from urllib2        import HTTPSHandler    as ydHTTPSHandler
+    from urllib2        import Request         as ydRequest
+    from urllib2        import build_opener    as yd_build_opener
+    from urllib2        import HTTPError       as ydHTTPError
+    from urllib2        import URLError        as ydURLError
+    from urllib         import urlencode       as yd_urlencode
 
 
 class ydError(RuntimeError):
@@ -278,9 +306,9 @@ class ydBase(object):
     """
     Базовые методы работы с API
     """
-    class _ydBaseHTTPSConnection(httplib.HTTPSConnection):
+    class _ydBaseHTTPSConnection(ydHTTPSConnection):
         """
-        Сабклассинг httplib.HTTPSConnection для:
+        Сабклассинг ydHTTPSConnection для:
             * Проверки валидности SSL сертификата
             * Установки предпочитаемого набора шифров / алгоритма шифрования
             * Задания размера отсылаемого блока
@@ -291,7 +319,7 @@ class ydBase(object):
                 options (ydOptions) -- Опции приложения
             """
             self._options = kwargs.pop("options", None)
-            httplib.HTTPSConnection.__init__(self, host, **kwargs)
+            ydHTTPSConnection.__init__(self, host, **kwargs)
 
 
         def _check_cert(self, cert, hostname):
@@ -359,7 +387,7 @@ class ydBase(object):
 
         def connect(self):
             """
-            Перегрузка httplib.HTTPSConnection.connect для проверки валидности SSL сертификата
+            Перегрузка ydHTTPSConnection.connect для проверки валидности SSL сертификата
             и установки предпочитаемого набора шифров / алгоритма шифрования
             """
             sock = socket.create_connection((self.host, self.port), self.timeout)
@@ -395,13 +423,13 @@ class ydBase(object):
 
         def send(self, data):
             """
-            Перегрузка httplib.HTTPConnection.send для возможности задания размера отсылаемого блока
+            Перегрузка ydHTTPConnection.send для возможности задания размера отсылаемого блока
             """
             if self.sock is None:
                 if self.auto_open:
                     self.connect()
                 else:
-                    raise httplib.NotConnected()
+                    raise ydNotConnected()
 
             if hasattr(data, "read") and not isinstance(data, array.array):
                 datablock = data.read(self._options.chunk)
@@ -412,9 +440,9 @@ class ydBase(object):
                 self.sock.sendall(data)
 
 
-    class _ydBaseHTTPSHandler(urllib2.HTTPSHandler):
+    class _ydBaseHTTPSHandler(ydHTTPSHandler):
         """
-        Сабклассинг urllib2.HTTPSHandler для:
+        Сабклассинг ydHTTPSHandler для:
             * Проверки валидности SSL сертификата
             * Установки предпочитаемого набора шифров / алгоритма шифрования
             * Задания размера отсылаемого блока
@@ -426,12 +454,12 @@ class ydBase(object):
             """
             self._options = options
 
-            urllib2.HTTPSHandler.__init__(self, debuglevel)
+            ydHTTPSHandler.__init__(self, debuglevel)
 
 
         def https_open(self, req):
             """
-            Перегрузка urllib2.HTTPSHandler.https_open для использования _ydBaseHTTPSConnection
+            Перегрузка ydHTTPSHandler.https_open для использования _ydBaseHTTPSConnection
             """
             return self.do_open(self._get_connection, req)
 
@@ -526,7 +554,7 @@ class ydBase(object):
         if headers == None:
             headers = self._headers()
 
-        url += ("" if data == None else "?{0}".format(urllib.urlencode(data)))
+        url += ("" if data == None else "?{0}".format(yd_urlencode(data)))
 
         if self.options.debug:
             self.debug("{0} {1}".format(method, url))
@@ -544,11 +572,11 @@ class ydBase(object):
         if filename != None and method == "PUT":
             fd = open(filename, "rb")
 
-        request = urllib2.Request(url, fd, headers)
+        request = ydRequest(url, fd, headers)
         request.get_method = lambda: method
 
         try:
-            opener = urllib2.build_opener(ydBase._ydBaseHTTPSHandler(self.options))
+            opener = yd_build_opener(ydBase._ydBaseHTTPSHandler(self.options))
             result = opener.open(request, timeout = self.options.timeout)
             code   = result.getcode()
 
@@ -577,7 +605,7 @@ class ydBase(object):
                         return input
 
                 return json.load(result, object_hook = _json_convert)
-        except urllib2.HTTPError as e:
+        except ydHTTPError as e:
             try:
                 result = json.load(e)
 
@@ -599,7 +627,7 @@ class ydBase(object):
         while True:
             try:
                 return self.query_retry(method, url, data, headers, filename)
-            except (urllib2.URLError, ssl.SSLError) as e:
+            except (ydURLError, ssl.SSLError) as e:
                 retry += 1
                 self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
                 if retry >= self.options.retries:
@@ -892,7 +920,7 @@ class ydBase(object):
             try:
                 self._put_retry(source, target)
                 break
-            except (urllib2.URLError, ssl.SSLError) as e:
+            except (ydURLError, ssl.SSLError) as e:
                 retry += 1
                 self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
                 if retry >= self.options.retries:
@@ -950,7 +978,7 @@ class ydBase(object):
             try:
                 self._get_retry(source, target)
                 break
-            except (urllib2.URLError, ssl.SSLError) as e:
+            except (ydURLError, ssl.SSLError) as e:
                 retry += 1
                 self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
                 if retry >= self.options.retries:
@@ -1207,7 +1235,7 @@ class ydExtended(ydBase):
         if self.options.keep == "" or self.options.type not in ["all", "file", "dir"]:
             return
 
-        flist = self.list(path).values()
+        flist = listvalues(self.list(path))
 
         if self.options.type != "all":
             tlist = []
@@ -1378,7 +1406,7 @@ class ydCmd(ydExtended):
         if len(args) > 0:
             path = args[0]
 
-        result = self.list(self.remote_path(path)).values()
+        result = listvalues(self.list(self.remote_path(path)))
         result.sort(key = lambda x: (x.type, x.name))
 
         for item in result:
@@ -1416,7 +1444,7 @@ class ydCmd(ydExtended):
             except ValueError:
                 raise ydError(1, "Limit must be integer")
 
-        result = self.last(limit).values()
+        result = listvalues(self.last(limit))
         result.sort(key = lambda x: (x.modified, x.created, x.name))
 
         for item in result:
