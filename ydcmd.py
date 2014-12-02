@@ -1792,9 +1792,11 @@ if __name__ == "__main__":
         else:
             args.append(arg)
 
+    if len(args) == 0:
+        ydCmd.print_usage()
+
     options = ydOptions(config)
 
-    # TODO: check args count like ydcmd --short
     command = string.lower(args.pop(0))
     if command == "help":
         command = None
