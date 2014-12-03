@@ -1083,7 +1083,7 @@ class ydExtended(ydBase):
             sitem = source + item
             titem = target + item
 
-            if os.path.islink(sitem):
+            if not os.path.islink(sitem):
                 if os.path.isdir(sitem):
                     self._ensure_remote(titem, "dir", flist[item] if item in flist else None)
                     self._put_sync(sitem + "/", titem + "/")
@@ -1091,7 +1091,7 @@ class ydExtended(ydBase):
                     force = True
                     if item in flist:
                         self._ensure_remote(titem, "file", flist[item])
-                        if self.options.encrypt and flist[item].isfile() and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
+                        if not self.options.encrypt and flist[item].isfile() and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
                             force = False
 
                     if force:
@@ -1174,7 +1174,7 @@ class ydExtended(ydBase):
             elif item.isfile():
                 force  = True
                 exists = self._ensure_local(titem, "file")
-                if self.options.decrypt and exists and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
+                if not self.options.decrypt and exists and os.path.getsize(titem) == item.size and self.md5(titem) == item.md5:
                     force = False
 
                 if force:
@@ -1549,7 +1549,7 @@ class ydCmd(ydExtended):
         if os.path.basename(target) == "":
             target += os.path.basename(source)
 
-        if os.path.islink(source):
+        if not os.path.islink(source):
             target = self.remote_path(target)
             if os.path.isdir(source):
                 if os.path.basename(source) != "":
@@ -1561,7 +1561,7 @@ class ydCmd(ydExtended):
             elif os.path.isfile(source):
                 force = True
                 stat  = self._ensure_remote(target, "file")
-                if self.options.encrypt and stat != None and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
+                if not self.options.encrypt and stat != None and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
                     force = False
                 if force:
                     self.put(source, target)
@@ -1605,7 +1605,7 @@ class ydCmd(ydExtended):
         elif stat.isfile():
             force  = True
             exists = self._ensure_local(target, "file")
-            if self.options.decrypt and exists and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
+            if not self.options.decrypt and exists and os.path.getsize(target) == stat.size and self.md5(target) == stat.md5:
                 force = False
             if force:
                 self.get(source, target)
@@ -1888,11 +1888,11 @@ if __name__ == "__main__":
         else:
             ydCmd.print_usage(command)
     except ydError as e:
-        if options.quiet:
+        if not options.quiet:
             sys.stderr.write("{0}\n".format(e.errmsg))
         sys.exit(e.errno)
     except ydCertError as e:
-        if options.quiet:
+        if not options.quiet:
             sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
     except KeyboardInterrupt:
