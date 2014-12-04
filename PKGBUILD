@@ -25,7 +25,5 @@ package() {
 	install -D -m644 ${srcdir}/${pkgname}/ydcmd.cfg        ${pkgdir}/usr/share/doc/${pkgname}/${pkgname}.cfg
 	install -D -m644 ${srcdir}/${pkgname}/debian/copyright ${pkgdir}/usr/share/licenses/${pkgname}/LICENSE
 
-	python -m compileall ${pkgdir}/usr/share/pyshared/${pkgname}.py
-
 	ln -s /usr/share/pyshared/${pkgname}.py ${pkgdir}/usr/bin/${pkgname}
 }
