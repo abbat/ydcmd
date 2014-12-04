@@ -604,9 +604,11 @@ class ydBase(object):
                     else:
                         return input
 
-                #reader = codecs.getreader("utf-8")
+                if sys.version_info < (3, 0):
+                    return json.load(result, object_hook = _json_convert)
+                else:
+                    return json.load(codecs.getreader("utf-8")(result))
 
-                return json.load(result, object_hook = _json_convert)
         except ydHTTPError as e:
             try:
                 result = json.load(e)
