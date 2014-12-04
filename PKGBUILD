@@ -10,7 +10,7 @@ license=('BSD')
 depends=('python>=2.6' 'python-dateutil')
 makedepends=('python>=2.6' 'git')
 optdepends=('ca-certificates: ssl certificates validation')
-source=("git+https://github.com/abbat/ydcmd.git#tag=${pkgver}")
+source=("git+https://github.com/abbat/ydcmd.git#tag=v${pkgver}")
 sha256sums=('SKIP')
 
 package() {
