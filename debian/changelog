@@ -1,3 +1,9 @@
+ydcmd (0.8) unstable; urgency=low
+
+  * Исправления для поддержки python 3.x (тестирование на 3.4.2, Arch).
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 04 Dec 2014 22:51:00 +0300
+
 ydcmd (0.7) unstable; urgency=low
 
   * Исправление ошибок статических анализаторов.
