@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "0.8"
+__version__  = "0.9"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -1892,7 +1892,7 @@ if __name__ == "__main__":
     except ydError as e:
         if not options.quiet:
             sys.stderr.write("{0}\n".format(e.errmsg))
-        sys.exit(e.errno)
+        sys.exit(e.errno if e.errno < 256 else int(e.errno / 100))
     except ydCertError as e:
         if not options.quiet:
             sys.stderr.write("{0}\n".format(e))

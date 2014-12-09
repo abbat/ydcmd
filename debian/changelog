@@ -1,3 +1,9 @@
+ydcmd (0.9) unstable; urgency=low
+
+  * Исправление ошибки с кодом возврата для HTTP-xxx.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 09 Dec 2014 22:28:00 +0300
+
 ydcmd (0.8) unstable; urgency=low
 
   * Исправления для поддержки python 3.x (тестирование на 3.4.2, Arch).

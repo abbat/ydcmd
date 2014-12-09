@@ -251,5 +251,5 @@ When operating in automatic mode (cron), it may be useful to get the result of t
 
 * `0` - successful completion;
 * `1` - general application error;
-* `4xx` - HTTP status code 4xx (client error);
-* `5xx` - HTTP status code 5xx (server error).
+* `4` - HTTP status code 4xx (client error);
+* `5` - HTTP status code 5xx (server error).

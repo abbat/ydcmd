@@ -1,7 +1,7 @@
 # Maintainer: Anton Batenev <antonbatenev@yandex.ru>
 
 pkgname=ydcmd
-pkgver=0.8
+pkgver=0.9
 pkgrel=1
 pkgdesc='Command line client for Yandex.Disk'
 arch=('any')
