@@ -2,7 +2,7 @@
 
 [English](https://github.com/abbat/ydcmd/blob/master/README.en.md) | [Русский](https://github.com/abbat/ydcmd/blob/master/README.md)
 
-REST API vasıtasıyla bulut depolama [Yandex.Disk] (https://disk.yandex.com.tr/) ile etkileşim için Linux/FreeBSD'nin komut satırı istemcisidir (http://api.yandex.com.tr/disk/api/concepts/about.xml).
+[REST API](http://api.yandex.com.tr/disk/api/concepts/about.xml) vasıtasıyla bulut depolama [Yandex.Disk](https://disk.yandex.com.tr/) ile etkileşim için Linux/FreeBSD'nin komut satırı istemcisidir.
 
 ## İndirme / Kurma
 
