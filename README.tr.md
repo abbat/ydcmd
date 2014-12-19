@@ -31,7 +31,7 @@ Erişim sağlandıktan sonra hizmet sizi şu bağlantıya yönlendirir:
 
 * `https://oauth.yandex.com.tr/verification_code?dev=True#access_token=<belirteç>`
 
-''belirteç'' değeri gereklidir. Daha fazla bilgi almak için bağlantı  [elle hata ayıklama belirteci alma](http://api.yandex.com.tr/oauth/doc/dg/tasks/get-oauth-token.xml).
+''belirteç'' değeri gereklidir. Daha fazla bilgi almak için bağlantı [elle hata ayıklama belirteci alma](http://api.yandex.com.tr/oauth/doc/dg/tasks/get-oauth-token.xml).
 
 ## Çalıştırma
 
@@ -69,7 +69,7 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `--debug` - hata ayıklama bilgisi görüntüleme;
 * `--chunk=<N>` - girdi/çıktı işlemleri için bilgi bloğunun boyutu (KB);
 * `--ca-file=<S>` - güvenilir sertifika merkezlerinin sertifikaları ile dosya adı (değer boş ise, sertifika onayı gerçekleştirilemez);
-* `--ciphers=<S>` - şifreleme algoritmaları dizisi (bak ciphers(1)](https://www.openssl.org/docs/apps/ciphers.html)).
+* `--ciphers=<S>` - şifreleme algoritmaları dizisi (bak [ciphers(1)](https://www.openssl.org/docs/apps/ciphers.html)).
 
 ### Dosya ve dizinlerin listesini alma
 
@@ -94,7 +94,7 @@ ydcmd rm disk:/nesne
 **Seçenekler**:
 
 * `--poll=<N>` - asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye);
-* `--async` - işlem sonlandırmasını (poll) beklemeyip komutunu çalıştırma.
+* `--async` - işlem sonlandırmasını (`poll`) beklemeyip komutunu çalıştırma.
 
 Dosyalar kalıcı olarak silinir. Dizinler özyinelemeli silinir (alt dosya ve dizinler dahil).
 
@@ -107,7 +107,7 @@ ydcmd cp disk:/nesne1 disk:/nesne2
 **Seçenekler**:
 
 * `--poll=<N>` - asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye);
-* `--async` - işlem sonlandırmayı beklemeden komut (poll) çalıştırma.
+* `--async` - işlem sonlandırmayı beklemeden komut (`poll`) çalıştırma.
 
 İsim çakışması durumunda, dizinler ve dosyalar üzerine yazılacak. Dizinler özyinelemeli kopyalanır (alt dosya ve dizinler dahil).
 
@@ -120,7 +120,7 @@ ydcmd mv disk:/nesne1 disk:/nesne2
 **Seçenekler**:
 
 * `--poll=<N>` - asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye);
-* `--async` - işlem sonlandırmayı beklemeden komut (poll) çalıştırma.
+* `--async` - işlem sonlandırmayı beklemeden komut (`poll`) çalıştırma.
 
 İsim çakışması durumunda, dizinler ve dosyalar üzerine yazılacak.
 
@@ -133,8 +133,8 @@ ydcmd put <dosya> [disk:/nesne]
 **Seçenekler**:
 
 * `--rsync` - depoda, dosya ve dizinlerin ağaçları ile yerel ağacı senkronize eder;
-* `--encrypt` - depoya yüklemeden önce --encrypt-cmd kullanarak dosyaları şifreleme;
-* `--encrypt-cmd` - yerel dosyanın (şifrelenmemiş) içeriğini stdin'den alan ve şifrelenmiş versiyonunu stdout'a gönderen komuttur;
+* `--encrypt` - depoya yüklemeden önce `--encrypt-cmd` kullanarak dosyaları şifreleme;
+* `--encrypt-cmd` - yerel dosyanın (şifrelenmemiş) içeriğini `stdin`den alan ve şifrelenmiş versiyonunu `stdout`'a gönderen komuttur;
 * `--temp-dir` - şifrelenmiş geçici dosyaların depolanması için bir dizin;
 
 Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini kullanılacaktır. Eğer hedef nesne, dizini ("/" ile biten) belirtirse, kaynak dosyasının adı dizinin adına eklenmiş olacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır. Sembolik bağlantılar göz ardı edilir.
@@ -148,7 +148,7 @@ ydcmd get <disk:/nesne> [dosya]
 **Seçenekler**:
 
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
-* `--decrypt` - depodan alındıktan sonra --decrypt-cmd kullanarak dosyaların şifresini çözme;
+* `--decrypt` - depodan alındıktan sonra `--decrypt-cmd` kullanarak dosyaların şifresini çözme;
 * `--decrypt-cmd` - depodan alınan şifrelenmiş dosyanın içeriğini `stdin`den alan ve şifrelenmemiş versiyonunu `stdout`a gönderen komuttur;
 * `--temp-dir` - şifrelenmiş geçici dosyaların depolanması için bir dizin;
 
@@ -178,7 +178,7 @@ ydcmd info
 
 * `--long` - İnsan tarafından okunabilir türde göstermek yerine bayt'larla göstermek;
 
-###  Son yüklenen dosyalar hakkında meta-bilgi alma
+### Son yüklenen dosyalar hakkında meta-bilgi alma
 
 ```
 ydcmd last [N]
@@ -213,18 +213,18 @@ ydcmd clean <seçenekler> [disk:/nesne]
 
 **Seçenekler**:
 
-* `--dry` -  silmek yerine, silinecek nesnelerin listesini göstermek;
-* `--type=<S>` - silinecek nesnelerin türü ('file' - dosyalar, 'dir' - dizinler, 'all' - hepsi);
+* `--dry` - silmek yerine, silinecek nesnelerin listesini göstermek;
+* `--type=<S>` - silinecek nesnelerin türü (`file` - dosyalar, `dir` - dizinler, `all` - hepsi);
 * `--keep=<S>` - kaydedilmesi gereken nesnelerin seçim kriterleri:
-* Verinin silinmesi gereken **tarihe kadar** seçilmesi için ISO formatındaki tarih satırı kullanılabilir (örneğin '2014-02-12T12:19:05+04:00');
-* Göreceli zamanı seçmek için sayı ve boyut kullanılabilir (örneğin, 7d', '4w', '1m', '1y');
-* Kopya sayısını seçmek için, boyut olmadan sayı kullanılabilir (örneğin, '31').
+* Verinin silinmesi gereken **tarihe kadar** seçilmesi için ISO formatındaki tarih satırı kullanılabilir (örneğin `2014-02-12T12:19:05+04:00`);
+* Göreceli zamanı seçmek için sayı ve boyut kullanılabilir (örneğin, `7d`, `4w`, `1m`, `1y`);
+* Kopya sayısını seçmek için, boyut olmadan sayı kullanılabilir (örneğin, `31`).
 
 Eğer hedef nesne belirtilmemişse, deponun kök dizini kullanılacaktır. Nesneler değiştirme tarihine göre (oluşturma tarihi ile değil) sıralanır ve filtrelenir.
 
 ## Yapılandırma
 
-Kolaylık sağlamak için ~/.ydcmd.cfg isimli bir yapılandırma dosyası oluşturmak ve  bu dosyaya 0600 veya 0400 izinlerini vermek tavsiye edilir. Dosya biçimi:
+Kolaylık sağlamak için `~/.ydcmd.cfg` isimli bir yapılandırma dosyası oluşturmak ve bu dosyaya `0600` veya `0400` izinlerini vermek tavsiye edilir. Dosya biçimi:
 
 ```
 [ydcmd]
