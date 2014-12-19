@@ -258,4 +258,4 @@ Otomatik modda çalışırken (cron), komut çalışmasının sonucunu almak yar
 
 ## Çeviri
 
-Tatyana Pekhas <tatyana-zlobina@mail.ru>
+Tatyana Pekhas <<tatyana-zlobina@mail.ru>>
