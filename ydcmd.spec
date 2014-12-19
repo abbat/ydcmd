@@ -1,5 +1,5 @@
 Name:          ydcmd
-Version:       0.9
+Version:       1.0
 Release:       1
 BuildArch:     noarch
 Summary:       Command line client for Yandex.Disk
@@ -39,9 +39,11 @@ ln -s %{python_sitelib}/ydcmd.py %{buildroot}%{_bindir}/ydcmd
 
 install -d %{buildroot}%{_mandir}/man1
 install -d %{buildroot}%{_mandir}/ru/man1
+install -d %{buildroot}%{_mandir}/tr/man1
 
 install -m644 man/ydcmd.1    %{buildroot}%{_mandir}/man1/ydcmd.1
 install -m644 man/ydcmd.ru.1 %{buildroot}%{_mandir}/ru/man1/ydcmd.1
+install -m644 man/ydcmd.tr.1 %{buildroot}%{_mandir}/tr/man1/ydcmd.1
 
 %if 0%{?suse_version}
 %py_compile -O %{buildroot}%{python_sitelib}
@@ -61,10 +63,11 @@ rm -rf %{buildroot}
 
 %doc %{_mandir}/man1/ydcmd.1%{?ext_man}
 %doc %{_mandir}/ru/man1/ydcmd.1%{?ext_man}
+%doc %{_mandir}/tr/man1/ydcmd.1%{?ext_man}
 
-%doc README.md README.en.md ydcmd.cfg
+%doc README.md README.en.md README.tr.md ydcmd.cfg
 
 
 %changelog
-* Tue Dec 09 2014 Anton Batenev <antonbatenev@yandex.ru> 0.9-1
+* Tue Dec 19 2014 Anton Batenev <antonbatenev@yandex.ru> 1.0-1
 - Initial RPM release

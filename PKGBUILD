@@ -1,7 +1,7 @@
 # Maintainer: Anton Batenev <antonbatenev@yandex.ru>
 
 pkgname=ydcmd
-pkgver=0.9
+pkgver=1.0
 pkgrel=1
 pkgdesc='Command line client for Yandex.Disk'
 arch=('any')
@@ -20,8 +20,10 @@ package() {
 	install -D -m755 ${srcdir}/${pkgname}/ydcmd.py         ${pkgdir}/usr/share/pyshared/${pkgname}.py
 	install -D -m644 ${srcdir}/${pkgname}/man/ydcmd.1      ${pkgdir}/usr/share/man/man1/${pkgname}.1
 	install -D -m644 ${srcdir}/${pkgname}/man/ydcmd.ru.1   ${pkgdir}/usr/share/man/ru/man1/${pkgname}.1
+	install -D -m644 ${srcdir}/${pkgname}/man/ydcmd.tr.1   ${pkgdir}/usr/share/man/tr/man1/${pkgname}.1
 	install -D -m644 ${srcdir}/${pkgname}/README.md        ${pkgdir}/usr/share/doc/${pkgname}/README.md
 	install -D -m644 ${srcdir}/${pkgname}/README.en.md     ${pkgdir}/usr/share/doc/${pkgname}/README.en.md
+	install -D -m644 ${srcdir}/${pkgname}/README.tr.md     ${pkgdir}/usr/share/doc/${pkgname}/README.tr.md
 	install -D -m644 ${srcdir}/${pkgname}/ydcmd.cfg        ${pkgdir}/usr/share/doc/${pkgname}/${pkgname}.cfg
 	install -D -m644 ${srcdir}/${pkgname}/debian/copyright ${pkgdir}/usr/share/licenses/${pkgname}/LICENSE
 

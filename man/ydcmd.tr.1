@@ -1,0 +1,236 @@
+.TH ydcmd 1 "22 Temmuz 2014"
+.nh
+.ad left
+.SH ADI
+ydcmd \- REST API vasıtasıyla Yandex.Disk bulut depolama ile etkileşim için komut satırı istemcisidir.
+.SH  SÖZDİZİMİ
+.B ydcmd
+.RI [ command ] " " [ options ] " " [ args ]
+.SH KOMUTLAR
+.TP
+.B help
+Uygulama komutları ve seçenekleri hakkında kısa bilgi alma.
+.TP
+.B ls
+Dosya ve dizinlerin listesini alma.
+.TP
+.B rm
+Dosya veya dizin silme.
+.TP
+.B cp
+Dosya veya dizin kopyalama.
+.TP
+.B mv
+Dosya veya dizin taşıma.
+.TP
+.B put
+Dosya veya dizini depoya yükleme.
+.TP
+.B get
+Dosya veya dizini depodan alma.
+.TP
+.B mkdir
+Dizin oluşturma.
+.TP
+.B stat
+Nesne hakkında meta-bilgi alma.
+.TP
+.B info
+Depo hakkında meta-bilgi alma.
+.TP
+.B last
+Son yüklenen dosyalar hakkında meta-bilgi alma.
+.TP
+.B du
+Dosyaların hafızada kapladığı alanı hesaplama.
+.TP
+.B clean
+Dosya ve dizinleri temizleme.
+.SH SEÇENEKLER
+.TP
+.B --timeout=<N>
+Ağ bağlantısı kurmak için zaman aşımı (saniye).
+.TP
+.B --retries=<N>
+Hata kodu almadan önce API yöntemini çağırma denemelerinin sayısı.
+.TP
+.B --delay=<N>
+Api metodunu çağırma denemeleri arasındaki zaman aşımı (saniye).
+.TP
+.B --limit=<N>
+Dosya ve dizinlerin listesini alma metodunun bir çağrısı ile geri dönen öge sayısı.
+.TP
+.B --token=<S>
+OAuth belirteci (yapılandırma dosyasının içinde ya da ortam değişkeni ile YDCMD_TOKEN güvenlik hedefleri için belirtilmiş olmalı). Hata ayıklama belirteci edinme talimatları sonraki sayfada bulunabilir http://api.yandex.ru/oauth/doc/dg/tasks/get-oauth-token.xml
+.TP
+.B --quiet
+Hatta raporu önleme.
+.TP
+.B --verbose
+Genişletilmiş bilgi görüntüleme.
+.TP
+.B --debug
+Hata ayıklama bilgisi görüntüleme.
+.TP
+.B --chunk=<N>
+Girdi/çıktı işlemleri için bilgi bloğunun boyutu (KB).
+.TP
+.B --ca-file=<S>
+Güvenilir sertifika merkezlerinin sertifikaları ile dosya adı (değer boş ise, sertifika onayı gerçekleştirilemez).
+.TP
+.B --ciphers=<S>
+Şifreleme algoritmaları dizisi (bak ciphers(1)).
+.SH EK SEÇENEKLER
+.SS ls
+.TP
+.B --human
+İnsan tarafından okunabilir türde dosyanın boyutunu görüntüleme.
+.TP
+.B --short
+Ek bilgiler olmadan dosya ve dizinlerin listesini görüntüleme (satır başına bir ad).
+.TP
+.B --long
+Genişletilmiş liste gösterme (oluşturma zamanı, değişiklik zamanı, boyut, dosya adı).
+.TP
+Eğer hedef nesne belirtilmemişse, deponun kök dizini kullanılacaktır.
+.SS rm
+.TP
+.B --poll=<N>
+Asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye).
+.TP
+.B --async
+İşlem sonlandırmayı beklemeden komut (poll) çalıştırma.
+.TP
+Dosyalar kalıcı olarak silinir. Dizinler özyinelemeli silinir (alt dosya ve dizinler dahil).
+.SS cp
+.TP
+.B --poll=<N>
+Asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye).
+.TP
+.B --async
+İşlem sonlandırmayı beklemeden komut (poll) çalıştırma.
+.TP
+İsim çakışması durumunda, dizinler ve dosyalar üzerine yazılacak. Dizinler özyinelemeli silinir (alt dosya ve dizinler dahil).
+.SS mv
+.TP
+.B --poll=<N>
+Asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye).
+.TP
+.B --async
+İşlem sonlandırmayı beklemeden komut (poll) çalıştırma.
+.TP
+İsim çakışması durumunda, dizinler ve dosyalar üzerine yazılacak.
+.SS put
+.TP
+.B --rsync
+Depo içerisindeki yerel ağaç ile dosya ve dizin ağaçlarını senkronize eder.
+.TP
+.B --encrypt
+Depoya yüklemeden önce --encrypt-cmd kullanarak dosyaları şifreleme.
+.TP
+.B --encrypt-cmd
+Yerel dosyanın (şifrelenmemiş) içeriğini stdin'den alan ve şifrelenmiş versiyonunu stdout'a gönderen komuttur.
+.TP
+.B --temp-dir
+Şifrelenmiş geçici dosyaların depolanması için bir dizin.
+.TP
+Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini kullanılacaktır. Eğer hedef nesne, dizini ("/" ile biten) belirtirse, kaynak dosyasının adı dizinin adına eklenmiş olacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır. Sembolik bağlantılar göz ardı edilir.
+.SS get
+.TP
+.B --rsync
+Dosya ve dizinlerin yerel ağacını depo içerisindeki ağaç ile senkronize eder.
+.TP
+.B --decrypt
+Depodan alındıktan sonra --decrypt-cmd kullanarak dosyaların şifresini çözme.
+.TP
+.B --decrypt-cmd
+Depodan alınan şifrelenmiş dosyanın içeriğini stdin'den alan ve şifrelenmemiş versiyonunu stdout'a gönderen komuttur.
+.TP
+.B --temp-dir
+Şifrelenmiş geçici dosyaların depolanması için bir dizin.
+.TP
+Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır.
+.SS info
+.TP
+.B --long
+İnsan tarafından okunabilir türde göstermek yerine bayt'larla göstermek.
+.SS last
+.TP
+.B --human
+İnsan tarafından okunabilir türde dosyanın boyutunu görüntüleme.
+.TP
+.B --short
+Ek bilgiler olmadan dosyaların listesini görüntüleme (satır başına bir isim).
+.TP
+.B --long
+Genişletilmiş liste gösterme (oluşturma zamanı, değişiklik zamanı, boyut, dosya adı).
+.TP
+Eğer N argüman belirtilmemişse, REST API'nin varsayılan değeri kullanılacaktır.
+.SS du
+.TP
+.B --depth=<N>
+Seviye N'e kadar olan dizinlerin boyutlarını göstermek.
+.TP
+.B --long
+İnsan tarafından okunabilir türde göstermek yerine bayt'larla göstermek.
+.TP
+Eğer hedef nesne belirtilmemişse, deponun kök dizini kullanılacaktır.
+.SS clean
+.TP
+.B --dry
+Silmek yerine, silinecek nesnelerin listesini göstermek.
+.TP
+.B --type=<S>
+Silinecek nesnelerin türü ('file' - dosyalar, 'dir' - dizinler, 'all' - hepsi).
+.TP
+.B --keep=<S>
+Kaydedilmesi gereken nesnelerin seçim kriterleri:
+.br
+* Verinin silinmesi gereken tarihe kadar seçilmesi için ISO formatındaki tarih satırı kullanılabilir (örneğin '2014-02-12T12:19:05+04:00');
+.br
+* Göreceli zamanı seçmek için sayı ve boyut kullanılabilir (örneğin, 7d', '4w', '1m', '1y');
+.br
+* Kopya sayısını seçmek için, boyut olmadan sayı kullanılabilir (örneğin, '31').
+.SH YAPILANDIRMA
+.TP
+Kolaylık sağlamak için ~/.ydcmd.cfg isimli bir yapılandırma dosyası oluşturmak ve bu dosyaya 0600 veya 0400 izinlerini vermek tavsiye edilir. Dosya biçimi:
+.P
+.RS
+[ydcmd]
+.br
+# yorum
+.br
+<option> = <value>
+.RE
+.TP
+Örneğin:
+.P
+.RS
+[ydcmd]
+.br
+token   = 1234567890
+.br
+verbose = yes
+.br
+ca-file = /etc/ssl/certs/ca-certificates.crt
+.RE
+.SH ÇEVRE DEĞİŞKENLERİ
+.TP
+.B YDCMD_TOKEN
+OAuth belirteci. --token seçeneği üzerinde önceliğe sahiptir.
+.SH ÇIKIŞ KODU
+.TP
+.B 0
+Başarılı tamamlama.
+.TP
+.B 1
+Genel uygulama hatası.
+.TP
+.B 4
+Durum kodu HTTP-4xx (istemci hatası).
+.TP
+.B 5
+Durum kodu HTTP-5xx (sunucu hatası).
+.SH ÇEVİRİ
+.TP
+Tatyana Pekhas <tatyana-zlobina@mail.ru>

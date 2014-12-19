@@ -1,3 +1,9 @@
+ydcmd (1.0) testing; urgency=low
+
+  * Документация TR, testing.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 19 Dec 2014 16:04:00 +0300
+
 ydcmd (0.9) unstable; urgency=low
 
   * Исправление ошибки с кодом возврата для HTTP-xxx.
