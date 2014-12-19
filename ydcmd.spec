@@ -58,8 +58,10 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 
+%if 0%{?suse_version}
 %dir %{_mandir}/tr
 %dir %{_mandir}/tr/man1
+%endif
 
 %{_bindir}/ydcmd
 %{python_sitelib}/ydcmd.py*
