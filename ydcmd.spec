@@ -58,6 +58,9 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 
+%dir %{_mandir}/tr
+%dir %{_mandir}/tr/man1
+
 %{_bindir}/ydcmd
 %{python_sitelib}/ydcmd.py*
 
