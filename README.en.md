@@ -1,5 +1,7 @@
 # ydcmd
 
+[Русский](https://github.com/abbat/ydcmd/blob/master/README.md) | [Türk](https://github.com/abbat/ydcmd/blob/master/README.tr.md)
+
 Linux/FreeBSD command line client for interacting with cloud storage [Yandex.Disk](https://disk.yandex.com/) by means of [REST API](http://api.yandex.com/disk/api/concepts/about.xml).
 
 ## Download / Install
