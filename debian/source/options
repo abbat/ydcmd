@@ -1,6 +1,7 @@
 compression = "bzip2"
 compression-level = 9
 tar-ignore = .git
+tar-ignore = windows
 tar-ignore = .gitignore
 tar-ignore = PKGBUILD
 tar-ignore = ydcmd.spec
