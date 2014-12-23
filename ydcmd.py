@@ -21,6 +21,13 @@ import hashlib, shutil
 try:
     import dateutil.parser
     import dateutil.relativedelta
+
+    # Hide UnicodeWarning in dateutil under Windows
+    # https://bugs.launchpad.net/dateutil/+bug/1227221
+    if os.name == "nt":
+        import warnings
+        warnings.filterwarnings("ignore", category = UnicodeWarning)
+
 except ImportError:
     err = "Python module dateutil not found.\nPlease, install \"{0}\"\n"
     name = os.uname()[0]
