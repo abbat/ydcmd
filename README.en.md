@@ -57,6 +57,8 @@ ydcmd [command] [options] [arguments]
 * `stat` - returns meta-information about an object;
 * `info` - returns meta-information about a storage;
 * `last` - returns meta-information about last uploaded files;
+* `share` - publish uploaded object (obtaining direct link);
+* `revoke` - unpublish uploaded object;
 * `du` - evaluates the disk space used by files within the storage;
 * `clean` - cleans files and directories.
 
@@ -194,6 +196,20 @@ ydcmd last [N]
 * `--long` - returns an extended list (creation time, modification time, size, file name).
 
 If argument N is not specified, default REST API value will be used.
+
+### Publish object
+
+```
+ydcmd share disk:/object
+```
+
+Command returns object path and direct url.
+
+### Unpublish object
+
+```
+ydcmd revoke disk:/object
+```
 
 ### Evaluating the disk space used
 

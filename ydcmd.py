@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.0"
+__version__  = "1.1"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -877,6 +877,49 @@ class ydBase(object):
         self.query(method, url, data)
 
 
+    def publish(self, path):
+        """
+        Публикация объекта (объект становится доступен по прямой ссылке)
+
+        Аргументы:
+            path (str) -- Имя файла или директории в хранилище
+
+        Результат (ydItem):
+            Метаинформация об объекте в хранилище
+        """
+        self.verbose("Publish: {0}".format(path), self.options.verbose)
+
+        data = {
+            "path" : path
+        }
+
+        method = "PUT"
+        url    = self.options.baseurl + "/resources/publish"
+
+        self.query(method, url, data)
+
+        return self.stat(path)
+
+
+    def unpublish(self, path):
+        """
+        Закрытие публичного доступа к объекту (объект становится недоступен по прямой ссылке)
+
+        Аргументы:
+            path (str) -- Имя файла или директории в хранилище
+        """
+        self.verbose("Unpublish: {0}".format(path), self.options.verbose)
+
+        data = {
+            "path" : path
+        }
+
+        method = "PUT"
+        url    = self.options.baseurl + "/resources/unpublish"
+
+        self.query(method, url, data)
+
+
     def _put_retry(self, source, target):
         """
         Реализация одной попытки помещения файла в хранилище
@@ -1536,6 +1579,35 @@ class ydCmd(ydExtended):
             self.create(self.remote_path(arg))
 
 
+    def share_cmd(self, args):
+        """
+        Обработчик публикации объекта (объект становится доступен по прямой ссылке)
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) < 1:
+            raise ydError(1, "Object name not specified")
+
+        for arg in args:
+            info = self.publish(self.remote_path(arg))
+            ydBase.echo("{0} -> {1}".format(info.path, info.public_url))
+
+
+    def revoke_cmd(self, args):
+        """
+        Обработчик закрытия публичного доступа к объекту (объект становится недоступен по прямой ссылке)
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) < 1:
+            raise ydError(1, "Object name not specified")
+
+        for arg in args:
+            self.unpublish(self.remote_path(arg))
+
+
     def put_cmd(self, args):
         """
         Обработчик загрузки файла в хранилище
@@ -1685,19 +1757,21 @@ class ydCmd(ydExtended):
             ydBase.echo("     {0} <command> [options] [args]".format(sys.argv[0]))
             ydBase.echo("")
             ydBase.echo("Commands:")
-            ydBase.echo("     help  -- describe the usage of this program or its subcommands")
-            ydBase.echo("     ls    -- list files and directories")
-            ydBase.echo("     rm    -- remove file or directory")
-            ydBase.echo("     cp    -- copy file or directory")
-            ydBase.echo("     mv    -- move file or directory")
-            ydBase.echo("     put   -- upload file to storage")
-            ydBase.echo("     get   -- download file from storage")
-            ydBase.echo("     mkdir -- create directory")
-            ydBase.echo("     stat  -- show metainformation about cloud object")
-            ydBase.echo("     info  -- show metainformation about cloud storage")
-            ydBase.echo("     last  -- show metainformation about last uploaded files")
-            ydBase.echo("     du    -- estimate files space usage")
-            ydBase.echo("     clean -- delete old files and/or directories")
+            ydBase.echo("     help   -- describe the usage of this program or its subcommands")
+            ydBase.echo("     ls     -- list files and directories")
+            ydBase.echo("     rm     -- remove file or directory")
+            ydBase.echo("     cp     -- copy file or directory")
+            ydBase.echo("     mv     -- move file or directory")
+            ydBase.echo("     put    -- upload file to storage")
+            ydBase.echo("     get    -- download file from storage")
+            ydBase.echo("     mkdir  -- create directory")
+            ydBase.echo("     stat   -- show metainformation about cloud object")
+            ydBase.echo("     info   -- show metainformation about cloud storage")
+            ydBase.echo("     last   -- show metainformation about last uploaded files")
+            ydBase.echo("     share  -- publish uploaded object")
+            ydBase.echo("     revoke -- unpublish uploaded object")
+            ydBase.echo("     du     -- estimate files space usage")
+            ydBase.echo("     clean  -- delete old files and/or directories")
             ydBase.echo("")
             ydBase.echo("Options:")
             ydBase.echo("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
@@ -1803,6 +1877,14 @@ class ydCmd(ydExtended):
             ydBase.echo("")
             ydBase.echo(" * If argument N is not specified, default REST API value will be used.")
             ydBase.echo("")
+        elif cmd == "share":
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} share <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
+            ydBase.echo("")
+        elif cmd == "revoke":
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} revoke <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
+            ydBase.echo("")
         elif cmd == "du":
             ydBase.echo("Usage:")
             ydBase.echo("     {0} du [disk:/object]".format(sys.argv[0]))
@@ -1890,6 +1972,10 @@ if __name__ == "__main__":
             cmd.info_cmd(args)
         elif command == "last":
             cmd.last_cmd(args)
+        elif command == "share":
+            cmd.share_cmd(args)
+        elif command == "revoke":
+            cmd.revoke_cmd(args)
         elif command == "du":
             cmd.du_cmd(args)
         elif command == "clean":

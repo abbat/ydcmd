@@ -57,6 +57,8 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `stat` - nesne hakkında meta-bilgi alma;
 * `info` - depo hakkında meta-bilgi alma;
 * `last` - son yüklenen dosyalar hakkında meta-bilgi alma;
+* `share` - yayın nesnenin (daha doğrudan bağlantılar);
+* `revoke` - kapanış erişim yayımlanmış, daha önce nesne;
 * `du` - dosyaların hafızada kapladığı alanı hesaplama;
 * `clean` - dosya ve dizinleri temizleme;
 
@@ -194,6 +196,20 @@ ydcmd last [N]
 * `--long` - genişletilmiş liste gösterme (oluşturma zamanı, değişiklik zamanı, boyut, dosya).
 
 Eğer N argüman belirtilmemişse, REST API'nin varsayılan değeri kullanılacaktır.
+
+### Yayın nesne
+
+```
+ydcmd share disk:/nesne
+```
+
+Komut verir path ve url nesne.
+
+### Erişim kapatma
+
+```
+ydcmd revoke disk:/nesne
+```
 
 ### Kullanılan disk alanı değerlendirmesi
 
