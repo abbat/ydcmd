@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.1"
+__version__  = "1.2"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -139,6 +139,8 @@ class ydConfig(object):
             "async"       : "no",
             "rsync"       : "no",
             "base-url"    : "https://cloud-api.yandex.net/v1/disk",
+            "app-id"      : "2415aa2e6ceb4839b1202e15ac83536c",
+            "app-secret"  : "b8ae32ce025c451f84bd7df17029cb55",
             "ca-file"     : "",
             "ciphers"     : "",
             "depth"       : "1",
@@ -188,21 +190,23 @@ class ydOptions(object):
         Аргументы:
             config (dict) -- конфигурация приложения
         """
-        self.timeout  = int(config["timeout"])
-        self.poll     = int(config["poll"])
-        self.retries  = int(config["retries"])
-        self.delay    = int(config["delay"])
-        self.limit    = int(config["limit"])
-        self.chunk    = int(config["chunk"]) * 1024
-        self.token    = str(config["token"])
-        self.quiet    = self._bool(config["quiet"])
-        self.debug    = self._bool(config["debug"]) and not self.quiet
-        self.verbose  = (self._bool(config["verbose"]) or self.debug) and not self.quiet
-        self.async    = self._bool(config["async"])
-        self.rsync    = self._bool(config["rsync"])
-        self.baseurl  = str(config["base-url"])
-        self.cafile   = str(config["ca-file"])
-        self.ciphers  = str(config["ciphers"])
+        self.timeout   = int(config["timeout"])
+        self.poll      = int(config["poll"])
+        self.retries   = int(config["retries"])
+        self.delay     = int(config["delay"])
+        self.limit     = int(config["limit"])
+        self.chunk     = int(config["chunk"]) * 1024
+        self.token     = str(config["token"])
+        self.quiet     = self._bool(config["quiet"])
+        self.debug     = self._bool(config["debug"]) and not self.quiet
+        self.verbose   = (self._bool(config["verbose"]) or self.debug) and not self.quiet
+        self.async     = self._bool(config["async"])
+        self.rsync     = self._bool(config["rsync"])
+        self.baseurl   = str(config["base-url"])
+        self.appid     = str(config["app-id"])
+        self.appsecret = str(config["app-secret"])
+        self.cafile    = str(config["ca-file"])
+        self.ciphers   = str(config["ciphers"])
 
         if self.ciphers == "":
             self.ciphers = None
@@ -540,16 +544,17 @@ class ydBase(object):
         }
 
 
-    def query_retry(self, method, url, data, headers = None, filename = None):
+    def query_retry(self, method, url, args, headers = None, filename = None, data = None):
         """
         Реализация одной попытки запроса к API
 
         Аргументы:
-            method   (str)  -- Тип запроса (GET|PUT|DELETE)
+            method   (str)  -- Тип запроса (GET|POST|PUT|DELETE)
             url      (str)  -- URL запроса
-            data     (dict) -- Параметры запроса
+            args     (dict) -- Параметры запроса
             headers  (dict) -- Заголовки запроса
             filename (str)  -- Имя файла для отправки / получения
+            data     (str)  -- Данные для тела POST запроса
 
         Результат (dict):
             Результат вызова API, преобразованный из JSON
@@ -561,7 +566,7 @@ class ydBase(object):
         if headers == None:
             headers = self._headers()
 
-        url += ("" if data == None else "?{0}".format(yd_urlencode(data)))
+        url += ("" if args == None else "?{0}".format(yd_urlencode(args)))
 
         if self.options.debug:
             self.debug("{0} {1}".format(method, url))
@@ -576,8 +581,10 @@ class ydBase(object):
             raise ValueError("Unknown method: {0}".format(method))
 
         fd = None
-        if filename != None and method == "PUT":
+        if method == "PUT" and filename != None:
             fd = open(filename, "rb")
+        elif method == "POST" and data != None:
+            fd = data
 
         request = ydRequest(url, fd, headers)
         request.get_method = lambda: method
@@ -630,14 +637,14 @@ class ydBase(object):
             raise ydError(e.code, errmsg)
 
 
-    def query(self, method, url, data, headers = None, filename = None):
+    def query(self, method, url, args, headers = None, filename = None, data = None):
         """
         Реализация нескольких попыток запроса к API
         """
         retry = 0
         while True:
             try:
-                return self.query_retry(method, url, data, headers, filename)
+                return self.query_retry(method, url, args, headers, filename, data)
             except (ydURLError, ssl.SSLError) as e:
                 retry += 1
                 self.debug("Retry {0}/{1}: {2}".format(retry, self.options.retries, e), self.options.debug)
@@ -697,7 +704,7 @@ class ydBase(object):
         Результат (ydItem):
             Метаинформация об объекте в хранилище
         """
-        data = {
+        args = {
             "path"   : path,
             "offset" : 0,
             "limit"  : 0
@@ -706,7 +713,7 @@ class ydBase(object):
         method = "GET"
         url    = self.options.baseurl + "/resources"
 
-        part = self.query(method, url, data)
+        part = self.query(method, url, args)
 
         if "_embedded" in part:
             del part["_embedded"]
@@ -726,7 +733,7 @@ class ydBase(object):
         """
         result = {}
 
-        data = {
+        args = {
             "path"   : path,
             "offset" : 0,
             "limit"  : self.options.limit
@@ -736,7 +743,7 @@ class ydBase(object):
         url    = self.options.baseurl + "/resources"
 
         while True:
-            part = self.query(method, url, data)
+            part = self.query(method, url, args)
 
             if "_embedded" in part:
                 part = part["_embedded"]
@@ -750,7 +757,7 @@ class ydBase(object):
                 result[item.name] = item
 
             if len(part["items"]) == int(part["limit"]):
-                data["offset"] += int(part["limit"])
+                args["offset"] += int(part["limit"])
             else:
                 break
 
@@ -765,25 +772,25 @@ class ydBase(object):
             limit (int) -- Количество файлов в списке
 
         Результат (dict):
-            Список имен объектов и метаинформации о них { "имя" : ydItem }
+            Список имен объектов и метаинформации о них { "путь" : ydItem }
         """
         result = {}
 
-        data = None
+        args = None
 
         if limit > 0:
-            data = {
+            args = {
                 "limit" : limit
             }
 
         method = "GET"
         url    = self.options.baseurl + "/resources/last-uploaded"
 
-        part = self.query(method, url, data)
+        part = self.query(method, url, args)
 
         for item in part["items"]:
             item = ydItem(item)
-            result[item.name] = item
+            result[item.path] = item
 
         return result
 
@@ -797,7 +804,7 @@ class ydBase(object):
         """
         self.verbose("Delete: {0}".format(path), self.options.verbose)
 
-        data = {
+        args = {
             "path"        : path,
             "permanently" : "true"
         }
@@ -805,7 +812,7 @@ class ydBase(object):
         method = "DELETE"
         url    = self.options.baseurl + "/resources"
 
-        link = self.query(method, url, data)
+        link = self.query(method, url, args)
 
         self._wait(link)
 
@@ -820,7 +827,7 @@ class ydBase(object):
         """
         self.verbose("Copy: {0} -> {1}".format(source, target), self.options.verbose)
 
-        data = {
+        args = {
             "from"      : source,
             "path"      : target,
             "overwrite" : "true"
@@ -829,7 +836,7 @@ class ydBase(object):
         method = "POST"
         url    = self.options.baseurl + "/resources/copy"
 
-        link = self.query(method, url, data)
+        link = self.query(method, url, args)
 
         self._wait(link)
 
@@ -844,7 +851,7 @@ class ydBase(object):
         """
         self.verbose("Move: {0} -> {1}".format(source, target), self.options.verbose)
 
-        data = {
+        args = {
             "from"      : source,
             "path"      : target,
             "overwrite" : "true"
@@ -853,7 +860,7 @@ class ydBase(object):
         method = "POST"
         url    = self.options.baseurl + "/resources/move"
 
-        link = self.query(method, url, data)
+        link = self.query(method, url, args)
 
         self._wait(link)
 
@@ -867,14 +874,14 @@ class ydBase(object):
         """
         self.verbose("Create: {0}".format(path), self.options.verbose)
 
-        data = {
+        args = {
             "path" : path
         }
 
         method = "PUT"
         url    = self.options.baseurl + "/resources"
 
-        self.query(method, url, data)
+        self.query(method, url, args)
 
 
     def publish(self, path):
@@ -889,14 +896,14 @@ class ydBase(object):
         """
         self.verbose("Publish: {0}".format(path), self.options.verbose)
 
-        data = {
+        args = {
             "path" : path
         }
 
         method = "PUT"
         url    = self.options.baseurl + "/resources/publish"
 
-        self.query(method, url, data)
+        self.query(method, url, args)
 
         return self.stat(path)
 
@@ -910,14 +917,14 @@ class ydBase(object):
         """
         self.verbose("Unpublish: {0}".format(path), self.options.verbose)
 
-        data = {
+        args = {
             "path" : path
         }
 
         method = "PUT"
         url    = self.options.baseurl + "/resources/unpublish"
 
-        self.query(method, url, data)
+        self.query(method, url, args)
 
 
     def _put_retry(self, source, target):
@@ -928,7 +935,7 @@ class ydBase(object):
             source (str) -- Имя локального файла
             target (str) -- Имя файла в хранилище
         """
-        data = {
+        args = {
             "path"      : target,
             "overwrite" : "true"
         }
@@ -936,7 +943,7 @@ class ydBase(object):
         method = "GET"
         url    = self.options.baseurl + "/resources/upload"
 
-        result = self.query_retry(method, url, data)
+        result = self.query_retry(method, url, args)
 
         if "href" in result and "method" in result:
             url    = result["href"]
@@ -990,14 +997,14 @@ class ydBase(object):
             source (str) -- Имя файла в хранилище
             target (str) -- Имя локального файла
         """
-        data = {
+        args = {
             "path" : source
         }
 
         method = "GET"
         url    = self.options.baseurl + "/resources/download"
 
-        result = self.query_retry(method, url, data)
+        result = self.query_retry(method, url, args)
 
         if "href" in result and "method" in result:
             url    = result["href"]
@@ -1743,6 +1750,36 @@ class ydCmd(ydExtended):
         self.clean(path)
 
 
+    def token_cmd(self, args):
+        """
+        Получение OAuth токена для приложения
+
+        Аргументы:
+            args (dict) -- Аргументы командной строки
+        """
+        if len(args) > 1:
+            raise ydError(1, "Too many arguments")
+
+        if len(args) == 0:
+            ydBase.echo("Open URL below in your browser, allow access and paste code as argument")
+            ydBase.echo("https://oauth.yandex.com/authorize?response_type=code&client_id={0}".format(self.options.appid))
+            return
+
+        method  = "POST"
+        url     = "https://oauth.yandex.com/token"
+        data    = "grant_type=authorization_code&code={0}&client_id={1}&client_secret={2}".format(args[0], self.options.appid, self.options.appsecret)
+        headers = self._headers()
+
+        headers["Content-Type"]   = "application/x-www-form-urlencoded"
+        headers["Content-Length"] = len(data)
+
+        del headers["Authorization"]
+
+        result = self.query_retry(method, url, None, headers, None, data)
+
+        ydBase.echo("OAuth token is: {0}".format(result["access_token"]))
+
+
     @staticmethod
     def print_usage(cmd = None):
         """
@@ -1772,6 +1809,7 @@ class ydCmd(ydExtended):
             ydBase.echo("     revoke -- unpublish uploaded object")
             ydBase.echo("     du     -- estimate files space usage")
             ydBase.echo("     clean  -- delete old files and/or directories")
+            ydBase.echo("     token  -- get oauth token for application")
             ydBase.echo("")
             ydBase.echo("Options:")
             ydBase.echo("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
@@ -1910,6 +1948,10 @@ class ydCmd(ydExtended):
             ydBase.echo(" * If target is not specified, target will be root '/' directory")
             ydBase.echo(" * Objects sorted and filtered by modified date (not created date)")
             ydBase.echo("")
+        elif cmd == "token":
+            ydBase.echo("Usage:")
+            ydBase.echo("     {0} token [code]".format(sys.argv[0]))
+            ydBase.echo("")
         else:
             sys.stderr.write("Unknown command {0}\n".format(cmd))
             sys.exit(1)
@@ -1980,6 +2022,8 @@ if __name__ == "__main__":
             cmd.du_cmd(args)
         elif command == "clean":
             cmd.clean_cmd(args)
+        elif command == "token":
+            cmd.token_cmd(args)
         else:
             ydCmd.print_usage(command)
     except ydError as e:

@@ -20,7 +20,7 @@ $ sudo cp ydcmd/ydcmd.py /usr/local/bin/ydcmd
 
 ## Pre-starting procedure
 
-To run the client you need a OAuth debugging token. To obtain one, [register the application on Yandex](https://oauth.yandex.com/client/new):
+To run the client you need a OAuth token. To obtain one run `ydcmd token` command or [register the application on Yandex](https://oauth.yandex.com/client/new):
 
 * `Name` - `ydcmd` (can be arbitrary)
 * `Permissions` - `Yandex.Disk REST API`
@@ -60,7 +60,8 @@ ydcmd [command] [options] [arguments]
 * `share` - publish uploaded object (obtaining direct link);
 * `revoke` - unpublish uploaded object;
 * `du` - evaluates the disk space used by files within the storage;
-* `clean` - cleans files and directories.
+* `clean` - cleans files and directories;
+* `token` - get oauth token for application.
 
 **Options**:
 
@@ -240,6 +241,14 @@ ydcmd clean <options> [disk:/object]
   * For selecting the number of copies, you can use a number without a dimension (for example, `31`).
 
 If a target object is not specified, then the storage's root directory will be used. Objects are sorted and filtered according to modification date (not by creation date).
+
+### Get OAuth token
+
+```
+ydcmd token [code]
+```
+
+Without argument it shows URL to obtain code. Open URL in your browser, allow access and use code as command argument to obtain OAuth token.
 
 ## Configuration
 

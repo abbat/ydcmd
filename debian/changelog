@@ -1,3 +1,10 @@
+ydcmd (1.2) testing; urgency=low
+
+  * Исправление ошибки last для одинаковых имен файлов с разными путями;
+  * Добавление команды token для упрощенного получения OAuth токена.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 29 Dec 2014 13:06:00 +0300
+
 ydcmd (1.1) testing; urgency=low
 
   * share / revoke для объектов в хранилище.

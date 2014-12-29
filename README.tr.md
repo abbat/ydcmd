@@ -20,7 +20,7 @@ $ sudo cp ydcmd/ydcmd.py /usr/local/bin/ydcmd
 
 ## Çalışmaya hazırlık
 
-İstemcinin çalışması için OAuth hata ayıklama belirteci gereklidir. Almak için, [Yandex'ten uygulamayı kaydediniz](https://oauth.yandex.com.tr/client/new):
+İstemcinin çalışması için OAuth ayıklama belirteci gereklidir. Almak için, [Yandex'ten uygulamayı kaydediniz](https://oauth.yandex.com.tr/client/new):
 
 * `Adı` - `ydcmd` (isteğe bağlı olabilir)
 * `İzinler` - `Yandex.Disk REST API`
@@ -61,6 +61,7 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `revoke` - kapanış erişim yayımlanmış, daha önce nesne;
 * `du` - dosyaların hafızada kapladığı alanı hesaplama;
 * `clean` - dosya ve dizinleri temizleme;
+* `token` - almak OAuth token uygulaması için.
 
 **Seçenekler**:
 
