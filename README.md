@@ -10,7 +10,7 @@
 * [Fedora, openSUSE, CentOS](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
 * [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
 * [Arch AUR](https://aur.archlinux.org/packages/ydcmd/) (см. так же [AUR Helpers](https://wiki.archlinux.org/index.php/AUR_Helpers_(Русский)))
-* Windows (не тестируется, не поддерживается): [msi](https://yadi.sk/d/4zeF42GsdbLZL), [zip](https://yadi.sk/d/qQSswrqBdbLa9)
+* Windows (не тестируется, не поддерживается): [msi](https://yadi.sk/d/BjXSRl8XdhFmP), [zip](https://yadi.sk/d/-oLa2EpMdhFmu)
 * Из исходного кода:
 
 ```
