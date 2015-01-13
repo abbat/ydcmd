@@ -1,6 +1,8 @@
 ydcmd (1.3) testing; urgency=low
 
-  * Поддержка TLS > 1.0 для новых версий Python.
+  * Поддержка TLS > 1.0 для новых версий Python;
+  * Смена умолчаний для ciphers (ключи >= 128 бит);
+  * Смена умолчаний для ca-file (поиск по известным путям).
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 12 Jan 2015 20:23:00 +0300
 

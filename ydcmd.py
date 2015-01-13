@@ -125,7 +125,7 @@ class ydConfig(object):
         Результат (dict):
             Конфигурация приложения по умолчанию, которая может быть перегружена в вызове ydConfig.load_config
         """
-        return {
+        result = {
             "timeout"     : "30",
             "poll"        : "1",
             "retries"     : "3",
@@ -141,8 +141,8 @@ class ydConfig(object):
             "base-url"    : "https://cloud-api.yandex.net/v1/disk",
             "app-id"      : "2415aa2e6ceb4839b1202e15ac83536c",
             "app-secret"  : "b8ae32ce025c451f84bd7df17029cb55",
-            "ca-file"     : "",   # TODO: check env for SSL_CERT_FILE and standard paths
-            "ciphers"     : "",
+            "ca-file"     : "",
+            "ciphers"     : "HIGH:!aNULL:!MD5:!3DES:!CAMELLIA:!SRP:!PSK:@STRENGTH",
             "depth"       : "1",
             "dry"         : "no",
             "type"        : "all",
@@ -153,6 +153,20 @@ class ydConfig(object):
             "decrypt-cmd" : "",
             "temp-dir"    : ""
         }
+
+        cafiles = [
+            "/etc/ssl/certs/ca-certificates.crt",       # Debian, Ubuntu, Arch
+            "/etc/pki/tls/certs/ca-bundle.trust.crt",   # CentOS, Fedora (EV certs)
+            "/etc/ssl/ca-bundle.pem",                   # OpenSUSE
+            "/usr/local/share/certs/ca-root-nss.crt"    # FreeBSD
+        ]
+
+        for cafile in cafiles:
+            if os.path.isfile(cafile):
+                result["ca-file"] = cafile
+                break;
+
+        return result
 
 
     @staticmethod
@@ -234,6 +248,8 @@ class ydOptions(object):
 
         if "YDCMD_TOKEN" in os.environ:
             self.token = str(os.environ["YDCMD_TOKEN"])
+        if "SSL_CERT_FILE" in os.environ:
+            self.cafile = str(os.environ["SSL_CERT_FILE"])
 
 
     def __repr__(self):
@@ -1848,8 +1864,8 @@ class ydCmd(ydExtended):
             ydBase.echo("     --verbose     -- verbose output (default: {0})".format(default["verbose"]))
             ydBase.echo("     --debug       -- debug output (default: {0})".format(default["debug"]))
             ydBase.echo("     --chunk=<N>   -- chunk size in KB for io operations (default: {0})".format(default["chunk"]))
-            ydBase.echo("     --ca-file=<S> -- file with trusted CAs (default: none)")
-            ydBase.echo("     --ciphers=<S> -- ciphers sute (default: none)")
+            ydBase.echo("     --ca-file=<S> -- file with trusted CAs (default: {0})".format("none" if not default["ca-file"] else default["ca-file"]))
+            ydBase.echo("     --ciphers=<S> -- ciphers sute (default: {0})".format("none" if not default["ciphers"] else default["ciphers"]))
             ydBase.echo("")
         elif cmd == "ls":
             ydBase.echo("Usage:")
