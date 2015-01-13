@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.2"
+__version__  = "1.3"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -141,7 +141,7 @@ class ydConfig(object):
             "base-url"    : "https://cloud-api.yandex.net/v1/disk",
             "app-id"      : "2415aa2e6ceb4839b1202e15ac83536c",
             "app-secret"  : "b8ae32ce025c451f84bd7df17029cb55",
-            "ca-file"     : "",
+            "ca-file"     : "",   # TODO: check env for SSL_CERT_FILE and standard paths
             "ciphers"     : "",
             "depth"       : "1",
             "dry"         : "no",
@@ -414,14 +414,24 @@ class ydBase(object):
                     ca_certs  = self._options.cafile
                 )
 
-            if sys.version_info >= (2, 7) and self._options.ciphers != None:
+            if self._options.ciphers != None and ydBase.check_python23(7, 0, 2, 0):   # Python >= 2.7 / 3.2
                 kwargs.update(ciphers = self._options.ciphers)
 
-            self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, ssl_version = ssl.PROTOCOL_TLSv1, **kwargs)
+            sslv3_workaround = ydBase.check_python23(7, 9, 2, 0)   # Python >= 2.7.9 / 3.2
+            if sslv3_workaround:
+                kwargs.update(ssl_version = ssl.PROTOCOL_SSLv23)
+            else:
+                kwargs.update(ssl_version = ssl.PROTOCOL_TLSv1)
 
-            if self._options.debug == True:
+            self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, **kwargs)
+
+            if sslv3_workaround:
+                self.sock.context.options |= ssl.OP_NO_SSLv2
+                self.sock.context.options |= ssl.OP_NO_SSLv3
+
+            if self._options.debug:
                 ciphers = self.sock.cipher()
-                ydBase.debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, ciphers[1], ciphers[0]))
+                ydBase.debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, self.sock.version() if ydBase.check_python23(7, 9, 5, 0) else ciphers[1], ciphers[0]))
 
             if self._options.cafile != None:
                 try:
@@ -528,6 +538,23 @@ class ydBase(object):
         """
         if flag:
             sys.stderr.write("--> {0}\n".format(errmsg))
+
+
+    @staticmethod
+    def check_python23(py2minor, py2micro, py3minor, py3micro):
+        """
+        Проверка версии Python для обеспечения совместимости
+
+        Аргументы:
+            py2minor (int) -- minor версия для 2.x
+            py2micro (int) -- micro версия для 2.x
+            py3minor (int) -- minor версия для 3.x
+            py3micro (int) -- micro версия для 3.x
+
+        Результат (bool):
+            Соответствие версии >= аргументам
+        """
+        return sys.version_info >= (2, py2minor, py2micro) if sys.version_info < (3, 0) else sys.version_info >= (3, py3minor, py3micro)
 
 
     def _headers(self):
