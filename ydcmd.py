@@ -10,7 +10,7 @@ __license__  = "BSD"
 __all__ = ["ydError", "ydCertError", "ydConfig", "ydOptions", "ydItem", "ydBase", "ydExtended", "ydCmd"]
 
 
-import array, os, sys
+import array, os, stat, pwd, grp, sys
 import socket, ssl
 import re, codecs, json
 import time, datetime
@@ -138,6 +138,7 @@ class ydConfig(object):
             "debug"       : "no",
             "async"       : "no",
             "rsync"       : "no",
+            "attr"        : "no",
             "base-url"    : "https://cloud-api.yandex.net/v1/disk",
             "app-id"      : "2415aa2e6ceb4839b1202e15ac83536c",
             "app-secret"  : "b8ae32ce025c451f84bd7df17029cb55",
@@ -216,6 +217,7 @@ class ydOptions(object):
         self.verbose   = (self._bool(config["verbose"]) or self.debug) and not self.quiet
         self.async     = self._bool(config["async"])
         self.rsync     = self._bool(config["rsync"])
+        self.attr      = self._bool(config["attr"])
         self.baseurl   = str(config["base-url"])
         self.appid     = str(config["app-id"])
         self.appsecret = str(config["app-secret"])
@@ -321,7 +323,7 @@ class ydItem(object):
     def __str__(self):
         result = ""
         for key, value in iteritems(self.__dict__):
-            result += "{0:>12}: {1}\n".format(key, value)
+            result += "{0:>12}: {1}\n".format(key if key != "custom_properties" else "custom", value)
         return result
 
 
@@ -587,6 +589,30 @@ class ydBase(object):
         }
 
 
+    def _meta(self, path):
+        """
+        Получение мета-информации о локальном файле или директории
+
+        Аргументы:
+            path (str) -- Имя файла или директории
+
+        Результат (dict):
+            Метаинформация для отправки
+        """
+        info = os.stat(path)
+        meta = {
+            "ctime" : int(info.st_ctime),
+            "mtime" : int(info.st_mtime),
+            "uid"   : info.st_uid,
+            "gid"   : info.st_gid,
+            "mode"  : oct(stat.S_IMODE(info.st_mode)),
+            "user"  : pwd.getpwuid(info.st_uid).pw_name,
+            "group" : grp.getgrgid(info.st_gid).gr_name
+        }
+
+        return meta
+
+
     def query_retry(self, method, url, args, headers = None, filename = None, data = None):
         """
         Реализация одной попытки запроса к API
@@ -620,13 +646,13 @@ class ydBase(object):
         if re.match('^https:\/\/[a-z0-9\.\-]+\.yandex\.(net|ru|com)(:443){,1}\/', url, re.IGNORECASE) == None:
             raise RuntimeError("Malformed URL {0}".format(url))
 
-        if method not in ["GET", "POST", "PUT", "DELETE"]:
+        if method not in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
             raise ValueError("Unknown method: {0}".format(method))
 
         fd = None
         if method == "PUT" and filename != None:
             fd = open(filename, "rb")
-        elif method == "POST" and data != None:
+        elif (method == "POST" or method == "PATCH") and data != None:
             fd = data
 
         request = ydRequest(url, fd, headers)
@@ -762,6 +788,31 @@ class ydBase(object):
             del part["_embedded"]
 
         return ydItem(part)
+
+
+    def patch(self, path, info):
+        """
+        Добавление метаинформации объекту в хранилище
+
+        Аргументы:
+            path (str)  -- Имя файла или директории в хранилище
+            info (dict) -- Метаинформация (без custom_properties)
+        """
+        self.verbose("Patch: {0}".format(path), self.options.verbose)
+
+        args = {
+            "path" : path
+        }
+
+        method  = "PATCH"
+        url     = self.options.baseurl + "/resources"
+        data    = "{\"custom_properties\": " + json.dumps(info, ensure_ascii = False) + "}"
+        headers = self._headers()
+
+        headers["Content-Length"] = len(data)
+        headers["Content-Type"]   = "application/json"
+
+        self.query(method, url, args, headers, None, data)
 
 
     def list(self, path):
@@ -1005,6 +1056,10 @@ class ydBase(object):
         """
         Реализация нескольких попыток загрузки файла в хранилище
         """
+        meta = None
+        if self.options.attr:
+            meta = self._meta(source)
+
         if self.options.encrypt:
             if self.options.encryptcmd == "":
                 raise ydError(1, "Encrypt error: --encrypt-cmd not defined but --encrypt used")
@@ -1030,6 +1085,9 @@ class ydBase(object):
                 if retry >= self.options.retries:
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
+
+        if meta:
+            self.patch(target, meta)
 
 
     def _get_retry(self, source, target):
