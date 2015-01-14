@@ -10,7 +10,7 @@ Linux/FreeBSD command line client for interacting with cloud storage [Yandex.Dis
 * [Fedora, openSUSE, CentOS](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
 * [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
 * [Arch AUR](https://aur.archlinux.org/packages/ydcmd/) (see also [AUR Helpers](https://wiki.archlinux.org/index.php/AUR_Helpers))
-* Windows (not tested, zero support): [msi](https://yadi.sk/d/BjXSRl8XdhFmP), [zip](https://yadi.sk/d/-oLa2EpMdhFmu)
+* Windows (not tested, zero support): [msi](https://yadi.sk/d/VYnXz2cGdxMjC), [zip](https://yadi.sk/d/Vaaivit7dxMjN)
 * From source code:
 
 ```
@@ -271,7 +271,8 @@ ca-file = /etc/ssl/certs/ca-certificates.crt
 
 ## Environment variables
 
-* `YDCMD_TOKEN` - oauth token, has priority over the option `--token`.
+* `YDCMD_TOKEN` - oauth token, has priority over the option `--token`;
+* `SSL_CERT_FILE` - file name with certificates of trusted certification authorities, has priority over the option `--ca-file`.
 
 ## Exit code
 

@@ -10,7 +10,7 @@
 * [Fedora, openSUSE, CentOS](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
 * [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
 * [Arch AUR](https://aur.archlinux.org/packages/ydcmd/) (ayrıca bkz. [AUR Helpers] (https://wiki.archlinux.org/index.php/AUR_Helpers_(Türkçe)))
-* Windows (değil test, sıfır desteği): [msi](https://yadi.sk/d/BjXSRl8XdhFmP), [zip](https://yadi.sk/d/-oLa2EpMdhFmu)
+* Windows (değil test, sıfır desteği): [msi](https://yadi.sk/d/VYnXz2cGdxMjC), [zip](https://yadi.sk/d/Vaaivit7dxMjN)
 * Kaynak kodundan:
 
 ```
@@ -263,7 +263,8 @@ ca-file = /etc/ssl/certs/ca-certificates.crt
 
 ## Çevre değişkenleri
 
-* `YDCMD_TOKEN` - oauth belirteci, `--token` seçeneği üzerinde önceliğe sahiptir.
+* `YDCMD_TOKEN` - oauth belirteci, `--token` seçeneği üzerinde önceliğe sahiptir;
+* `SSL_CERT_FILE` - güvenilir sertifika merkezlerinin sertifikaları ile dosya adı, `--ca-file` seçeneği üzerinde önceliğe sahiptir.
 
 ## Çıkış kodu
 
