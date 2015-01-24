@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.3"
+__version__  = "1.4"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -589,30 +589,6 @@ class ydBase(object):
         }
 
 
-    def _meta(self, path):
-        """
-        Получение мета-информации о локальном файле или директории
-
-        Аргументы:
-            path (str) -- Имя файла или директории
-
-        Результат (dict):
-            Метаинформация для отправки
-        """
-        info = os.stat(path)
-        meta = {
-            "ctime" : int(info.st_ctime),
-            "mtime" : int(info.st_mtime),
-            "uid"   : info.st_uid,
-            "gid"   : info.st_gid,
-            "mode"  : oct(stat.S_IMODE(info.st_mode)),
-            "user"  : pwd.getpwuid(info.st_uid).pw_name,
-            "group" : grp.getgrgid(info.st_gid).gr_name
-        }
-
-        return meta
-
-
     def query_retry(self, method, url, args, headers = None, filename = None, data = None):
         """
         Реализация одной попытки запроса к API
@@ -1056,10 +1032,6 @@ class ydBase(object):
         """
         Реализация нескольких попыток загрузки файла в хранилище
         """
-        meta = None
-        if self.options.attr:
-            meta = self._meta(source)
-
         if self.options.encrypt:
             if self.options.encryptcmd == "":
                 raise ydError(1, "Encrypt error: --encrypt-cmd not defined but --encrypt used")
@@ -1085,9 +1057,6 @@ class ydBase(object):
                 if retry >= self.options.retries:
                     raise ydError(1, e)
                 time.sleep(self.options.delay)
-
-        if meta:
-            self.patch(target, meta)
 
 
     def _get_retry(self, source, target):
@@ -1192,6 +1161,69 @@ class ydExtended(ydBase):
             return hasher.hexdigest()
 
 
+    def _meta(self, path):
+        """
+        Получение метаинформации о локальном файле или директории
+
+        Аргументы:
+            path (str) -- Имя файла или директории
+
+        Результат (dict):
+            Метаинформация для отправки
+        """
+        info = os.stat(path)
+        meta = {
+            "ctime" : int(info.st_ctime),
+            "mtime" : int(info.st_mtime),
+            "uid"   : info.st_uid,
+            "gid"   : info.st_gid,
+            "mode"  : oct(stat.S_IMODE(info.st_mode)),
+            "user"  : pwd.getpwuid(info.st_uid).pw_name,
+            "group" : grp.getgrgid(info.st_gid).gr_name
+        }
+
+        return meta
+
+
+    def _meta_diff(self, meta, stat):
+        """
+        Сравнение метаинформации о локальном объекте с метаинформацией объекта в хранилище
+
+        Аргументы:
+            meta (dict)   -- Метаинформация о локальном объекте
+            stat (ydItem) -- Информация об оъекте
+
+        Результат (dict):
+            Метаинформация для изменения или None
+        """
+        if not stat or not getattr(stat, "custom_properties", None):
+            return meta
+
+        result = {}
+        for key, value in iteritems(stat.custom_properties):
+            if key in meta and meta[key] == value:
+                continue
+            result[key] = meta[key]
+
+        return result if len(result) > 0 else None
+
+
+    def meta_patch(self, source, target, stat):
+        """
+        Установка метаинформации для объекта в хранилище
+
+        Аргументы:
+            source (str)    -- Локальный объект
+            target (str)    -- Объект в хранилище
+            stat   (ydItem) -- Информация об объекте в хранилище или None
+        """
+        if self.options.attr and os.name != "nt":
+            meta = self._meta(source)
+            diff = self._meta_diff(meta, stat)
+            if diff:
+                self.patch(target, diff)
+
+
     def _ensure_remote(self, path, type, stat = None):
         """
         Метод проверки возможности создания объекта требуемого типа в хранилище.
@@ -1244,18 +1276,22 @@ class ydExtended(ydBase):
             titem = target + item
 
             if not os.path.islink(sitem):
+                stat = None
                 if os.path.isdir(sitem):
-                    self._ensure_remote(titem, "dir", flist[item] if item in flist else None)
+                    stat = self._ensure_remote(titem, "dir", flist[item] if item in flist else None)
+                    self.meta_patch(sitem, titem, stat)
                     self._put_sync(sitem + "/", titem + "/")
                 elif os.path.isfile(sitem):
                     force = True
                     if item in flist:
-                        self._ensure_remote(titem, "file", flist[item])
-                        if not self.options.encrypt and flist[item].isfile() and os.path.getsize(sitem) == flist[item].size and self.md5(sitem) == flist[item].md5:
+                        stat = self._ensure_remote(titem, "file", flist[item])
+                        if not self.options.encrypt and stat and stat.isfile() and os.path.getsize(sitem) == stat.size and self.md5(sitem) == stat.md5:
                             force = False
 
                     if force:
                         self.put(sitem, titem)
+
+                    self.meta_patch(sitem, titem, stat)
                 else:
                     raise ydError(1, "Unsupported filesystem object: {0}".format(sitem))
 
@@ -1745,15 +1781,17 @@ class ydCmd(ydExtended):
                     source += "/"
                 if os.path.basename(target) != "":
                     target += "/"
-                self._ensure_remote(target, "dir")
+                stat = self._ensure_remote(target, "dir")
+                self.meta_patch(source, target, stat)
                 self._put_sync(source, target)
             elif os.path.isfile(source):
                 force = True
                 stat  = self._ensure_remote(target, "file")
-                if not self.options.encrypt and stat != None and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
+                if not self.options.encrypt and stat and stat.isfile() and os.path.getsize(source) == stat.size and self.md5(source) == stat.md5:
                     force = False
                 if force:
                     self.put(source, target)
+                self.meta_patch(source, target, stat)
             else:
                 raise ydError(1, "Unsupported filesystem object: {0}".format(source))
         else:
