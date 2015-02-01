@@ -178,6 +178,9 @@ class ydConfig(object):
         Аргументы:
             config   (dict) -- Базовая конфигурация
             filename (str)  -- Имя INI файла
+
+        Результат (dict):
+            Конфигурация приложения на основе файла конфигурации
         """
         if config == None:
             config = ydConfig.default_config()
