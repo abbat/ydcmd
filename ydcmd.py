@@ -11,8 +11,8 @@ import array, os, stat, pwd, grp, sys
 import socket, ssl
 import re, codecs, json
 import time, datetime
-import subprocess, tempfile
-import hashlib, shutil
+import subprocess, multiprocessing
+import tempfile, hashlib, shutil
 
 
 try:
@@ -309,6 +309,7 @@ def yd_default_config():
         "async"       : "no",
         "rsync"       : "no",
         "attr"        : "no",
+        "threads"     : "0",
         "base-url"    : "https://cloud-api.yandex.net/v1/disk",
         "app-id"      : "2415aa2e6ceb4839b1202e15ac83536c",
         "app-secret"  : "b8ae32ce025c451f84bd7df17029cb55",
@@ -390,6 +391,7 @@ class ydOptions(object):
         self.async     = self._bool(config["async"])
         self.rsync     = self._bool(config["rsync"])
         self.attr      = self._bool(config["attr"])
+        self.threads   = int(config["threads"])
         self.baseurl   = str(config["base-url"])
         self.appid     = str(config["app-id"])
         self.appsecret = str(config["app-secret"])
