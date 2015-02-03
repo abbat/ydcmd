@@ -2,8 +2,7 @@ ydcmd (1.5) testing; urgency=low
 
   * Повтор попытки запроса при получении кода HTTP-500/503;
   * Удаление лишнего вызова stat для put;
-  * Поддержка --threads для put;
-  * Рефакторинг (все методы picklable).
+  * Поддержка --threads для put.
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Tue, 03 Feb 2015 22:34:00 +0300
 
