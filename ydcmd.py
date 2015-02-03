@@ -8,7 +8,8 @@ __license__  = "BSD"
 
 
 import array
-import os, sys, signal, stat, pwd, grp
+import os, sys, signal
+import stat, pwd, grp
 import socket, ssl
 import re, codecs, json
 import time, datetime
