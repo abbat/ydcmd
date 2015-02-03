@@ -7,7 +7,8 @@ __author__   = "Anton Batenev"
 __license__  = "BSD"
 
 
-import array, os, stat, pwd, grp, sys
+import array
+import os, sys, signal, stat, pwd, grp
 import socket, ssl
 import re, codecs, json
 import time, datetime
@@ -101,6 +102,10 @@ class ydError(RuntimeError):
         """
         self.errno  = errno
         self.errmsg = "{0}".format(errmsg)
+
+
+    def __str__(self):
+        return self.errmsg
 
 
 class ydCertError(ValueError):
@@ -750,7 +755,9 @@ def yd_query(options, method, url, args, headers = None, filename = None, data =
     while True:
         try:
             return yd_query_retry(options, method, url, args, headers, filename, data)
-        except (ydURLError, ssl.SSLError) as e:
+        except (ydURLError, ssl.SSLError, ydError) as e:
+            if type(e).__name__ == "ydError" and not (e.errno == 500 or e.errno == 503):   # TODO: HTTP-401 - Unauthorized
+                raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
             if retry >= options.retries:
@@ -1127,7 +1134,7 @@ def yd_put(options, source, target):
             yd_put_retry(options, source, target)
             break
         except (ydURLError, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.code == 500 or e.code == 503):
+            if type(e).__name__ == "ydError" and not (e.errno == 500 or e.errno == 503):   # TODO: HTTP-401 - Unauthorized
                 raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
@@ -1188,7 +1195,7 @@ def yd_get(options, source, target):
             yd_get_retry(options, source, target)
             break
         except (ydURLError, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.code == 500 or e.code == 503):
+            if type(e).__name__ == "ydError" and not (e.errno == 500 or e.errno == 503):   # TODO: HTTP-401 - Unauthorized
                 raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
@@ -1359,8 +1366,8 @@ def yd_put_dir(options, source, target, stat = None):
         target  (str)       -- Имя директории хранилище
         stat    (ydItem)    -- Описатель директории в хранилище или None, если директория отсутствует
     """
-    stat = yd_ensure_remote(options, titem, "dir", stat)
-    yd_meta_patch(options, sitem, titem, stat)
+    stat = yd_ensure_remote(options, target, "dir", stat)
+    yd_meta_patch(options, source, target, stat)
 
 
 def yd_put_sync(options, source, target, pool = None):
@@ -1410,7 +1417,7 @@ def yd_put_sync(options, source, target, pool = None):
                 yd_delete(options, target + item.name)
 
     if pool:
-        pool.get()
+        pool.yd_get()
 
     for [sitem, titem] in lazy_put_sync:
         yd_put_sync(options, sitem, titem, pool)
@@ -1853,6 +1860,7 @@ def yd_put_cmd(options, args):
                 source += "/"
             if os.path.basename(target) != "":
                 target += "/"
+
             stat = yd_ensure_remote(options, target, "dir")
             yd_meta_patch(options, source, target, stat)
 
