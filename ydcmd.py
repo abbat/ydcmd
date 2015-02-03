@@ -757,7 +757,7 @@ def yd_query(options, method, url, args, headers = None, filename = None, data =
         try:
             return yd_query_retry(options, method, url, args, headers, filename, data)
         except (ydURLError, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.errno == 500 or e.errno == 503):   # TODO: HTTP-401 - Unauthorized
+            if type(e).__name__ == "ydError" and not e.errno >= 500:   # TODO: HTTP-401 - Unauthorized
                 raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
@@ -1141,7 +1141,7 @@ def yd_put(options, source, target):
             yd_put_retry(options, source, target)
             break
         except (ydURLError, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.errno == 500 or e.errno == 503):   # TODO: HTTP-401 - Unauthorized
+            if type(e).__name__ == "ydError" and not e.errno >= 500:   # TODO: HTTP-401 - Unauthorized
                 raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
@@ -1202,7 +1202,7 @@ def yd_get(options, source, target):
             yd_get_retry(options, source, target)
             break
         except (ydURLError, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.errno == 500 or e.errno == 503):   # TODO: HTTP-401 - Unauthorized
+            if type(e).__name__ == "ydError" and not e.errno >= 500:   # TODO: HTTP-401 - Unauthorized
                 raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
