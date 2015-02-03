@@ -11,7 +11,7 @@ import array, os, stat, pwd, grp, sys
 import socket, ssl
 import re, codecs, json
 import time, datetime
-import subprocess, multiprocessing
+import subprocess, multiprocessing.pool
 import tempfile, hashlib, shutil
 
 
@@ -288,6 +288,34 @@ class ydHTTPSHandler(ydHTTPSHandlerBase):
         return ydHTTPSConnection(host, **d)
 
 
+class ydPool(multiprocessing.pool.Pool):
+    """
+    Сабклассинг multiprocessing.Pool для контроля списка результатов вызовов
+    """
+    def __init__(self, processes = None, initializer = None, initargs = ()):
+        multiprocessing.pool.Pool.__init__(self, processes, initializer, initargs)
+        self._apply_result_list = []
+
+
+    def yd_apply_async(self, func, args = (), kwds = {}, callback = None):
+        """
+        Аналог multiprocessing.Pool.yd_apply_async с занесением результата
+        во внутренний список для дальнейшего вызова yd_get
+        """
+        result = self.apply_async(func, args, kwds, callback)
+        self._apply_result_list.append(result)
+        return result
+
+
+    def yd_get(self):
+        """
+        Получение результата всех вызовов yd_apply_async
+        """
+        for result in self._apply_result_list:
+            result.get()
+        self._apply_result_list = []
+
+
 def yd_default_config():
     """
     Получение конфигурации приложения по умолчанию
@@ -519,6 +547,14 @@ def yd_check_python23(py2minor, py2micro, py3minor, py3micro):
         Соответствие версии >= аргументам
     """
     return sys.version_info >= (2, py2minor, py2micro) if sys.version_info < (3, 0) else sys.version_info >= (3, py3minor, py3micro)
+
+
+def yd_init_worker():
+    """
+    Callback для инициализации дочернего процесса при threads > 0
+    Запрет прерывания по CTRL+C
+    """
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 def yd_print(msg):
@@ -1296,7 +1332,38 @@ def yd_ensure_remote(options, path, type, stat = None):
     return None
 
 
-def yd_put_sync(options, source, target):
+def yd_put_file(options, source, target, stat = None):
+    """
+    Загрузка файла в хранилище
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        source  (str)       -- Имя локального файла
+        target  (str)       -- Имя файла хранилище
+        stat    (ydItem)    -- Описатель файла в хранилище или None, если файл отсутствует
+    """
+    if stat:
+        stat = yd_ensure_remote(options, target, "file", stat)
+    if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5):
+        yd_put(options, source, target)
+    yd_meta_patch(options, source, target, stat)
+
+
+def yd_put_dir(options, source, target, stat = None):
+    """
+    Загрузка директории в хранилище (по аналогии с yd_put_file)
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        source  (str)       -- Имя локальной директории
+        target  (str)       -- Имя директории хранилище
+        stat    (ydItem)    -- Описатель директории в хранилище или None, если директория отсутствует
+    """
+    stat = yd_ensure_remote(options, titem, "dir", stat)
+    yd_meta_patch(options, sitem, titem, stat)
+
+
+def yd_put_sync(options, source, target, pool = None):
     """
     Синхронизация локальных файлов и директорий с находящимися в хранилище
 
@@ -1304,8 +1371,11 @@ def yd_put_sync(options, source, target):
         options (ydOptions) -- Опции приложения
         source  (str)       -- Имя локальной директории (со слешем)
         target  (str)       -- Имя директории в хранилище (со слешем)
+        pool    (ydPool)    -- Пул процессов
     """
     flist = yd_list(options, target)
+
+    lazy_put_sync = []
 
     for item in os.listdir(source):
         sitem = source + item
@@ -1314,20 +1384,16 @@ def yd_put_sync(options, source, target):
         if not os.path.islink(sitem):
             stat = None
             if os.path.isdir(sitem):
-                stat = yd_ensure_remote(options, titem, "dir", flist[item] if item in flist else None)
-                yd_meta_patch(options, sitem, titem, stat)
-                yd_put_sync(options, sitem + "/", titem + "/")
+                lazy_put_sync.append([sitem + "/", titem + "/"])
+                if pool:
+                    pool.yd_apply_async(yd_put_dir, args = (options, sitem, titem, flist[item] if item in flist else None))
+                else:
+                    yd_put_dir(options, sitem, titem, flist[item] if item in flist else None)
             elif os.path.isfile(sitem):
-                force = True
-                if item in flist:
-                    stat = yd_ensure_remote(options, titem, "file", flist[item])
-                    if not options.encrypt and stat and stat.isfile() and os.path.getsize(sitem) == stat.size and yd_md5(options, sitem) == stat.md5:
-                        force = False
-
-                if force:
-                    yd_put(options, sitem, titem)
-
-                yd_meta_patch(options, sitem, titem, stat)
+                if pool:
+                    pool.yd_apply_async(yd_put_file, args = (options, sitem, titem, flist[item] if item in flist else None))
+                else:
+                    yd_put_file(options, sitem, titem, flist[item] if item in flist else None)
             else:
                 raise ydError(1, "Unsupported filesystem object: {0}".format(sitem))
 
@@ -1338,7 +1404,16 @@ def yd_put_sync(options, source, target):
 
     if options.rsync:
         for item in itervalues(flist):
-            yd_delete(options, target + item.name)
+            if pool:
+                pool.yd_apply_async(yd_delete, args = (options, target + item.name))
+            else:
+                yd_delete(options, target + item.name)
+
+    if pool:
+        pool.get()
+
+    for [sitem, titem] in lazy_put_sync:
+        yd_put_sync(options, sitem, titem, pool)
 
 
 def yd_ensure_local(options, path, type):
@@ -1780,13 +1855,25 @@ def yd_put_cmd(options, args):
                 target += "/"
             stat = yd_ensure_remote(options, target, "dir")
             yd_meta_patch(options, source, target, stat)
-            yd_put_sync(options, source, target)
+
+            if options.threads > 0:
+                pool = ydPool(options.threads, initializer = yd_init_worker)
+                try:
+                    yd_put_sync(options, source, target, pool)
+                    pool.get()
+                    pool.close()
+                    pool.join()
+                except KeyboardInterrupt as e:
+                    pool.terminate()
+                    pool.join()
+                    raise e
+            else:
+                yd_put_sync(options, source, target)
+
         elif os.path.isfile(source):
             force = True
             stat  = yd_ensure_remote(options, target, "file")
-            if not options.encrypt and stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5:
-                force = False
-            if force:
+            if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5):
                 yd_put(options, source, target)
             yd_meta_patch(options, source, target, stat)
         else:
