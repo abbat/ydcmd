@@ -810,13 +810,14 @@ def yd_info(options):
     return yd_query(options, method, url, None)
 
 
-def yd_stat(options, path):
+def yd_stat(options, path, silent = False):
     """
     Получение метаинформации об объекте в хранилище
 
     Аргументы:
         options (ydOptions) -- Опции приложения
         path    (str)       -- Имя файла или директории в хранилище
+        silent  (bool)      -- Подавление HTTP-404 и возврат None
 
     Результат (ydItem):
         Метаинформация об объекте в хранилище
@@ -830,12 +831,17 @@ def yd_stat(options, path):
     method = "GET"
     url    = options.baseurl + "/resources"
 
-    part = yd_query(options, method, url, args)
+    try:
+        part = yd_query(options, method, url, args)
 
-    if "_embedded" in part:
-        del part["_embedded"]
+        if "_embedded" in part:
+            del part["_embedded"]
 
-    return ydItem(part)
+        return ydItem(part)
+    except ydError as e:
+        if silent and e.errno == 404:
+            return None
+        raise e
 
 
 def yd_patch(options, path, info):
@@ -1301,7 +1307,7 @@ def yd_meta_patch(options, source, target, stat):
             yd_patch(options, target, diff)
 
 
-def yd_ensure_remote(options, path, type, stat = None):
+def yd_ensure_remote(options, path, type, stat):
     """
     Метод проверки возможности создания объекта требуемого типа в хранилище.
     Если объект уже существует и типы не совпадают, производится удаление объекта.
@@ -1311,20 +1317,13 @@ def yd_ensure_remote(options, path, type, stat = None):
         options (ydOptions) -- Опции приложения
         path    (str)       -- Объект в хранилище
         type    (str)       -- Тип объекта в хранилище (file|dir)
-        stat    (ydItem)    -- Информация об объекте (если уже имеется)
+        stat    (ydItem)    -- Информация об объекте (None если объект отсутствует)
 
     Результат (ydItem):
         Метаинформация об объекте, если он уже существует и его тип совпадает с аргументом type.
     """
     if not (type == "dir" or type == "file"):
         raise ValueError("Unsupported type: {}".format(type))
-
-    if stat == None:
-        try:
-            stat = yd_stat(options, path)
-        except ydError as e:
-            if e.errno != 404:
-                raise
 
     if stat != None:
         if stat.type != type:
@@ -1347,7 +1346,7 @@ def yd_put_file(options, source, target, stat = None):
         options (ydOptions) -- Опции приложения
         source  (str)       -- Имя локального файла
         target  (str)       -- Имя файла хранилище
-        stat    (ydItem)    -- Описатель файла в хранилище или None, если файл отсутствует
+        stat    (ydItem)    -- Описатель файла в хранилище (None, если файл отсутствует)
     """
     if stat:
         stat = yd_ensure_remote(options, target, "file", stat)
@@ -1364,7 +1363,7 @@ def yd_put_dir(options, source, target, stat = None):
         options (ydOptions) -- Опции приложения
         source  (str)       -- Имя локальной директории
         target  (str)       -- Имя директории хранилище
-        stat    (ydItem)    -- Описатель директории в хранилище или None, если директория отсутствует
+        stat    (ydItem)    -- Описатель директории в хранилище (None, если директория отсутствует)
     """
     stat = yd_ensure_remote(options, target, "dir", stat)
     yd_meta_patch(options, source, target, stat)
@@ -1861,7 +1860,7 @@ def yd_put_cmd(options, args):
             if os.path.basename(target) != "":
                 target += "/"
 
-            stat = yd_ensure_remote(options, target, "dir")
+            stat = yd_ensure_remote(options, target, "dir", yd_stat(options, target, True))
             yd_meta_patch(options, source, target, stat)
 
             if options.threads > 0:
@@ -1879,8 +1878,7 @@ def yd_put_cmd(options, args):
                 yd_put_sync(options, source, target)
 
         elif os.path.isfile(source):
-            force = True
-            stat  = yd_ensure_remote(options, target, "file")
+            stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True))
             if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5):
                 yd_put(options, source, target)
             yd_meta_patch(options, source, target, stat)
