@@ -2099,6 +2099,7 @@ def yd_print_usage(cmd = None):
         yd_print("")
         yd_print("Options:")
         yd_print("     --rsync       -- sync remote tree with local")
+        yd_print("     --threads=<N> -- number of worker processes (default: {0})".format(default["threads"]))
         yd_print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
         yd_print("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
         yd_print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")

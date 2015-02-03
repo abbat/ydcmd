@@ -139,6 +139,7 @@ ydcmd put <file> [disk:/object]
 **Options**:
 
 * `--rsync` - synchronizes a tree of files and directories in the storage with a local tree;
+* `--threads=<N>` - number of worker processes;
 * `--encrypt` - encryption of files using `--encrypt-cmd` before uploading to the storage;
 * `--encrypt-cmd` - command sending to `stdin` the contents of the local (unencrypted) file and sending its encrypted version to `stdout`;
 * `--temp-dir` - a directory for storing temporary encrypted files.

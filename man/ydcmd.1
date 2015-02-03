@@ -132,7 +132,10 @@ In case of name coincidence, directories and files will be overwritten.
 .SS put
 .TP
 .B --rsync
-Synchronizes a tree of files and directories in the storage with a local tree
+Synchronizes a tree of files and directories in the storage with a local tree.
+.TP
+.B --threads=<N>
+Number of worker processes.
 .TP
 .B --encrypt
 Encryption of files using --encrypt-cmd before uploading to the storage.
