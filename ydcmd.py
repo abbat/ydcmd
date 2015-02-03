@@ -1090,7 +1090,9 @@ def yd_put(options, source, target):
         try:
             yd_put_retry(options, source, target)
             break
-        except (ydURLError, ssl.SSLError) as e:
+        except (ydURLError, ssl.SSLError, ydError) as e:
+            if type(e).__name__ == "ydError" and e.code != 500:
+                raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
             if retry >= options.retries:
@@ -1149,7 +1151,9 @@ def yd_get(options, source, target):
         try:
             yd_get_retry(options, source, target)
             break
-        except (ydURLError, ssl.SSLError) as e:
+        except (ydURLError, ssl.SSLError, ydError) as e:
+            if type(e).__name__ == "ydError" and e.code != 500:
+                raise e
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
             if retry >= options.retries:
