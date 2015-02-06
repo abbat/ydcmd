@@ -7,7 +7,7 @@ __author__   = "Anton Batenev"
 __license__  = "BSD"
 
 
-import array
+import array, random
 import os, sys, signal
 import stat, pwd, grp
 import socket, ssl
@@ -1418,6 +1418,9 @@ def yd_put_sync(options, source, target, pool = None):
 
     if pool:
         pool.yd_get()
+
+    # при большом количестве директорий позволяет продолжить с места обрыва
+    random.shuffle(lazy_put_sync)
 
     for [sitem, titem] in lazy_put_sync:
         yd_put_sync(options, sitem, titem, pool)
