@@ -71,6 +71,7 @@ else:
 try:
     from http.client    import HTTPSConnection as ydHTTPSConnectionBase
     from http.client    import NotConnected    as ydNotConnected
+    from http.client    import BadStatusLine   as ydBadStatusLine
     from urllib.request import HTTPSHandler    as ydHTTPSHandlerBase
     from urllib.request import Request         as ydRequest
     from urllib.request import build_opener    as yd_build_opener
@@ -80,6 +81,7 @@ try:
 except ImportError:
     from httplib        import HTTPSConnection as ydHTTPSConnectionBase
     from httplib        import NotConnected    as ydNotConnected
+    from httplib        import BadStatusLine   as ydBadStatusLine
     from urllib2        import HTTPSHandler    as ydHTTPSHandlerBase
     from urllib2        import Request         as ydRequest
     from urllib2        import build_opener    as yd_build_opener
@@ -756,7 +758,7 @@ def yd_query(options, method, url, args, headers = None, filename = None, data =
     while True:
         try:
             return yd_query_retry(options, method, url, args, headers, filename, data)
-        except (ydURLError, ssl.SSLError, ydError) as e:
+        except (ydURLError, ydBadStatusLine, ssl.SSLError, ydError) as e:
             if type(e).__name__ == "ydError" and not (e.errno >= 500 or e.errno == 401):
                 raise e
             retry += 1
@@ -1140,7 +1142,7 @@ def yd_put(options, source, target):
         try:
             yd_put_retry(options, source, target)
             break
-        except (ydURLError, ssl.SSLError, ydError) as e:
+        except (ydURLError, ydBadStatusLine, ssl.SSLError, ydError) as e:
             if type(e).__name__ == "ydError" and not (e.errno >= 500 or e.errno == 401):
                 raise e
             retry += 1
@@ -1201,7 +1203,7 @@ def yd_get(options, source, target):
         try:
             yd_get_retry(options, source, target)
             break
-        except (ydURLError, ssl.SSLError, ydError) as e:
+        except (ydURLError, ydBadStatusLine, ssl.SSLError, ydError) as e:
             if type(e).__name__ == "ydError" and not (e.errno >= 500 or e.errno == 401):
                 raise e
             retry += 1
