@@ -106,6 +106,9 @@ class ydError(RuntimeError):
         self.errno  = errno
         self.errmsg = "{0}".format(errmsg)
 
+        # http://bugs.python.org/issue1692335
+        self.args = (errno, errmsg)
+
 
     def __str__(self):
         return self.errmsg
@@ -1421,7 +1424,8 @@ def yd_put_sync(options, source, target, pool = None):
     if pool:
         pool.yd_get()
 
-    # при большом количестве директорий позволяет продолжить с места обрыва
+    # при большом количестве директорий позволяет продолжить загрузку
+    # не обрабатывая заново ранее загруженные директории
     random.shuffle(lazy_put_sync)
 
     for [sitem, titem] in lazy_put_sync:
