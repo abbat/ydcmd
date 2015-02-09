@@ -140,6 +140,7 @@ ydcmd put <dosya> [disk:/nesne]
 
 * `--rsync` - depoda, dosya ve dizinlerin ağaçları ile yerel ağacı senkronize eder;
 * `--threads=<N>` - number of worker processes;
+* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`);
 * `--encrypt` - depoya yüklemeden önce `--encrypt-cmd` kullanarak dosyaları şifreleme;
 * `--encrypt-cmd` - yerel dosyanın (şifrelenmemiş) içeriğini `stdin`'den alan ve şifrelenmiş versiyonunu `stdout`'a gönderen komuttur;
 * `--temp-dir` - şifrelenmiş geçici dosyaların depolanması için bir dizin;

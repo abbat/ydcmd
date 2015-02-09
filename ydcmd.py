@@ -349,6 +349,7 @@ def yd_default_config():
         "rsync"       : "no",
         "attr"        : "no",
         "threads"     : "0",
+        "iconv"       : "",
         "base-url"    : "https://cloud-api.yandex.net/v1/disk",
         "app-id"      : "2415aa2e6ceb4839b1202e15ac83536c",
         "app-secret"  : "b8ae32ce025c451f84bd7df17029cb55",
@@ -431,6 +432,13 @@ class ydOptions(object):
         self.rsync     = self._bool(config["rsync"])
         self.attr      = self._bool(config["attr"])
         self.threads   = int(config["threads"])
+        self.iconv     = str(config["iconv"])
+
+        if self.iconv == "":
+            self.iconv = None
+        else:
+            self.iconv = ["utf-8", self.iconv]
+
         self.baseurl   = str(config["base-url"])
         self.appid     = str(config["app-id"])
         self.appsecret = str(config["app-secret"])
@@ -1375,6 +1383,26 @@ def yd_put_dir(options, source, target, stat = None):
     yd_meta_patch(options, source, target, stat)
 
 
+def yd_iconv(options, name):
+    """
+    Попытка преобразования имени файла или директории из кодировки отличной от utf-8
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        source  (str)       -- Имя локальной директории
+    """
+    if not options.iconv:
+        return name
+
+    for encoding in options.iconv:
+        try:
+            return name.decode(encoding).encode("utf-8")
+        except UnicodeDecodeError:
+            pass
+
+    return None
+
+
 def yd_put_sync(options, source, target, pool = None):
     """
     Синхронизация локальных файлов и директорий с находящимися в хранилище
@@ -1391,6 +1419,12 @@ def yd_put_sync(options, source, target, pool = None):
 
     for item in os.listdir(source):
         sitem = source + item
+
+        item = yd_iconv(options, item)
+        if not item:
+            yd_verbose("Skip: {0}".format(sitem), options.verbose)
+            continue
+
         titem = target + item
 
         if not os.path.islink(sitem):
@@ -2117,6 +2151,7 @@ def yd_print_usage(cmd = None):
         yd_print("Options:")
         yd_print("     --rsync       -- sync remote tree with local")
         yd_print("     --threads=<N> -- number of worker processes (default: {0})".format(default["threads"]))
+        yd_print("     --iconv=<S>   -- try to restore file or directory names from the specified encoding if necessary (default: {0})".format("none" if not default["iconv"] else default["iconv"]))
         yd_print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
         yd_print("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
         yd_print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")

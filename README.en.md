@@ -140,6 +140,7 @@ ydcmd put <file> [disk:/object]
 
 * `--rsync` - synchronizes a tree of files and directories in the storage with a local tree;
 * `--threads=<N>` - number of worker processes;
+* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`);
 * `--encrypt` - encryption of files using `--encrypt-cmd` before uploading to the storage;
 * `--encrypt-cmd` - command sending to `stdin` the contents of the local (unencrypted) file and sending its encrypted version to `stdout`;
 * `--temp-dir` - a directory for storing temporary encrypted files.
