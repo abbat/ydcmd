@@ -8,7 +8,7 @@ __license__  = "BSD"
 
 
 import array, random
-import os, sys, signal
+import os, sys, signal, errno
 import stat, pwd, grp
 import socket, ssl
 import re, codecs, json
@@ -311,14 +311,14 @@ class ydPool(multiprocessing.pool.Pool):
     def yd_apply_async(self, func, args = (), kwds = {}, callback = None):
         """
         Аналог multiprocessing.Pool.yd_apply_async с занесением результата
-        во внутренний список для дальнейшего вызова yd_get
+        во внутренний список для дальнейшего вызова yd_wait_async
         """
         result = self.apply_async(func, args, kwds, callback)
         self._apply_result_list.append(result)
         return result
 
 
-    def yd_get(self):
+    def yd_wait_async(self):
         """
         Получение результата всех вызовов yd_apply_async
         """
@@ -1422,14 +1422,22 @@ def yd_put_sync(options, source, target, pool = None):
                 yd_delete(options, target + item.name)
 
     if pool:
-        pool.yd_get()
+        pool.yd_wait_async()
 
-    # при большом количестве директорий позволяет продолжить загрузку
-    # не обрабатывая заново ранее загруженные директории
+    # при большом количестве директорий рандомизация позволяет продолжить
+    # загрузку не обрабатывая заново ранее загруженные директории
     random.shuffle(lazy_put_sync)
 
     for [sitem, titem] in lazy_put_sync:
-        yd_put_sync(options, sitem, titem, pool)
+        try:
+            yd_put_sync(options, sitem, titem, pool)
+        except OSError as e:
+            # аналогично поведению rsync, которая не останавливается с ошибкой
+            # при исчезновении файлов и директорий во время синхронизации
+            if e.errno == errno.ENOENT:
+                yd_verbose("Warning: {0}".format(e), options.verbose)
+            else:
+                raise e
 
 
 def yd_ensure_local(options, path, type):
