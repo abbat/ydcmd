@@ -1919,7 +1919,7 @@ def yd_put_cmd(options, args):
                 pool = ydPool(options.threads, initializer = yd_init_worker)
                 try:
                     yd_put_sync(options, source, target, pool)
-                    pool.get()
+                    pool.yd_wait_async()
                     pool.close()
                     pool.join()
                 except KeyboardInterrupt as e:
