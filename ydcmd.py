@@ -623,13 +623,13 @@ def yd_human(val):
     if val < 1024:
         return "{0}".format(val)
     elif val < 1024 * 1024:
-        return "{0:.0f}K".format(val / 1024)
+        return "{0:.0f}".format(val / 1024) + "K"
     elif val < 1024 * 1024 * 1024:
-        return "{0:.0f}M".format(val / 1024 / 1024)
+        return "{0:.0f}".format(val / 1024 / 1024) + "M"
     elif val < 1024 * 1024 * 1024 * 1024:
-        return "{0:.0f}G".format(val / 1024 / 1024 / 1024)
+        return "{0:.2f}".format(val / 1024.0 / 1024.0 / 1024.0).rstrip("0").rstrip(".") + "G"
 
-    return "{0:.0f}T".format(val / 1024 / 1024 / 1024 / 1024)
+    return "{0:.2f}".format(val / 1024.0 / 1024.0 / 1024.0 / 1024.0).rstrip("0").rstrip(".") + "T"
 
 
 def yd_remote_path(path):
