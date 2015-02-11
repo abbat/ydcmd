@@ -1366,7 +1366,14 @@ def yd_put_file(options, source, target, stat = None):
         stat = yd_ensure_remote(options, target, "file", stat)
     if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5):
         yd_put(options, source, target)
-    yd_meta_patch(options, source, target, stat)
+
+    try:
+        # иногда сразу после загрузки файла попытка patch отдает 404 (лаг репликации?)
+        # поскольку опция экспериментальная - игнорируем (обновится при повторной синхронизации)
+        yd_meta_patch(options, source, target, stat)
+    except ydError as e:
+        if e.errno != 404:
+            raise e
 
 
 def yd_put_dir(options, source, target, stat = None):
@@ -1380,7 +1387,14 @@ def yd_put_dir(options, source, target, stat = None):
         stat    (ydItem)    -- Описатель директории в хранилище (None, если директория отсутствует)
     """
     stat = yd_ensure_remote(options, target, "dir", stat)
-    yd_meta_patch(options, source, target, stat)
+
+    try:
+        # иногда сразу после загрузки файла попытка patch отдает 404 (лаг репликации?)
+        # поскольку опция экспериментальная - игнорируем (обновится при повторной синхронизации)
+        yd_meta_patch(options, source, target, stat)
+    except ydError as e:
+        if e.errno != 404:
+            raise e
 
 
 def yd_iconv(options, name):
