@@ -1462,8 +1462,13 @@ def yd_put_sync(options, source, target, pool = None):
     # загрузку не обрабатывая заново ранее загруженные директории
     random.shuffle(lazy_put_sync)
 
+    index = 0
+    count = len(lazy_put_sync)
+
     for [sitem, titem] in lazy_put_sync:
         try:
+            index += 1
+            yd_verbose("Processing [{0}/{1}]: {2}".format(index, count, sitem), options.verbose)
             yd_put_sync(options, sitem, titem, pool)
         except OSError as e:
             # аналогично поведению rsync, которая не останавливается с ошибкой
