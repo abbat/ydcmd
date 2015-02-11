@@ -1684,7 +1684,7 @@ def yd_clean(options, path):
 
     for item in flist:
         if options.dry:
-            yd_print("{0:>25} {1:>7} {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
+            yd_print("{0:>25}  {1:>7}  {2}".format(item.modified.isoformat(), "<{0}>".format(item.type), item.name))
         else:
             yd_delete(options, path + item.name)
 
@@ -1757,11 +1757,11 @@ def yd_ls_cmd(options, args):
             size = item.size
 
         if options.long:
-            yd_print("{0} {1:>26} {2:>11} {3}".format(item.created, item.modified, size, item.name))
+            yd_print("{0}  {1:>25}  {2:>11}  {3}".format(item.created, item.modified, size, item.name))
         elif options.short:
             yd_print("{0}".format(item.name))
         else:
-            yd_print("{0:>5}  {1}".format(size, item.name))
+            yd_print("{0:>7}  {1}".format(size, item.name))
 
 
 def yd_last_cmd(options, args):
@@ -1794,11 +1794,11 @@ def yd_last_cmd(options, args):
             size = item.size
 
         if options.long:
-            yd_print("{0} {1:>26} {2:>11} {3}".format(item.created, item.modified, size, item.path[5:]))
+            yd_print("{0}  {1:>25}  {2:>11}  {3}".format(item.created, item.modified, size, item.path[5:]))
         elif options.short:
             yd_print("{0}".format(item.path[5:]))
         else:
-            yd_print("{0:>5}  {1}".format(size, item.path[5:]))
+            yd_print("{0:>7}  {1}".format(size, item.path[5:]))
 
 
 def yd_rm_cmd(options, args):
@@ -2026,9 +2026,9 @@ def yd_du_cmd(options, args):
         if len(name) == 0:
             name = "/"
         if options.human:
-            yd_print("{0:>5}  {1}".format(yd_human(size), name))
+            yd_print("{0:>7}  {1}".format(yd_human(size), name))
         else:
-            yd_print("{0:>11}  {1}".format(size, name))
+            yd_print("{0:>12}  {1}".format(size, name))
 
 
 def yd_clean_cmd(options, args):
