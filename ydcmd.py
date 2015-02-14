@@ -664,7 +664,7 @@ def yd_headers(token):
     """
     return {
         "Accept"        : "application/json",
-        "User-Agent"    : "ydcmd/{0} ({1})".format(__version__, "https://github.com/abbat/ydcmd"),
+        "User-Agent"    : "ydcmd/{0}".format(__version__),
         "Authorization" : "OAuth {0}".format(token)
     }
 
