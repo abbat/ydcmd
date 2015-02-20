@@ -1,3 +1,9 @@
+ydcmd (1.6) testing; urgency=low
+
+  * Повтор попытки запроса при получении некоторых ошибок соединения.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 20 Feb 2015 19:20:00 +0300
+
 ydcmd (1.5) testing; urgency=low
 
   * Поддержка --threads и --iconv для put;

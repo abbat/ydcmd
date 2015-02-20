@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.5"
+__version__  = "1.6"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -763,6 +763,22 @@ def yd_query_retry(options, method, url, args, headers = None, filename = None, 
         raise ydError(e.code, errmsg)
 
 
+def yd_can_query_retry(e):
+    """
+    Проверка исключения при вызове yd_query_retry на возможность повторного запроса
+
+    Аргументы:
+        e (Exception) -- Исключение из yd_query_retry
+
+    Результат:
+        None или необработанное исключение
+    """
+    if isinstance(e, ydError) and not (e.errno >= 500 or e.errno == 401):
+        raise e
+    elif isinstance(e, socket.error) and not (e.errno == errno.ECONNRESET or e.errno == errno.ECONNREFUSED):
+        raise e
+
+
 def yd_query(options, method, url, args, headers = None, filename = None, data = None):
     """
     Реализация нескольких попыток запроса к API (yd_query_retry)
@@ -771,9 +787,8 @@ def yd_query(options, method, url, args, headers = None, filename = None, data =
     while True:
         try:
             return yd_query_retry(options, method, url, args, headers, filename, data)
-        except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.errno >= 500 or e.errno == 401):
-                raise e
+        except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, socket.error, ydError) as e:
+            yd_can_query_retry(e)
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
             if retry >= options.retries:
@@ -1155,9 +1170,8 @@ def yd_put(options, source, target):
         try:
             yd_put_retry(options, source, target)
             break
-        except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.errno >= 500 or e.errno == 401):
-                raise e
+        except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, socket.error, ydError) as e:
+            yd_can_query_retry(e)
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
             if retry >= options.retries:
@@ -1216,9 +1230,8 @@ def yd_get(options, source, target):
         try:
             yd_get_retry(options, source, target)
             break
-        except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, ydError) as e:
-            if type(e).__name__ == "ydError" and not (e.errno >= 500 or e.errno == 401):
-                raise e
+        except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, socket.error, ydError) as e:
+            yd_can_query_retry(e)
             retry += 1
             yd_debug("Retry {0}/{1}: {2}".format(retry, options.retries, e), options.debug)
             if retry >= options.retries:
