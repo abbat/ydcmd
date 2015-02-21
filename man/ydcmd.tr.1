@@ -134,6 +134,9 @@ Asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye).
 .B --rsync
 Depo içerisindeki yerel ağaç ile dosya ve dizin ağaçlarını senkronize eder.
 .TP
+.B --skip-md5
+Skip md5 integrity checks.
+.TP
 .B --threads=<N>
 Number of worker processes.
 .TP
@@ -154,6 +157,9 @@ Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini k
 .TP
 .B --rsync
 Dosya ve dizinlerin yerel ağacını depo içerisindeki ağaç ile senkronize eder.
+.TP
+.B --skip-md5
+Skip md5 integrity checks.
 .TP
 .B --decrypt
 Depodan alındıktan sonra --decrypt-cmd kullanarak dosyaların şifresini çözme.

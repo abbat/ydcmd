@@ -138,6 +138,7 @@ ydcmd put <dosya> [disk:/nesne]
 **Seçenekler**:
 
 * `--rsync` - depoda, dosya ve dizinlerin ağaçları ile yerel ağacı senkronize eder;
+* `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`);
 * `--encrypt` - depoya yüklemeden önce `--encrypt-cmd` kullanarak dosyaları şifreleme;
@@ -155,6 +156,7 @@ ydcmd get <disk:/nesne> [dosya]
 **Seçenekler**:
 
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
+* `--skip-md5` - skip md5 integrity checks;
 * `--decrypt` - depodan alındıktan sonra `--decrypt-cmd` kullanarak dosyaların şifresini çözme;
 * `--decrypt-cmd` - depodan alınan şifrelenmiş dosyanın içeriğini `stdin`'den alan ve şifrelenmemiş versiyonunu `stdout`'a gönderen komuttur;
 * `--temp-dir` - şifrelenmiş geçici dosyaların depolanması için bir dizin;

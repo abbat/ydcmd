@@ -349,6 +349,7 @@ def yd_default_config():
         "debug"       : "no",
         "async"       : "no",
         "rsync"       : "no",
+        "skip-md5"    : "no",
         "attr"        : "no",
         "threads"     : "0",
         "iconv"       : "",
@@ -432,6 +433,7 @@ class ydOptions(object):
         self.verbose   = (self._bool(config["verbose"]) or self.debug) and not self.quiet
         self.async     = self._bool(config["async"])
         self.rsync     = self._bool(config["rsync"])
+        self.skipmd5   = self._bool(config["skip-md5"])
         self.attr      = self._bool(config["attr"])
         self.threads   = int(config["threads"])
         self.iconv     = str(config["iconv"])
@@ -1272,6 +1274,24 @@ def yd_md5(options, filename):
         return hasher.hexdigest()
 
 
+def yd_check_hash(options, filename, md5):
+    """
+    Проверка хэша файла
+
+    Аргументы:
+        options  (ydOptions) -- Опции приложения
+        filename (str)       -- Имя файла
+        md5      (str)       -- Сравниваемное значение MD5
+
+    Результат (bool):
+        Результат сравнения хэша
+    """
+    if options.skipmd5 or yd_md5(options, filename) == md5:
+        return True
+
+    return False
+
+
 def yd_meta(path):
     """
     Получение метаинформации о локальном файле или директории
@@ -1379,7 +1399,7 @@ def yd_put_file(options, source, target, stat = None):
     """
     if stat:
         stat = yd_ensure_remote(options, target, "file", stat)
-    if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5):
+    if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
         yd_put(options, source, target)
 
     try:
@@ -1575,7 +1595,7 @@ def yd_get_sync(options, source, target):
         elif item.isfile():
             force  = True
             exists = yd_ensure_local(options, titem, "file")
-            if not options.decrypt and exists and os.path.getsize(titem) == item.size and yd_md5(options, titem) == item.md5:
+            if not options.decrypt and exists and os.path.getsize(titem) == item.size and yd_check_hash(options, titem, item.md5):
                 force = False
 
             if force:
@@ -1965,7 +1985,7 @@ def yd_put_cmd(options, args):
 
         elif os.path.isfile(source):
             stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True))
-            if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_md5(options, source) == stat.md5):
+            if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
                 yd_put(options, source, target)
             yd_meta_patch(options, source, target, stat)
         else:
@@ -2009,7 +2029,7 @@ def yd_get_cmd(options, args):
     elif stat.isfile():
         force  = True
         exists = yd_ensure_local(options, target, "file")
-        if not options.decrypt and exists and os.path.getsize(target) == stat.size and yd_md5(options, target) == stat.md5:
+        if not options.decrypt and exists and os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5):
             force = False
         if force:
             yd_get(options, source, target)
@@ -2184,6 +2204,7 @@ def yd_print_usage(cmd = None):
         yd_print("")
         yd_print("Options:")
         yd_print("     --rsync       -- sync remote tree with local")
+        yd_print("     --skip-md5    -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
         yd_print("     --threads=<N> -- number of worker processes (default: {0})".format(default["threads"]))
         yd_print("     --iconv=<S>   -- try to restore file or directory names from the specified encoding if necessary (default: {0})".format("none" if not default["iconv"] else default["iconv"]))
         yd_print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
@@ -2201,6 +2222,7 @@ def yd_print_usage(cmd = None):
         yd_print("")
         yd_print("Options:")
         yd_print("     --rsync       -- sync local tree with remote")
+        yd_print("     --skip-md5    -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
         yd_print("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: {0})".format(default["decrypt"]))
         yd_print("     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)")
         yd_print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")

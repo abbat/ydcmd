@@ -138,6 +138,7 @@ ydcmd put <file> [disk:/object]
 **Options**:
 
 * `--rsync` - synchronizes a tree of files and directories in the storage with a local tree;
+* `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`);
 * `--encrypt` - encryption of files using `--encrypt-cmd` before uploading to the storage;
@@ -155,6 +156,7 @@ ydcmd get <disk:/object> [file]
 **Options**:
 
 * `--rsync` - synchronizes a local tree of files and directories with a tree in the storage;
+* `--skip-md5` - skip md5 integrity checks;
 * `--decrypt` - decryption of files using `--decrypt-cmd` after obtaining them from the storage;
 * `--decrypt-cmd` - command sending to `stdin` the contents of an encrypted file from the storage and sending its unencrypted version to `stdout`;
 * `--temp-dir` - a directory for storing temporary encrypted files.

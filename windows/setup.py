@@ -16,7 +16,7 @@ build_exe_options = {
 
 setup (
     name        = "ydcmd",
-    version     = "1.6",
+    version     = "1.7",
     description = "Command line client for Yandex.Disk",
     options     = { "build_exe": build_exe_options },
     executables = [ Executable("ydcmd.py", base = None) ]
