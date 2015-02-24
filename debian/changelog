@@ -1,5 +1,6 @@
 ydcmd (1.7) testing; urgency=low
 
+  * Повтор попытки запроса при получении HTTP-429;
   * Добавление опции --skip-md5 для get/put.
 
  -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 21 Feb 2015 20:50:00 +0300

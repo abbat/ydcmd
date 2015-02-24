@@ -775,7 +775,9 @@ def yd_can_query_retry(e):
     Результат:
         None или необработанное исключение
     """
-    if isinstance(e, ydError) and not (e.errno >= 500 or e.errno == 401):
+    # для HTTP-429 по хорошему надо проверить заголовок Retry-After
+    # но т.к. ошибку трудно воспроизвести, оставлена стандартная пауза
+    if isinstance(e, ydError) and not (e.errno >= 500 or e.errno == 401 or e.errno == 429):
         raise e
     elif isinstance(e, socket.error) and not (e.errno == errno.ECONNRESET or e.errno == errno.ECONNREFUSED):
         raise e
