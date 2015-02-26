@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.6"
+__version__  = "1.7"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 

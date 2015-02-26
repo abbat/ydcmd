@@ -74,5 +74,5 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Sat Feb 21 2015 Anton Batenev <antonbatenev@yandex.ru> 1.7-1
+* Fri Feb 27 2015 Anton Batenev <antonbatenev@yandex.ru> 1.7-1
 - Initial RPM release
