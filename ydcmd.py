@@ -2162,6 +2162,7 @@ def yd_print_usage(cmd = None):
         yd_print("     --chunk=<N>   -- chunk size in KB for io operations (default: {0})".format(default["chunk"]))
         yd_print("     --ca-file=<S> -- file with trusted CAs (default: {0})".format("none" if not default["ca-file"] else default["ca-file"]))
         yd_print("     --ciphers=<S> -- ciphers sute (default: {0})".format("none" if not default["ciphers"] else default["ciphers"]))
+        yd_print("     --version     -- print version and exit")
         yd_print("")
     elif cmd == "ls":
         yd_print("Usage:")

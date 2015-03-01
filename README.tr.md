@@ -74,7 +74,8 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `--debug` - hata ayıklama bilgisi görüntüleme;
 * `--chunk=<N>` - girdi/çıktı işlemleri için bilgi bloğunun boyutu (KB);
 * `--ca-file=<S>` - güvenilir sertifika merkezlerinin sertifikaları ile dosya adı (değer boş ise, sertifika onayı gerçekleştirilemez);
-* `--ciphers=<S>` - şifreleme algoritmaları dizisi (bak [ciphers(1)](https://www.openssl.org/docs/apps/ciphers.html)).
+* `--ciphers=<S>` - şifreleme algoritmaları dizisi (bak [ciphers(1)](https://www.openssl.org/docs/apps/ciphers.html));
+* `--version` - print version and exit.
 
 ### Dosya ve dizinlerin listesini alma
 

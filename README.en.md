@@ -74,7 +74,8 @@ ydcmd [command] [options] [arguments]
 * `--debug` - returns debug information;
 * `--chunk=<N>` - data block size (in KB) for I/O operations;
 * `--ca-file=<S>` - file name with certificates of trusted certification authorities (if the value is null, certificate validation is not performed);
-* `--ciphers=<S>` - set of encryption algorithms (see [ciphers(1)](https://www.openssl.org/docs/apps/ciphers.html)).
+* `--ciphers=<S>` - set of encryption algorithms (see [ciphers(1)](https://www.openssl.org/docs/apps/ciphers.html));
+* `--version` - print version and exit.
 
 ### Returning a list of files and directories
 
