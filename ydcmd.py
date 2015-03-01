@@ -2320,6 +2320,10 @@ if __name__ == "__main__":
         else:
             args.append(arg)
 
+    if config["version"]:
+        yd_print("ydcmd v{0}".format(__version__))
+        sys.exit(0)
+
     if len(args) == 0:
         yd_print_usage()
 
