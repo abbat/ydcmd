@@ -1304,7 +1304,6 @@ def yd_meta(path):
     """
     info = os.stat(path)
     meta = {
-        "ctime" : None,
         "mtime" : int(info.st_mtime),
         "uid"   : info.st_uid,
         "gid"   : info.st_gid,
@@ -1332,6 +1331,10 @@ def yd_meta_diff(meta1, meta2):
         if key in meta2 and meta2[key] == value:
             continue
         result[key] = meta1[key]
+
+    # временная конструкция - сброс ранее-установленного ctime (см. @adbf291)
+    if "ctime" in meta2:
+        result["ctime"] = None
 
     return result if len(result) > 0 else None
 
