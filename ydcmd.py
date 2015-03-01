@@ -1601,13 +1601,15 @@ def yd_get_sync(options, source, target, pool = None):
     """
     flist = yd_list(options, source)
 
+    lazy_get_sync = []
+
     for item in itervalues(flist):
         sitem = source + item.name
         titem = target + item.name
 
         if item.isdir():
+            lazy_get_sync.append([sitem + "/", titem + "/"])
             yd_ensure_local(options, titem, "dir")
-            yd_get_sync(options, sitem + "/", titem + "/")
         elif item.isfile():
             if pool:
                 pool.yd_apply_async(yd_get_file, args = (options, sitem, titem, item))
@@ -1629,6 +1631,29 @@ def yd_get_sync(options, source, target, pool = None):
                     shutil.rmtree(titem)
                 else:
                     raise ydError(1, "Unsupported filesystem object: {0}".format(titem))
+
+    if pool:
+        pool.yd_wait_async()
+
+    # при большом количестве директорий рандомизация позволяет продолжить
+    # загрузку не обрабатывая заново ранее загруженные директории
+    random.shuffle(lazy_get_sync)
+
+    index = 0
+    count = len(lazy_get_sync)
+
+    for [sitem, titem] in lazy_get_sync:
+        try:
+            index += 1
+            yd_verbose("Processing [{0}/{1}]: {2}".format(index, count, sitem), options.verbose)
+            yd_get_sync(options, sitem, titem, pool)
+        except ydError as e:
+            # аналогично поведению rsync, которая не останавливается с ошибкой
+            # при исчезновении файлов и директорий во время синхронизации
+            if e.errno == 404:
+                yd_verbose("Warning: {0}".format(e), options.verbose)
+            else
+                raise e
 
 
 def yd_du(options, path, depth = 0):
