@@ -1574,7 +1574,22 @@ def yd_ensure_local(options, path, type):
     return False
 
 
-def yd_get_sync(options, source, target):
+def yd_get_file(options, source, target, stat):
+    """
+    Получение файла из хранилища
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        source  (str)       -- Имя файла в хранилище
+        target  (str)       -- Имя локального файла
+        stat    (ydItem)    -- Описатель файла в хранилище
+    """
+    exists = yd_ensure_local(options, target, "file")
+    if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
+        yd_get(options, source, target)
+
+
+def yd_get_sync(options, source, target, pool = None):
     """
     Синхронизация файлов и директорий в хранилище с локальными
 
@@ -1582,6 +1597,7 @@ def yd_get_sync(options, source, target):
         options (ydOptions) -- Опции приложения
         source  (str)       -- Имя директории в хранилище (со слешем)
         target  (str)       -- Имя локальной директории (со слешем)
+        pool    (ydPool)    -- Пул процессов
     """
     flist = yd_list(options, source)
 
@@ -1593,13 +1609,10 @@ def yd_get_sync(options, source, target):
             yd_ensure_local(options, titem, "dir")
             yd_get_sync(options, sitem + "/", titem + "/")
         elif item.isfile():
-            force  = True
-            exists = yd_ensure_local(options, titem, "file")
-            if not options.decrypt and exists and os.path.getsize(titem) == item.size and yd_check_hash(options, titem, item.md5):
-                force = False
-
-            if force:
-                yd_get(options, sitem, titem)
+            if pool:
+                pool.yd_apply_async(yd_get_file, args = (options, sitem, titem, item))
+            else:
+                yd_get_file(options, sitem, titem, item)
 
     if options.rsync:
         for item in os.listdir(target):
@@ -2025,13 +2038,24 @@ def yd_get_cmd(options, args):
             target += "/"
 
         yd_ensure_local(options, target, "dir")
-        yd_get_sync(options, source, target)
+
+        if options.threads > 0:
+            pool = ydPool(options.threads, initializer = yd_init_worker)
+            try:
+                yd_get_sync(options, source, target, pool)
+                pool.yd_wait_async()
+                pool.close()
+                pool.join()
+            except KeyboardInterrupt as e:
+                pool.terminate()
+                pool.join()
+                raise e
+        else:
+            yd_get_sync(options, source, target)
+
     elif stat.isfile():
-        force  = True
         exists = yd_ensure_local(options, target, "file")
-        if not options.decrypt and exists and os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5):
-            force = False
-        if force:
+        if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
             yd_get(options, source, target)
 
 
@@ -2321,7 +2345,7 @@ if __name__ == "__main__":
         else:
             args.append(arg)
 
-    if config["version"]:
+    if "version" in config:
         yd_print("ydcmd v{0}".format(__version__))
         sys.exit(0)
 
