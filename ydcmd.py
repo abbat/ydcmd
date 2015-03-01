@@ -1652,7 +1652,7 @@ def yd_get_sync(options, source, target, pool = None):
             # при исчезновении файлов и директорий во время синхронизации
             if e.errno == 404:
                 yd_verbose("Warning: {0}".format(e), options.verbose)
-            else
+            else:
                 raise e
 
 
