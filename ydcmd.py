@@ -1316,25 +1316,22 @@ def yd_meta(path):
     return meta
 
 
-def yd_meta_diff(meta, stat):
+def yd_meta_diff(meta1, meta2):
     """
-    Сравнение метаинформации о локальном объекте с метаинформацией объекта в хранилище
+    Получение разницы в метаинформации
 
     Аргументы:
-        meta (dict)   -- Метаинформация о локальном объекте
-        stat (ydItem) -- Информация об оъекте
+        meta1 (dict) -- Полная (достоверная) метаинформация
+        meta2 (dict) -- Сравниваемая (недостоверная) метаинформация
 
     Результат (dict):
         Метаинформация для изменения или None
     """
-    if not stat or not getattr(stat, "custom_properties", None):
-        return meta
-
     result = {}
-    for key, value in iteritems(stat.custom_properties):
-        if key in meta and meta[key] == value:
+    for key, value in iteritems(meta1):
+        if key in meta2 and meta2[key] == value:
             continue
-        result[key] = meta[key]
+        result[key] = meta1[key]
 
     return result if len(result) > 0 else None
 
@@ -1351,9 +1348,10 @@ def yd_meta_patch(options, source, target, stat):
     """
     if options.attr and os.name != "nt":
         meta = yd_meta(source)
-        diff = yd_meta_diff(meta, stat)
-        if diff:
-            yd_patch(options, target, diff)
+        if stat and getattr(stat, "custom_properties", None):
+            meta = yd_meta_diff(meta, stat.custom_properties)
+        if meta:
+            yd_patch(options, target, meta)
 
 
 def yd_ensure_remote(options, path, type, stat):
