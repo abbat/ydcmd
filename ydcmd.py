@@ -1304,7 +1304,7 @@ def yd_meta(path):
     """
     info = os.stat(path)
     meta = {
-        "ctime" : int(info.st_ctime),
+        "ctime" : None,
         "mtime" : int(info.st_mtime),
         "uid"   : info.st_uid,
         "gid"   : info.st_gid,
