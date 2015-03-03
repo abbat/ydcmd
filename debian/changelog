@@ -1,3 +1,13 @@
+ydcmd (1.8) testing; urgency=low
+
+  * Исправление ошибки, которая могла приводить к остановке до момента исчерпания --retries;
+  * Добавление --version;
+  * Добавление --threads для get;
+  * Удаление экспериментальной опции --attr для get/put;
+  * Удаление опции --encrypt/--decrypt для get/put.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 06 Mar 2015 23:45:00 +0300
+
 ydcmd (1.7) testing; urgency=low
 
   * Повтор попытки запроса при получении HTTP-429;

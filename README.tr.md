@@ -141,7 +141,7 @@ ydcmd put <dosya> [disk:/nesne]
 * `--rsync` - depoda, dosya ve dizinlerin ağaçları ile yerel ağacı senkronize eder;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
-* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`);
+* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`).
 
 Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini kullanılacaktır. Eğer hedef nesne, dizini ("/" ile biten) belirtirse, kaynak dosyasının adı dizinin adına eklenmiş olacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır. Sembolik bağlantılar göz ardı edilir.
 
@@ -155,6 +155,7 @@ ydcmd get <disk:/nesne> [dosya]
 
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
 * `--skip-md5` - skip md5 integrity checks;
+* `--threads=<N>` - number of worker processes.
 
 Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır.
 

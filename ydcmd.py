@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "1.7"
+__version__  = "1.8"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -2140,6 +2140,7 @@ def yd_print_usage(cmd = None):
         yd_print("Options:")
         yd_print("     --rsync       -- sync local tree with remote")
         yd_print("     --skip-md5    -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
+        yd_print("     --threads=<N> -- number of worker processes (default: {0})".format(default["threads"]))
         yd_print("")
         yd_print(" * If target is not specified, source file name will be used")
         yd_print(" * If target exists, it will be silently overwritten")

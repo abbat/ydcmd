@@ -141,7 +141,7 @@ ydcmd put <file> [disk:/object]
 * `--rsync` - synchronizes a tree of files and directories in the storage with a local tree;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
-* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`);
+* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`).
 
 If a target object is not specified, then the storage's root directory will be used for uploading a file. If a target object denotes a directory (ends with `/`), then the source file name will be added to the directory's name. If a target object exists, it will be overwritten without a confirmation prompt. Symbolic links are ignored.
 
@@ -155,6 +155,7 @@ ydcmd get <disk:/object> [file]
 
 * `--rsync` - synchronizes a local tree of files and directories with a tree in the storage;
 * `--skip-md5` - skip md5 integrity checks;
+* `--threads=<N>` - number of worker processes.
 
 If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
 
