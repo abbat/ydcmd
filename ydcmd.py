@@ -8,8 +8,7 @@ __license__  = "BSD"
 
 
 import array, random
-import os, sys, signal, errno
-import stat, pwd, grp
+import os, sys, stat, signal, errno
 import socket, ssl
 import re, codecs, json
 import time, datetime
@@ -350,7 +349,6 @@ def yd_default_config():
         "async"       : "no",
         "rsync"       : "no",
         "skip-md5"    : "no",
-        "attr"        : "no",
         "threads"     : "0",
         "iconv"       : "",
         "base-url"    : "https://cloud-api.yandex.net/v1/disk",
@@ -434,7 +432,6 @@ class ydOptions(object):
         self.async     = self._bool(config["async"])
         self.rsync     = self._bool(config["rsync"])
         self.skipmd5   = self._bool(config["skip-md5"])
-        self.attr      = self._bool(config["attr"])
         self.threads   = int(config["threads"])
         self.iconv     = str(config["iconv"])
 
@@ -477,9 +474,6 @@ class ydOptions(object):
             self.token = str(os.environ["YDCMD_TOKEN"])
         if "SSL_CERT_FILE" in os.environ:
             self.cafile = str(os.environ["SSL_CERT_FILE"])
-
-        if self.attr and os.name != "nt":
-            self.euid = os.geteuid()
 
 
     def __repr__(self):
@@ -1295,124 +1289,6 @@ def yd_check_hash(options, filename, md5):
     return False
 
 
-def yd_meta(path):
-    """
-    Получение метаинформации о локальном файле или директории
-
-    Аргументы:
-        path (str) -- Имя файла или директории
-
-    Результат (dict):
-        Метаинформация для отправки
-    """
-    info = os.stat(path)
-    meta = {
-        "mtime" : int(info.st_mtime),
-        "uid"   : info.st_uid,
-        "gid"   : info.st_gid,
-        "mode"  : oct(stat.S_IMODE(info.st_mode)),
-        "user"  : pwd.getpwuid(info.st_uid).pw_name,
-        "group" : grp.getgrgid(info.st_gid).gr_name
-    }
-
-    return meta
-
-
-def yd_meta_diff(meta1, meta2):
-    """
-    Получение разницы в метаинформации
-
-    Аргументы:
-        meta1 (dict) -- Полная (достоверная) метаинформация
-        meta2 (dict) -- Сравниваемая (недостоверная) метаинформация
-
-    Результат (dict):
-        Метаинформация для изменения или None
-    """
-    result = {}
-    for key, value in iteritems(meta1):
-        if key in meta2 and meta2[key] == value:
-            continue
-        result[key] = meta1[key]
-
-    # временная конструкция - сброс ранее-установленного ctime (см. @adbf291)
-    if "ctime" in meta2:
-        result["ctime"] = None
-
-    return result if len(result) > 0 else None
-
-
-def yd_meta_patch(options, source, target, stat):
-    """
-    Установка метаинформации для объекта в хранилище
-
-    Аргументы:
-        options (ydOptions) -- Опции приложения
-        source  (str)       -- Локальный объект
-        target  (str)       -- Объект в хранилище
-        stat    (ydItem)    -- Информация об объекте в хранилище или None
-    """
-    if options.attr and os.name != "nt":
-        meta = yd_meta(source)
-        if stat and getattr(stat, "custom_properties", None):
-            meta = yd_meta_diff(meta, stat.custom_properties)
-        if meta:
-            yd_patch(options, target, meta)
-
-
-def yd_meta_set(options, path, stat):
-    """
-    Установка метаинформации для локального объекта
-
-    Аргументы:
-        options (ydOptions) -- Опции приложения
-        path    (str)       -- Локальный объект
-        stat    (ydItem)    -- Информация об объекте в хранилище или None
-    """
-    if options.attr and stat and getattr(stat, "custom_properties", None) and os.name != "nt":
-        meta = yd_meta(path)
-        meta = yd_meta_diff(stat.custom_properties, meta)
-        if meta:
-            if "mtime" in meta:
-                try:
-                    mtime = int(meta["mtime"])
-                    os.utime(path, (mtime, mtime))
-                except Exception as e:
-                    yd_debug("utime {0} to {1} failed: {2}".format(mtime, path, e))
-            if "mode" in meta:
-                try:
-                    os.chmod(path, int(meta["mode"], 8))
-                except Exception as e:
-                    yd_debug("chmod {0} to {1} failed: {2}".format(meta["mode"], path, e))
-            if options.euid == 0 and ("user" in meta or "group" in meta):
-                uid   = int(meta["uid"]) if "uid" in meta else -1
-                gid   = int(meta["gid"]) if "gid" in meta else -1
-                user  = meta["user"]  if "user"  in meta else ""
-                group = meta["group"] if "group" in meta else ""
-
-                if user:
-                    try:
-                        uid = pwd.getpwnam(user).pw_uid
-                    except:
-                        user = uid
-                else:
-                    user = uid
-
-                if group:
-                    try:
-                        gid = grp.getgrnam(group).gr_gid
-                    except:
-                        group = gid
-                else:
-                    group = gid
-
-                if uid != -1 or gid != -1:
-                    try:
-                        os.chown(path, uid, gid)
-                    except Exception as e:
-                        yd_debug("chown {0}:{1} to {2} failed: {3}".format(user, group, path, e))
-
-
 def yd_ensure_remote(options, path, type, stat):
     """
     Метод проверки возможности создания объекта требуемого типа в хранилище.
@@ -1459,14 +1335,6 @@ def yd_put_file(options, source, target, stat = None):
     if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
         yd_put(options, source, target)
 
-    try:
-        # иногда сразу после загрузки файла попытка patch отдает 404 (лаг репликации?)
-        # поскольку опция экспериментальная - игнорируем (обновится при повторной синхронизации)
-        yd_meta_patch(options, source, target, stat)
-    except ydError as e:
-        if e.errno != 404:
-            raise e
-
 
 def yd_put_dir(options, source, target, stat = None):
     """
@@ -1479,14 +1347,6 @@ def yd_put_dir(options, source, target, stat = None):
         stat    (ydItem)    -- Описатель директории в хранилище (None, если директория отсутствует)
     """
     stat = yd_ensure_remote(options, target, "dir", stat)
-
-    try:
-        # иногда сразу после загрузки файла попытка patch отдает 404 (лаг репликации?)
-        # поскольку опция экспериментальная - игнорируем (обновится при повторной синхронизации)
-        yd_meta_patch(options, source, target, stat)
-    except ydError as e:
-        if e.errno != 404:
-            raise e
 
 
 def yd_iconv(options, name):
@@ -1645,8 +1505,6 @@ def yd_get_file(options, source, target, stat):
     if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
         yd_get(options, source, target)
 
-    yd_meta_set(options, target, stat)
-
 
 def yd_get_sync(options, source, target, pool = None):
     """
@@ -1667,7 +1525,7 @@ def yd_get_sync(options, source, target, pool = None):
         titem = target + item.name
 
         if item.isdir():
-            lazy_get_sync.append([sitem + "/", titem + "/", item])
+            lazy_get_sync.append([sitem + "/", titem + "/"])
             yd_ensure_local(options, titem, "dir")
         elif item.isfile():
             if pool:
@@ -1701,12 +1559,11 @@ def yd_get_sync(options, source, target, pool = None):
     index = 0
     count = len(lazy_get_sync)
 
-    for [sitem, titem, stat] in lazy_get_sync:
+    for [sitem, titem] in lazy_get_sync:
         try:
             index += 1
             yd_verbose("Processing [{0}/{1}]: {2}".format(index, count, sitem), options.verbose)
             yd_get_sync(options, sitem, titem, pool)
-            yd_meta_set(options, titem, stat)
         except ydError as e:
             # аналогично поведению rsync, которая не останавливается с ошибкой
             # при исчезновении файлов и директорий во время синхронизации
@@ -2065,7 +1922,6 @@ def yd_put_cmd(options, args):
                 target += "/"
 
             stat = yd_ensure_remote(options, target, "dir", yd_stat(options, target, True))
-            yd_meta_patch(options, source, target, stat)
 
             if options.threads > 0:
                 pool = ydPool(options.threads, initializer = yd_init_worker)
@@ -2085,7 +1941,6 @@ def yd_put_cmd(options, args):
             stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True))
             if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
                 yd_put(options, source, target)
-            yd_meta_patch(options, source, target, stat)
         else:
             raise ydError(1, "Unsupported filesystem object: {0}".format(source))
     else:
@@ -2123,7 +1978,6 @@ def yd_get_cmd(options, args):
             target += "/"
 
         yd_ensure_local(options, target, "dir")
-        yd_meta_set(options, target, stat)
 
         if options.threads > 0:
             pool = ydPool(options.threads, initializer = yd_init_worker)
@@ -2143,8 +1997,6 @@ def yd_get_cmd(options, args):
         exists = yd_ensure_local(options, target, "file")
         if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
             yd_get(options, source, target)
-
-        yd_meta_set(options, target, stat)
 
 
 def yd_du_cmd(options, args):
