@@ -478,6 +478,9 @@ class ydOptions(object):
         if "SSL_CERT_FILE" in os.environ:
             self.cafile = str(os.environ["SSL_CERT_FILE"])
 
+        if self.attr and os.name != "nt":
+            self.euid = os.geteuid()
+
 
     def __repr__(self):
         return "{0!s}({1!r})".format(self.__class__, self.__dict__)
@@ -1357,6 +1360,59 @@ def yd_meta_patch(options, source, target, stat):
             yd_patch(options, target, meta)
 
 
+def yd_meta_set(options, path, stat):
+    """
+    Установка метаинформации для локального объекта
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        path    (str)       -- Локальный объект
+        stat    (ydItem)    -- Информация об объекте в хранилище или None
+    """
+    if options.attr and stat and getattr(stat, "custom_properties", None) and os.name != "nt":
+        meta = yd_meta(path)
+        meta = yd_meta_diff(stat.custom_properties, meta)
+        if meta:
+            if "mtime" in meta:
+                try:
+                    mtime = int(meta["mtime"])
+                    os.utime(path, (mtime, mtime))
+                except Exception as e:
+                    yd_debug("utime {0} to {1} failed: {2}".format(mtime, path, e))
+            if "mode" in meta:
+                try:
+                    os.chmod(path, int(meta["mode"], 8))
+                except Exception as e:
+                    yd_debug("chmod {0} to {1} failed: {2}".format(meta["mode"], path, e))
+            if options.euid == 0 and ("user" in meta or "group" in meta):
+                uid   = int(meta["uid"]) if "uid" in meta else -1
+                gid   = int(meta["gid"]) if "gid" in meta else -1
+                user  = meta["user"]  if "user"  in meta else ""
+                group = meta["group"] if "group" in meta else ""
+
+                if user:
+                    try:
+                        uid = pwd.getpwnam(user).pw_uid
+                    except:
+                        user = uid
+                else:
+                    user = uid
+
+                if group:
+                    try:
+                        gid = grp.getgrnam(group).gr_gid
+                    except:
+                        group = gid
+                else:
+                    group = gid
+
+                if uid != -1 or gid != -1:
+                    try:
+                        os.chown(path, uid, gid)
+                    except Exception as e:
+                        yd_debug("chown {0}:{1} to {2} failed: {3}".format(user, group, path, e))
+
+
 def yd_ensure_remote(options, path, type, stat):
     """
     Метод проверки возможности создания объекта требуемого типа в хранилище.
@@ -1589,6 +1645,8 @@ def yd_get_file(options, source, target, stat):
     if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
         yd_get(options, source, target)
 
+    yd_meta_set(options, target, stat)
+
 
 def yd_get_sync(options, source, target, pool = None):
     """
@@ -1611,6 +1669,7 @@ def yd_get_sync(options, source, target, pool = None):
         if item.isdir():
             lazy_get_sync.append([sitem + "/", titem + "/"])
             yd_ensure_local(options, titem, "dir")
+            yd_meta_set(options, titem, item)
         elif item.isfile():
             if pool:
                 pool.yd_apply_async(yd_get_file, args = (options, sitem, titem, item))
@@ -2064,6 +2123,7 @@ def yd_get_cmd(options, args):
             target += "/"
 
         yd_ensure_local(options, target, "dir")
+        yd_meta_set(options, target, stat)
 
         if options.threads > 0:
             pool = ydPool(options.threads, initializer = yd_init_worker)
@@ -2083,6 +2143,8 @@ def yd_get_cmd(options, args):
         exists = yd_ensure_local(options, target, "file")
         if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
             yd_get(options, source, target)
+
+        yd_meta_set(options, target, stat)
 
 
 def yd_du_cmd(options, args):
