@@ -778,9 +778,9 @@ def yd_can_query_retry(e):
     Результат:
         None или необработанное исключение
     """
-    if isinstance(e, ydError) and not (e.errno >= 500 or e.errno == 401 or e.errno == 429):
+    if type(e) == ydError and not (e.errno >= 500 or e.errno == 401 or e.errno == 429):
         raise e
-    elif isinstance(e, socket.error) and not (e.errno == errno.ECONNRESET or e.errno == errno.ECONNREFUSED):
+    elif type(e) == socket.error and not (e.errno == errno.ECONNRESET or e.errno == errno.ECONNREFUSED):
         raise e
 
 
