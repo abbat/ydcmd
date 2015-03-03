@@ -1667,9 +1667,8 @@ def yd_get_sync(options, source, target, pool = None):
         titem = target + item.name
 
         if item.isdir():
-            lazy_get_sync.append([sitem + "/", titem + "/"])
+            lazy_get_sync.append([sitem + "/", titem + "/", item])
             yd_ensure_local(options, titem, "dir")
-            yd_meta_set(options, titem, item)
         elif item.isfile():
             if pool:
                 pool.yd_apply_async(yd_get_file, args = (options, sitem, titem, item))
@@ -1702,11 +1701,12 @@ def yd_get_sync(options, source, target, pool = None):
     index = 0
     count = len(lazy_get_sync)
 
-    for [sitem, titem] in lazy_get_sync:
+    for [sitem, titem, stat] in lazy_get_sync:
         try:
             index += 1
             yd_verbose("Processing [{0}/{1}]: {2}".format(index, count, sitem), options.verbose)
             yd_get_sync(options, sitem, titem, pool)
+            yd_meta_set(options, titem, stat)
         except ydError as e:
             # аналогично поведению rsync, которая не останавливается с ошибкой
             # при исчезновении файлов и директорий во время синхронизации
