@@ -146,15 +146,6 @@ Number of worker processes.
 .B --iconv=<S>
 Try to restore file or directory names from the specified encoding if necessary (for example cp1254).
 .TP
-.B --encrypt
-Depoya yüklemeden önce --encrypt-cmd kullanarak dosyaları şifreleme.
-.TP
-.B --encrypt-cmd
-Yerel dosyanın (şifrelenmemiş) içeriğini stdin'den alan ve şifrelenmiş versiyonunu stdout'a gönderen komuttur.
-.TP
-.B --temp-dir
-Şifrelenmiş geçici dosyaların depolanması için bir dizin.
-.TP
 Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini kullanılacaktır. Eğer hedef nesne, dizini ("/" ile biten) belirtirse, kaynak dosyasının adı dizinin adına eklenmiş olacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır. Sembolik bağlantılar göz ardı edilir.
 .SS get
 .TP
@@ -163,15 +154,6 @@ Dosya ve dizinlerin yerel ağacını depo içerisindeki ağaç ile senkronize ed
 .TP
 .B --skip-md5
 Skip md5 integrity checks.
-.TP
-.B --decrypt
-Depodan alındıktan sonra --decrypt-cmd kullanarak dosyaların şifresini çözme.
-.TP
-.B --decrypt-cmd
-Depodan alınan şifrelenmiş dosyanın içeriğini stdin'den alan ve şifrelenmemiş versiyonunu stdout'a gönderen komuttur.
-.TP
-.B --temp-dir
-Şifrelenmiş geçici dosyaların depolanması için bir dizin.
 .TP
 Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır.
 .SS info

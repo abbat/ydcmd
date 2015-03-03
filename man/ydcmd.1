@@ -146,15 +146,6 @@ Number of worker processes.
 .B --iconv=<S>
 Try to restore file or directory names from the specified encoding if necessary (for example cp1250).
 .TP
-.B --encrypt
-Encryption of files using --encrypt-cmd before uploading to the storage.
-.TP
-.B --encrypt-cmd
-Command sending to stdin the contents of the local (unencrypted) file and sending its encrypted version to stdout.
-.TP
-.B --temp-dir
-A directory for storing temporary encrypted files.
-.TP
 If a target object is not specified, then the storage's root directory will be used for uploading a file. If a target object denotes a directory (ends with '/'), then the source file name will be added to the directory's name. If a target object exists, it will be overwritten without a confirmation prompt. Symbolic links are ignored.
 .SS get
 .TP
@@ -163,15 +154,6 @@ Synchronizes a local tree of files and directories with a tree in the storage.
 .TP
 .B --skip-md5
 Skip md5 integrity checks.
-.TP
-.B --decrypt
-Decryption of files using --decrypt-cmd after obtaining them from the storage.
-.TP
-.B --decrypt-cmd
-Command sending to stdin the contents of an encrypted file from the storage and sending its unencrypted version to stdout.
-.TP
-.B --temp-dir
-A directory for storing temporary encrypted files.
 .TP
 If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
 .SS info

@@ -142,9 +142,6 @@ ydcmd put <dosya> [disk:/nesne]
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`);
-* `--encrypt` - depoya yüklemeden önce `--encrypt-cmd` kullanarak dosyaları şifreleme;
-* `--encrypt-cmd` - yerel dosyanın (şifrelenmemiş) içeriğini `stdin`'den alan ve şifrelenmiş versiyonunu `stdout`'a gönderen komuttur;
-* `--temp-dir` - şifrelenmiş geçici dosyaların depolanması için bir dizin;
 
 Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini kullanılacaktır. Eğer hedef nesne, dizini ("/" ile biten) belirtirse, kaynak dosyasının adı dizinin adına eklenmiş olacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır. Sembolik bağlantılar göz ardı edilir.
 
@@ -158,9 +155,6 @@ ydcmd get <disk:/nesne> [dosya]
 
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
 * `--skip-md5` - skip md5 integrity checks;
-* `--decrypt` - depodan alındıktan sonra `--decrypt-cmd` kullanarak dosyaların şifresini çözme;
-* `--decrypt-cmd` - depodan alınan şifrelenmiş dosyanın içeriğini `stdin`'den alan ve şifrelenmemiş versiyonunu `stdout`'a gönderen komuttur;
-* `--temp-dir` - şifrelenmiş geçici dosyaların depolanması için bir dizin;
 
 Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır.
 

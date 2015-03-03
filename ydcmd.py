@@ -359,12 +359,7 @@ def yd_default_config():
         "depth"       : "1",
         "dry"         : "no",
         "type"        : "all",
-        "keep"        : "",
-        "encrypt"     : "no",
-        "decrypt"     : "no",
-        "encrypt-cmd" : "",
-        "decrypt-cmd" : "",
-        "temp-dir"    : ""
+        "keep"        : ""
     }
 
     cafiles = [
@@ -456,15 +451,6 @@ class ydOptions(object):
         self.dry   = self._bool(config["dry"])
         self.type  = str(config["type"])
         self.keep  = str(config["keep"])
-
-        self.encrypt    = self._bool(config["encrypt"])
-        self.decrypt    = self._bool(config["decrypt"])
-        self.encryptcmd = str(config["encrypt-cmd"])
-        self.decryptcmd = str(config["decrypt-cmd"])
-        self.tempdir    = str(config["temp-dir"])
-
-        if self.tempdir == "":
-            self.tempdir = None
 
         self.short = True if "short" in config else None
         self.long  = True if "long"  in config else None
@@ -1150,18 +1136,6 @@ def yd_put(options, source, target):
     """
     Реализация нескольких попыток загрузки файла в хранилище (yd_put_retry)
     """
-    if options.encrypt:
-        if options.encryptcmd == "":
-            raise ydError(1, "Encrypt error: --encrypt-cmd not defined but --encrypt used")
-        try:
-            dst = tempfile.NamedTemporaryFile(dir = options.tempdir, prefix = "ydcmd-", suffix = ".tmp")
-            yd_verbose("Encrypt: {0} -> {1}".format(source, dst.name), options.verbose)
-            src = open(source, "rb")
-            subprocess.check_call(options.encryptcmd, stdin = src, stdout = dst, shell = True)
-            source = dst.name
-        except Exception as e:
-            raise ydError(1, "Encrypt error: {0}".format(e))
-
     yd_verbose("Transfer: {0} -> {1}".format(source, target), options.verbose)
 
     retry = 0
@@ -1212,16 +1186,6 @@ def yd_get(options, source, target):
     """
     Реализация нескольких попыток получения файла из хранилища (yd_get_retry)
     """
-    if options.decrypt:
-        if options.decryptcmd == "":
-            raise ydError(1, "Decrypt error: --decrypt-cmd not defined but --decrypt used")
-        try:
-            src    = tempfile.NamedTemporaryFile(dir = options.tempdir, prefix = "ydcmd-", suffix = ".tmp")
-            dst    = target
-            target = src.name
-        except Exception as e:
-            raise ydError(1, "Decrypt error: {0}".format(e))
-
     yd_verbose("Transfer: {0} -> {1}".format(source, target), options.verbose)
 
     retry = 0
@@ -1236,15 +1200,6 @@ def yd_get(options, source, target):
             if retry >= options.retries:
                 raise ydError(1, e)
             time.sleep(options.delay)
-
-    if options.decrypt:
-        try:
-            target = dst
-            yd_verbose("Decrypt: {0} -> {1}".format(src.name, target), options.verbose)
-            dst = open(target, "wb")
-            subprocess.check_call(options.decryptcmd, stdin = src, stdout = dst, shell = True)
-        except Exception as e:
-            raise ydError(1, "Decrypt error: {0}".format(e))
 
 
 def yd_md5(options, filename):
@@ -1332,7 +1287,7 @@ def yd_put_file(options, source, target, stat = None):
     """
     if stat:
         stat = yd_ensure_remote(options, target, "file", stat)
-    if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
+    if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
         yd_put(options, source, target)
 
 
@@ -1502,7 +1457,7 @@ def yd_get_file(options, source, target, stat):
         stat    (ydItem)    -- Описатель файла в хранилище
     """
     exists = yd_ensure_local(options, target, "file")
-    if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
+    if not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
         yd_get(options, source, target)
 
 
@@ -1939,7 +1894,7 @@ def yd_put_cmd(options, args):
 
         elif os.path.isfile(source):
             stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True))
-            if options.encrypt or not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
+            if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
                 yd_put(options, source, target)
         else:
             raise ydError(1, "Unsupported filesystem object: {0}".format(source))
@@ -1995,7 +1950,7 @@ def yd_get_cmd(options, args):
 
     elif stat.isfile():
         exists = yd_ensure_local(options, target, "file")
-        if options.decrypt or not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
+        if not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
             yd_get(options, source, target)
 
 
@@ -2172,9 +2127,6 @@ def yd_print_usage(cmd = None):
         yd_print("     --skip-md5    -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
         yd_print("     --threads=<N> -- number of worker processes (default: {0})".format(default["threads"]))
         yd_print("     --iconv=<S>   -- try to restore file or directory names from the specified encoding if necessary (default: {0})".format("none" if not default["iconv"] else default["iconv"]))
-        yd_print("     --encrypt     -- encrypt uploaded files using --encrypt-cmd (default: {0})".format(default["encrypt"]))
-        yd_print("     --encrypt-cmd -- command used to encrypt local file passed to stdin and upload from stdout (default: none)")
-        yd_print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
         yd_print("")
         yd_print(" * If target is not specified, target will be root '/' directory")
         yd_print(" * If target specify a directory (ended with '/'), source file name will be added")
@@ -2188,9 +2140,6 @@ def yd_print_usage(cmd = None):
         yd_print("Options:")
         yd_print("     --rsync       -- sync local tree with remote")
         yd_print("     --skip-md5    -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
-        yd_print("     --decrypt     -- decrypt downloaded files using --decrypt-cmd (default: {0})".format(default["decrypt"]))
-        yd_print("     --decrypt-cmd -- command used to decrypt downloaded file passed to stdin and store from stdout (default: none)")
-        yd_print("     --temp-dir    -- directory to store encrypted temporary files (default: system default)")
         yd_print("")
         yd_print(" * If target is not specified, source file name will be used")
         yd_print(" * If target exists, it will be silently overwritten")
