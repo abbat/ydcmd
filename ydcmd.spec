@@ -74,5 +74,5 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Fri Mar 06 2015 Anton Batenev <antonbatenev@yandex.ru> 1.8-1
+* Thu Mar 05 2015 Anton Batenev <antonbatenev@yandex.ru> 1.8-1
 - Initial RPM release

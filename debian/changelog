@@ -6,7 +6,7 @@ ydcmd (1.8) testing; urgency=low
   * Удаление экспериментальной опции --attr для get/put;
   * Удаление опции --encrypt/--decrypt для get/put.
 
- -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 06 Mar 2015 23:45:00 +0300
+ -- Anton Batenev <antonbatenev@yandex.ru>  Thu, 05 Mar 2015 10:50:00 +0300
 
 ydcmd (1.7) testing; urgency=low
 
