@@ -337,31 +337,33 @@ def yd_default_config():
         Конфигурация приложения по умолчанию, которая может быть перегружена в вызове yd_load_config
     """
     result = {
-        "timeout"      : "30",
-        "poll"         : "1",
-        "retries"      : "3",
-        "delay"        : "30",
-        "limit"        : "100",   # default is 20
-        "chunk"        : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
-        "token"        : "",
-        "quiet"        : "no",
-        "verbose"      : "no",
-        "debug"        : "no",
-        "async"        : "no",
-        "rsync"        : "no",
-        "no-recursion" : "no",
-        "skip-md5"     : "no",
-        "threads"      : "0",
-        "iconv"        : "",
-        "base-url"     : "https://cloud-api.yandex.net/v1/disk",
-        "app-id"       : "2415aa2e6ceb4839b1202e15ac83536c",
-        "app-secret"   : "b8ae32ce025c451f84bd7df17029cb55",
-        "ca-file"      : "",
-        "ciphers"      : "HIGH:!aNULL:!MD5:!3DES:!CAMELLIA:!SRP:!PSK:@STRENGTH",
-        "depth"        : "1",
-        "dry"          : "no",
-        "type"         : "all",
-        "keep"         : ""
+        "timeout"          : "30",
+        "poll"             : "1",
+        "retries"          : "3",
+        "delay"            : "30",
+        "limit"            : "100",   # default is 20
+        "chunk"            : "512",   # default mdadm chunk size and optimal read-ahead is 512KB
+        "token"            : "",
+        "quiet"            : "no",
+        "verbose"          : "no",
+        "debug"            : "no",
+        "async"            : "no",
+        "rsync"            : "no",
+        "no-recursion"     : "no",
+        "no-recursion-tag" : "",
+        "exclude-tag"      : "",
+        "skip-md5"         : "no",
+        "threads"          : "0",
+        "iconv"            : "",
+        "base-url"         : "https://cloud-api.yandex.net/v1/disk",
+        "app-id"           : "2415aa2e6ceb4839b1202e15ac83536c",
+        "app-secret"       : "b8ae32ce025c451f84bd7df17029cb55",
+        "ca-file"          : "",
+        "ciphers"          : "HIGH:!aNULL:!MD5:!3DES:!CAMELLIA:!SRP:!PSK:@STRENGTH",
+        "depth"            : "1",
+        "dry"              : "no",
+        "type"             : "all",
+        "keep"             : ""
     }
 
     cafiles = [
@@ -416,22 +418,24 @@ class ydOptions(object):
         Аргументы:
             config (dict) -- конфигурация приложения
         """
-        self.timeout   = int(config["timeout"])
-        self.poll      = int(config["poll"])
-        self.retries   = int(config["retries"])
-        self.delay     = int(config["delay"])
-        self.limit     = int(config["limit"])
-        self.chunk     = int(config["chunk"]) * 1024
-        self.token     = str(config["token"])
-        self.quiet     = self._bool(config["quiet"])
-        self.debug     = self._bool(config["debug"]) and not self.quiet
-        self.verbose   = (self._bool(config["verbose"]) or self.debug) and not self.quiet
-        self.async     = self._bool(config["async"])
-        self.rsync     = self._bool(config["rsync"])
-        self.recursion = not self._bool(config["no-recursion"])
-        self.skipmd5   = self._bool(config["skip-md5"])
-        self.threads   = int(config["threads"])
-        self.iconv     = str(config["iconv"])
+        self.timeout          = int(config["timeout"])
+        self.poll             = int(config["poll"])
+        self.retries          = int(config["retries"])
+        self.delay            = int(config["delay"])
+        self.limit            = int(config["limit"])
+        self.chunk            = int(config["chunk"]) * 1024
+        self.token            = str(config["token"])
+        self.quiet            = self._bool(config["quiet"])
+        self.debug            = self._bool(config["debug"]) and not self.quiet
+        self.verbose          = (self._bool(config["verbose"]) or self.debug) and not self.quiet
+        self.async            = self._bool(config["async"])
+        self.rsync            = self._bool(config["rsync"])
+        self.recursion        = not self._bool(config["no-recursion"])
+        self.no_recursion_tag = str(config["no-recursion-tag"])
+        self.exclude_tag      = str(config["exclude-tag"])
+        self.skip_md5         = self._bool(config["skip-md5"])
+        self.threads          = int(config["threads"])
+        self.iconv            = str(config["iconv"])
 
         if self.iconv == "":
             self.iconv = None
@@ -1241,7 +1245,7 @@ def yd_check_hash(options, filename, md5):
     Результат (bool):
         Результат сравнения хэша
     """
-    if options.skipmd5 or yd_md5(options, filename) == md5:
+    if options.skip_md5 or yd_md5(options, filename) == md5:
         return True
 
     return False
@@ -1336,6 +1340,13 @@ def yd_put_sync(options, source, target, pool = None):
         target  (str)       -- Имя директории в хранилище (со слешем)
         pool    (ydPool)    -- Пул процессов
     """
+    if os.path.isfile(source + options.exclude_tag):
+        return
+
+    local_recursion = True
+    if os.path.isfile(source + options.no_recursion_tag):
+        local_recursion = False
+
     flist = yd_list(options, target)
 
     lazy_put_sync = []
@@ -1352,7 +1363,7 @@ def yd_put_sync(options, source, target, pool = None):
 
         if not os.path.islink(sitem):
             if os.path.isdir(sitem):
-                if options.recursion:
+                if options.recursion and local_recursion:
                     lazy_put_sync.append([sitem + "/", titem + "/"])
                 if pool:
                     pool.yd_apply_async(yd_put_dir, args = (options, titem, flist[item] if item in flist else None))
@@ -2126,11 +2137,13 @@ def yd_print_usage(cmd = None):
         yd_print("     {0} put <file> [disk:/object]".format(sys.argv[0]))
         yd_print("")
         yd_print("Options:")
-        yd_print("     --rsync        -- sync remote tree with local")
-        yd_print("     --no-recursion -- avoid descending automatically in directories (default: {0})".format(default["no-recursion"]))
-        yd_print("     --skip-md5     -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
-        yd_print("     --threads=<N>  -- number of worker processes (default: {0})".format(default["threads"]))
-        yd_print("     --iconv=<S>    -- try to restore file or directory names from the specified encoding if necessary (default: {0})".format("none" if not default["iconv"] else default["iconv"]))
+        yd_print("     --rsync                -- sync remote tree with local")
+        yd_print("     --no-recursion         -- avoid descending in directories (default: {0})".format(default["no-recursion"]))
+        yd_print("     --no-recursion-tag=<S> -- avoid descending in directories containing file (default: {0})".format("none" if not default["no-recursion-tag"] else default["no-recursion-tag"]))
+        yd_print("     --exclude-tag=<S>      -- exclude contents of directories containing file (default: {0})".format("none" if not default["exclude-tag"] else default["exclude-tag"]))
+        yd_print("     --skip-md5             -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
+        yd_print("     --threads=<N>          -- number of worker processes (default: {0})".format(default["threads"]))
+        yd_print("     --iconv=<S>            -- try to restore file or directory names from the specified encoding if necessary (default: {0})".format("none" if not default["iconv"] else default["iconv"]))
         yd_print("")
         yd_print(" * If target is not specified, target will be root '/' directory")
         yd_print(" * If target specify a directory (ended with '/'), source file name will be added")

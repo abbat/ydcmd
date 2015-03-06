@@ -140,6 +140,8 @@ ydcmd put <file> [disk:/object]
 
 * `--rsync` - synchronizes a tree of files and directories in the storage with a local tree;
 * `--no-recursion` - avoid descending automatically in directories;
+* `--no-recursion-tag=<S>` - avoid descending in directories containing file;
+* `--exclude-tag=<S>` - exclude contents of directories containing file;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`).
