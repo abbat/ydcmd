@@ -372,7 +372,7 @@ def yd_default_config():
     for cafile in cafiles:
         if os.path.isfile(cafile):
             result["ca-file"] = cafile
-            break;
+            break
 
     return result
 
