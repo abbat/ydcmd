@@ -1340,11 +1340,11 @@ def yd_put_sync(options, source, target, pool = None):
         target  (str)       -- Имя директории в хранилище (со слешем)
         pool    (ydPool)    -- Пул процессов
     """
-    if os.path.isfile(source + options.exclude_tag):
+    if options.exclude_tag and os.path.isfile(source + options.exclude_tag):
         return
 
     local_recursion = True
-    if os.path.isfile(source + options.no_recursion_tag):
+    if options.no_recursion_tag and os.path.isfile(source + options.no_recursion_tag):
         local_recursion = False
 
     flist = yd_list(options, target)
