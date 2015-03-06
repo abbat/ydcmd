@@ -1,3 +1,9 @@
+ydcmd (1.9) testing; urgency=low
+
+  * Добавление опции --no-recursion для get/put.
+
+-- Anton Batenev <antonbatenev@yandex.ru>  Thu, 06 Mar 2015 23:20:00 +0300
+
 ydcmd (1.8) testing; urgency=low
 
   * Исправление ошибки, которая могла приводить к остановке до момента исчерпания --retries;

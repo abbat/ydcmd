@@ -139,6 +139,7 @@ ydcmd put <dosya> [disk:/nesne]
 **Seçenekler**:
 
 * `--rsync` - depoda, dosya ve dizinlerin ağaçları ile yerel ağacı senkronize eder;
+* `--no-recursion` - avoid descending automatically in directories;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`).
@@ -154,6 +155,7 @@ ydcmd get <disk:/nesne> [dosya]
 **Seçenekler**:
 
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
+* `--no-recursion` - avoid descending automatically in directories;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes.
 
