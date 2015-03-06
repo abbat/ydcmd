@@ -4,7 +4,7 @@ ydcmd (1.9) testing; urgency=low
   * Добавление опции --no-recursion-tag для put;
   * Добавление опции --exclude-tag для put.
 
--- Anton Batenev <antonbatenev@yandex.ru>  Sat, 07 Mar 2015 00:50:00 +0300
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 07 Mar 2015 00:50:00 +0300
 
 ydcmd (1.8) testing; urgency=low
 
