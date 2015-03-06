@@ -138,7 +138,8 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
         ydHTTPSConnectionBase.__init__(self, host, **kwargs)
 
 
-    def _check_cert(self, cert, hostname):
+    @staticmethod
+    def _check_cert(cert, hostname):
         """
         Проверка валидности SSL сертификата
 
