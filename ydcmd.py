@@ -8,12 +8,12 @@ __license__  = "BSD"
 
 
 import array, random
-import os, sys, stat, signal, errno
+import os, sys, signal, errno
 import socket, ssl
 import re, codecs, json
 import time, datetime
-import subprocess, multiprocessing.pool
-import tempfile, hashlib, shutil
+import multiprocessing.pool
+import hashlib, shutil
 
 
 try:
