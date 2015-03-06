@@ -1291,13 +1291,12 @@ def yd_put_file(options, source, target, stat = None):
         yd_put(options, source, target)
 
 
-def yd_put_dir(options, source, target, stat = None):
+def yd_put_dir(options, target, stat = None):
     """
     Загрузка директории в хранилище (по аналогии с yd_put_file)
 
     Аргументы:
         options (ydOptions) -- Опции приложения
-        source  (str)       -- Имя локальной директории
         target  (str)       -- Имя директории хранилище
         stat    (ydItem)    -- Описатель директории в хранилище (None, если директория отсутствует)
     """
@@ -1349,13 +1348,12 @@ def yd_put_sync(options, source, target, pool = None):
         titem = target + item
 
         if not os.path.islink(sitem):
-            stat = None
             if os.path.isdir(sitem):
                 lazy_put_sync.append([sitem + "/", titem + "/"])
                 if pool:
-                    pool.yd_apply_async(yd_put_dir, args = (options, sitem, titem, flist[item] if item in flist else None))
+                    pool.yd_apply_async(yd_put_dir, args = (options, titem, flist[item] if item in flist else None))
                 else:
-                    yd_put_dir(options, sitem, titem, flist[item] if item in flist else None)
+                    yd_put_dir(options, titem, flist[item] if item in flist else None)
             elif os.path.isfile(sitem):
                 if pool:
                     pool.yd_apply_async(yd_put_file, args = (options, sitem, titem, flist[item] if item in flist else None))
