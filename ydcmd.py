@@ -969,13 +969,14 @@ def yd_last(options, limit):
     return result
 
 
-def yd_delete(options, path):
+def yd_delete(options, path, silent = False):
     """
     Удаление объекта в хранилище
 
     Аргументы:
         options (ydOptions) -- Опции приложения
         path    (str)       -- Объект хранилища
+        silent  (bool)      -- Игнорировать ошибку, если объект (уже/еще?) не существует
     """
     yd_verbose("Delete: {0}".format(path), options.verbose)
 
@@ -987,9 +988,12 @@ def yd_delete(options, path):
     method = "DELETE"
     url    = options.baseurl + "/resources"
 
-    link = yd_query(options, method, url, args)
-
-    yd_wait(options, link)
+    try:
+        link = yd_query(options, method, url, args)
+        yd_wait(options, link)
+    except ydError as e:
+        if not (silent and e.errno == 404):
+            raise e
 
 
 def yd_copy(options, source, target):
@@ -1042,13 +1046,14 @@ def yd_move(options, source, target):
     yd_wait(options, link)
 
 
-def yd_create(options, path):
+def yd_create(options, path, silent = False):
     """
     Cоздание директории в хранилище
 
     Аргументы:
         options (ydOptions) -- Опции приложения
         path    (str)       -- Имя директории в хранилище
+        silent  (bool)      -- Игноририровать ошибку, если директория (уже/еще?) существует
     """
     yd_verbose("Create: {0}".format(path), options.verbose)
 
@@ -1059,7 +1064,12 @@ def yd_create(options, path):
     method = "PUT"
     url    = options.baseurl + "/resources"
 
-    yd_query(options, method, url, args)
+    try:
+        yd_query(options, method, url, args)
+    except ydError as e:
+        # HTTP-409: Specified path "..." points to existent directory.
+        if not (silent and e.errno == 409 and "points to existent directory" in e.errmsg):
+            raise e
 
 
 def yd_publish(options, path):
@@ -1271,13 +1281,13 @@ def yd_ensure_remote(options, path, type, stat):
 
     if stat != None:
         if stat.type != type:
-            yd_delete(options, path)
+            yd_delete(options, path, True)
             if type == "dir":
-                yd_create(options, path)
+                yd_create(options, path, True)
         else:
             return stat
     elif type == "dir":
-        yd_create(options, path)
+        yd_create(options, path, True)
 
     return None
 
@@ -1296,18 +1306,6 @@ def yd_put_file(options, source, target, stat = None):
         stat = yd_ensure_remote(options, target, "file", stat)
     if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
         yd_put(options, source, target)
-
-
-def yd_put_dir(options, target, stat = None):
-    """
-    Загрузка директории в хранилище (по аналогии с yd_put_file)
-
-    Аргументы:
-        options (ydOptions) -- Опции приложения
-        target  (str)       -- Имя директории хранилище
-        stat    (ydItem)    -- Описатель директории в хранилище (None, если директория отсутствует)
-    """
-    stat = yd_ensure_remote(options, target, "dir", stat)
 
 
 def yd_iconv(options, name):
@@ -1366,9 +1364,9 @@ def yd_put_sync(options, source, target, pool = None):
                 if options.recursion and local_recursion:
                     lazy_put_sync.append([sitem + "/", titem + "/"])
                 if pool:
-                    pool.yd_apply_async(yd_put_dir, args = (options, titem, flist[item] if item in flist else None))
+                    pool.yd_apply_async(yd_ensure_remote, args = (options, titem, "dir", flist[item] if item in flist else None))
                 else:
-                    yd_put_dir(options, titem, flist[item] if item in flist else None)
+                    yd_ensure_remote(options, titem, "dir", flist[item] if item in flist else None)
             elif os.path.isfile(sitem):
                 if pool:
                     pool.yd_apply_async(yd_put_file, args = (options, sitem, titem, flist[item] if item in flist else None))
@@ -1385,9 +1383,9 @@ def yd_put_sync(options, source, target, pool = None):
     if options.rsync:
         for item in itervalues(flist):
             if pool:
-                pool.yd_apply_async(yd_delete, args = (options, target + item.name))
+                pool.yd_apply_async(yd_delete, args = (options, target + item.name, True))
             else:
-                yd_delete(options, target + item.name)
+                yd_delete(options, target + item.name, True)
 
     if pool:
         pool.yd_wait_async()
