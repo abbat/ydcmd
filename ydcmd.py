@@ -1659,13 +1659,16 @@ def yd_info_cmd(options, args):
 
     result = yd_info(options)
 
+    result["free_space"]     = int(result["total_space"]) - int(result["used_space"])
     result["used_space_pct"] = int(result["used_space"]) * 100 / int(result["total_space"])
 
     if options.human:
         result["used_space"]  = yd_human(result["used_space"])
+        result["free_space"]  = yd_human(result["free_space"])
         result["total_space"] = yd_human(result["total_space"])
 
     yd_print("{0:>7}: {1} ({2:.0f}%)".format("Used", result["used_space"], result["used_space_pct"]))
+    yd_print("{0:>7}: {1}".format("Free", result["free_space"]))
     yd_print("{0:>7}: {1}".format("Total", result["total_space"]))
 
 
