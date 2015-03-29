@@ -28,10 +28,10 @@ try:
 
 except ImportError:
     err = "Python module dateutil not found.\nPlease, install \"{0}\"\n"
-    name = os.uname()[0]
+    name = os.uname()[0] if os.name != "nt" else "Windows"
     if name == "FreeBSD":
         sys.stderr.write(err.format("devel/py-dateutil"))
-    elif name == "Linux":
+    elif name == "Linux" or name == "Windows":
         sys.stderr.write(err.format("python-dateutil"))
     sys.exit(1)
 
