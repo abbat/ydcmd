@@ -1,3 +1,11 @@
+ydcmd (2.0) stable; urgency=low
+
+  * Исправление потенциальной ошибки при длительном put;
+  * Добавление вывода свободного места в info;
+  * stable.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 04 Apr 2015 16:00:00 +0300
+
 ydcmd (1.9) testing; urgency=low
 
   * Добавление опции --no-recursion для get/put;
