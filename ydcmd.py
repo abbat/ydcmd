@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "2.0"
+__version__  = "2.1"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -702,7 +702,7 @@ def yd_query_retry(options, method, url, args, headers = None, filename = None, 
     if method == "PUT" and filename != None:
         fd = open(filename, "rb")
     elif (method == "POST" or method == "PATCH") and data != None:
-        fd = data
+        fd = data.encode("utf-8")
 
     request = ydRequest(url, fd, headers)
     request.get_method = lambda: method

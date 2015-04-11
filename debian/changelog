@@ -1,3 +1,9 @@
+ydcmd (2.1) stable; urgency=low
+
+  * Исправление ошибки с получением OAuth токена для python 3.x.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 11 Apr 2015 16:23:00 +0300
+
 ydcmd (2.0) stable; urgency=low
 
   * Исправление потенциальной ошибки при длительном put;
