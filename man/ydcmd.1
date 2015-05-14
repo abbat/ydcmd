@@ -53,6 +53,9 @@ Evaluates the disk space used by files within the storage.
 .B clean
 Cleans files and directories.
 .TP
+.B restore
+Restores file or directory from trash.
+.TP
 .B token
 Get OAuth token for application.
 .SH OPTIONS
@@ -106,6 +109,9 @@ Returns an extended list (creation time, modification time, size, file name).
 .TP
 If a target object is not specified, then the storage's root directory will be used.
 .SS rm
+.TP
+.B --trash
+Remove to trash folder.
 .TP
 .B --poll=<N>
 Interval (in seconds) between status polls during an asynchronous operation.
@@ -212,6 +218,15 @@ Value of selection criteria related to objects to be saved:
 * For selecting a relative time, you can use a number and a dimension (for example, '7d', '4w', '1m', '1y');
 .br
 * For selecting the number of copies, you can use a number without a dimension (for example, '31').
+.SS restore
+.TP
+.B --poll=<N>
+Interval (in seconds) between status polls during an asynchronous operation.
+.TP
+.B --async
+Runs a command without waiting for operation to terminate (poll).
+.TP
+In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
 .SH CONFIGURATION
 .TP
 For convenience, we recommend creating a configuration file named ~/.ydcmd.cfg and granting it file permissions 0600 or 0400. File format:

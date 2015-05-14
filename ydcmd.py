@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "2.1"
+__version__  = "2.2"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -363,7 +363,8 @@ def yd_default_config():
         "depth"            : "1",
         "dry"              : "no",
         "type"             : "all",
-        "keep"             : ""
+        "keep"             : "",
+        "trash"            : "no"
     }
 
     cafiles = [
@@ -458,6 +459,7 @@ class ydOptions(object):
         self.dry   = self._bool(config["dry"])
         self.type  = str(config["type"])
         self.keep  = str(config["keep"])
+        self.trash = self._bool(config["trash"])
 
         self.short = True if "short" in config else None
         self.long  = True if "long"  in config else None
@@ -626,22 +628,46 @@ def yd_human(val):
     return "{0:.2f}".format(val / 1024.0 / 1024.0 / 1024.0 / 1024.0).rstrip("0").rstrip(".") + "T"
 
 
-def yd_remote_path(path):
+def yd_path_area(path):
     """
-    Конвертация облачного пути в канонический
+    Получение имени области в хранилище из пути
 
     Аргументы:
-        path (str) -- Путь в хранилище
+        path (str) -- Путь
+
+    Результат:
+        Имя области в хранилище или None, если область не определена
+    """
+    area = path.split(":", 2)
+    if len(area) != 2:
+        return None
+
+    area = area[0]
+    if area not in ["disk", "app", "trash"]:
+        return None
+
+    return area
+
+
+def yd_remote_path(path, area = "disk"):
+    """
+    Конвертация неявного пути в путь от корня области в хранилище
+    path/to, /path/to, area:/path/to -> area:/path/to
+
+    Аргументы:
+        path (str) -- Путь
+        area (str) -- Область по умолчанию
 
     Результат (str):
-        Канонический путь вида disk:/path
+        Путь от корня области в хранилище
     """
-    if path.find("disk:") != 0:
-        if path[0] != "/":
-            path = "/{0}".format(path)
-        path = "disk:{0}".format(path)
+    if yd_path_area(path):
+        return path
 
-    return path
+    if path[0] != "/":
+        path = "/{0}".format(path)
+
+    return "{0}:{1}".format(area, path)
 
 
 def yd_headers(token):
@@ -852,7 +878,7 @@ def yd_stat(options, path, silent = False):
     }
 
     method = "GET"
-    url    = options.baseurl + "/resources"
+    url    = options.baseurl + ("/trash" if yd_path_area(path) == "trash" else "") + "/resources"
 
     try:
         part = yd_query(options, method, url, args)
@@ -913,7 +939,7 @@ def yd_list(options, path):
     }
 
     method = "GET"
-    url    = options.baseurl + "/resources"
+    url    = options.baseurl + ("/trash" if yd_path_area(path) == "trash" else "") + "/resources"
 
     while True:
         part = yd_query(options, method, url, args)
@@ -981,12 +1007,14 @@ def yd_delete(options, path, silent = False):
     yd_verbose("Delete: {0}".format(path), options.verbose)
 
     args = {
-        "path"        : path,
-        "permanently" : "true"
+        "path" : path
     }
 
+    if not options.trash:
+        args["permanently"] = "true"
+
     method = "DELETE"
-    url    = options.baseurl + "/resources"
+    url    = options.baseurl + ("/trash" if yd_path_area(path) == "trash" else "") + "/resources"
 
     try:
         link = yd_query(options, method, url, args)
@@ -1115,6 +1143,36 @@ def yd_unpublish(options, path):
     url    = options.baseurl + "/resources/unpublish"
 
     yd_query(options, method, url, args)
+
+
+def yd_restore(options, path, name = None):
+    """
+    Восстановление объекта из корзины
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        path    (str)       -- Объект в корзине
+        name    (str)       -- Новое имя восстанавливаемого ресурса
+    """
+    if name:
+        yd_verbose("Restore: {0} as {1}".format(path, name), options.verbose)
+    else:
+        yd_verbose("Restore: {0}".format(path), options.verbose)
+
+    args = {
+        "path"      : path,
+        "overwrite" : "true"
+    }
+
+    if name:
+        args["name"] = name
+
+    method = "PUT"
+    url    = options.baseurl + "/trash/resources/restore"
+
+    link = yd_query(options, method, url, args)
+
+    yd_wait(options, link)
 
 
 def yd_put_retry(options, source, target):
@@ -2027,6 +2085,28 @@ def yd_clean_cmd(options, args):
     yd_clean(options, path)
 
 
+def yd_restore_cmd(options, args):
+    """
+    Обработчик восстановления файла из корзины
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        args    (dict)      -- Аргументы командной строки
+    """
+    if len(args) < 1:
+        raise ydError(1, "Source or name not specified")
+    if len(args) > 2:
+        raise ydError(1, "Too many arguments")
+
+    path = args[0]
+    name = None
+
+    if len(args) == 2:
+        name = args[1]
+
+    yd_restore(options, yd_remote_path(path), name)
+
+
 def yd_token_cmd(options, args):
     """
     Получение OAuth токена для приложения
@@ -2072,22 +2152,23 @@ def yd_print_usage(cmd = None):
         yd_print("     {0} <command> [options] [args]".format(sys.argv[0]))
         yd_print("")
         yd_print("Commands:")
-        yd_print("     help   -- describe the usage of this program or its subcommands")
-        yd_print("     ls     -- list files and directories")
-        yd_print("     rm     -- remove file or directory")
-        yd_print("     cp     -- copy file or directory")
-        yd_print("     mv     -- move file or directory")
-        yd_print("     put    -- upload file to storage")
-        yd_print("     get    -- download file from storage")
-        yd_print("     mkdir  -- create directory")
-        yd_print("     stat   -- show metainformation about cloud object")
-        yd_print("     info   -- show metainformation about cloud storage")
-        yd_print("     last   -- show metainformation about last uploaded files")
-        yd_print("     share  -- publish uploaded object")
-        yd_print("     revoke -- unpublish uploaded object")
-        yd_print("     du     -- estimate files space usage")
-        yd_print("     clean  -- delete old files and/or directories")
-        yd_print("     token  -- get oauth token for application")
+        yd_print("     help    -- describe the usage of this program or its subcommands")
+        yd_print("     ls      -- list files and directories")
+        yd_print("     rm      -- remove file or directory")
+        yd_print("     cp      -- copy file or directory")
+        yd_print("     mv      -- move file or directory")
+        yd_print("     put     -- upload file to storage")
+        yd_print("     get     -- download file from storage")
+        yd_print("     mkdir   -- create directory")
+        yd_print("     stat    -- show metainformation about cloud object")
+        yd_print("     info    -- show metainformation about cloud storage")
+        yd_print("     last    -- show metainformation about last uploaded files")
+        yd_print("     share   -- publish uploaded object")
+        yd_print("     revoke  -- unpublish uploaded object")
+        yd_print("     du      -- estimate files space usage")
+        yd_print("     clean   -- delete old files and/or directories")
+        yd_print("     restore -- restore file or directory from trash")
+        yd_print("     token   -- get oauth token for application")
         yd_print("")
         yd_print("Options:")
         yd_print("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
@@ -2119,6 +2200,7 @@ def yd_print_usage(cmd = None):
         yd_print("     {0} rm <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
         yd_print("")
         yd_print("Options:")
+        yd_print("     --trash    -- remove to trash folder (default: {0})".format(default["trash"]))
         yd_print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
         yd_print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
         yd_print("")
@@ -2230,6 +2312,14 @@ def yd_print_usage(cmd = None):
         yd_print(" * If target is not specified, target will be root '/' directory")
         yd_print(" * Objects sorted and filtered by modified date (not created date)")
         yd_print("")
+    elif cmd == "restore":
+        yd_print("Usage:")
+        yd_print("     {0} restore <trash:/object> [name]".format(sys.argv[0]))
+        yd_print("")
+        yd_print("Options:")
+        yd_print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+        yd_print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
+        yd_print("")
     elif cmd == "token":
         yd_print("Usage:")
         yd_print("     {0} token [code]".format(sys.argv[0]))
@@ -2271,7 +2361,7 @@ if __name__ == "__main__":
     command = args.pop(0).lower()
     if command == "help":
         command = None
-        if argc > 2:
+        if len(args) == 1:
             command = args.pop(0).lower()
         yd_print_usage(command)
 
@@ -2307,6 +2397,8 @@ if __name__ == "__main__":
             yd_du_cmd(options, args)
         elif command == "clean":
             yd_clean_cmd(options, args)
+        elif command == "restore":
+            yd_restore_cmd(options, args)
         elif command == "token":
             yd_token_cmd(options, args)
         else:

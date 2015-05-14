@@ -60,6 +60,7 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `revoke` - kapanış erişim yayımlanmış, daha önce nesne;
 * `du` - dosyaların hafızada kapladığı alanı hesaplama;
 * `clean` - dosya ve dizinleri temizleme;
+* `restore` - restores file or directory from trash;
 * `token` - almak OAuth token uygulaması için.
 
 **Seçenekler**:
@@ -94,11 +95,12 @@ Eğer hedef nesne belirtilmemişse, deponun kök dizini kullanılacaktır.
 ### Dosya veya dizin silme
 
 ```
-ydcmd rm disk:/nesne
+ydcmd rm <disk:/nesne>
 ```
 
 **Seçenekler**:
 
+* `--trash` - remove to trash folder;
 * `--poll=<N>` - asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye);
 * `--async` - işlem sonlandırmasını (`poll`) beklemeyip komutunu çalıştırma.
 
@@ -107,7 +109,7 @@ Dosyalar kalıcı olarak silinir. Dizinler özyinelemeli silinir (alt dosya ve d
 ### Dosya veya dizin kopyalama
 
 ```
-ydcmd cp disk:/nesne1 disk:/nesne2
+ydcmd cp <disk:/nesne1> <disk:/nesne2>
 ```
 
 **Seçenekler**:
@@ -120,7 +122,7 @@ ydcmd cp disk:/nesne1 disk:/nesne2
 ### Dosya veya dizin taşıma
 
 ```
-ydcmd mv disk:/nesne1 disk:/nesne2
+ydcmd mv <disk:/nesne1> <disk:/nesne2>
 ```
 
 **Seçenekler**:
@@ -166,7 +168,7 @@ Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılac
 ### Dizin oluşturma
 
 ```
-ydcmd mkdir disk:/yol
+ydcmd mkdir <disk:/yol>
 ```
 
 ### Nesne hakkında meta-bilgi alma
@@ -204,7 +206,7 @@ Eğer N argüman belirtilmemişse, REST API'nin varsayılan değeri kullanılaca
 ### Yayın nesne
 
 ```
-ydcmd share disk:/nesne
+ydcmd share <disk:/nesne>
 ```
 
 Komut verir path ve url nesne.
@@ -212,7 +214,7 @@ Komut verir path ve url nesne.
 ### Erişim kapatma
 
 ```
-ydcmd revoke disk:/nesne
+ydcmd revoke <disk:/nesne>
 ```
 
 ### Kullanılan disk alanı değerlendirmesi
@@ -244,6 +246,19 @@ ydcmd clean <seçenekler> [disk:/nesne]
 * Kopya sayısını seçmek için, boyut olmadan sayı kullanılabilir (örneğin, `31`).
 
 Eğer hedef nesne belirtilmemişse, deponun kök dizini kullanılacaktır. Nesneler değiştirme tarihine göre (oluşturma tarihi ile değil) sıralanır ve filtrelenir.
+
+### Restores a file or directory from trash
+
+```
+ydcmd restore <trash:/object> [name]
+```
+
+**Options**:
+
+* `--poll=<N>` - interval (in seconds) between status polls during asynchronous operations;
+* `--async` - runs a command without waiting for operation to terminate (`poll`).
+
+In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
 
 ## Yapılandırma
 

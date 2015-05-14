@@ -60,6 +60,7 @@ ydcmd [command] [options] [arguments]
 * `revoke` - unpublish uploaded object;
 * `du` - evaluates the disk space used by files within the storage;
 * `clean` - cleans files and directories;
+* `restore` - restores file or directory from trash;
 * `token` - get oauth token for application.
 
 **Options**:
@@ -94,11 +95,12 @@ If a target object is not specified, then the storage's root directory will be u
 ### Deleting a file or directory
 
 ```
-ydcmd rm disk:/object
+ydcmd rm <disk:/object>
 ```
 
 **Options**:
 
+* `--trash` - remove to trash folder;
 * `--poll=<N>` - interval (in seconds) between status polls during an asynchronous operation;
 * `--async` - runs a command without waiting for operation to terminate (`poll`).
 
@@ -107,7 +109,7 @@ Files are deleted permanently. Directories are deleted recursively (including su
 ### Copying a file or directory
 
 ```
-ydcmd cp disk:/object1 disk:/object2
+ydcmd cp <disk:/object1> <disk:/object2>
 ```
 
 **Options**:
@@ -120,7 +122,7 @@ In case of name coincidence, directories and files will be overwritten. Director
 ### Moving a file or directory
 
 ```
-ydcmd mv disk:/object1 disk:/object2
+ydcmd mv <disk:/object1> <disk:/object2>
 ```
 
 **Options**:
@@ -166,7 +168,7 @@ If the target file's name is not specified, the file's name within the storage w
 ### Creating a directory
 
 ```
-ydcmd mkdir disk:/path
+ydcmd mkdir <disk:/path>
 ```
 
 ### Obtaining meta-information about an object
@@ -204,7 +206,7 @@ If argument N is not specified, default REST API value will be used.
 ### Publish object
 
 ```
-ydcmd share disk:/object
+ydcmd share <disk:/object>
 ```
 
 Command returns object path and direct url.
@@ -212,7 +214,7 @@ Command returns object path and direct url.
 ### Unpublish object
 
 ```
-ydcmd revoke disk:/object
+ydcmd revoke <disk:/object>
 ```
 
 ### Evaluating the disk space used
@@ -244,6 +246,19 @@ ydcmd clean <options> [disk:/object]
   * For selecting the number of copies, you can use a number without a dimension (for example, `31`).
 
 If a target object is not specified, then the storage's root directory will be used. Objects are sorted and filtered according to modification date (not by creation date).
+
+### Restores a file or directory from trash
+
+```
+ydcmd restore <trash:/object> [name]
+```
+
+**Options**:
+
+* `--poll=<N>` - interval (in seconds) between status polls during asynchronous operations;
+* `--async` - runs a command without waiting for operation to terminate (`poll`).
+
+In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
 
 ### Get OAuth token
 

@@ -53,6 +53,9 @@ Dosyaların hafızada kapladığı alanı hesaplama.
 .B clean
 Dosya ve dizinleri temizleme.
 .TP
+.B restore
+Restores file or directory from trash.
+.TP
 .B token
 Almak OAuth token uygulaması için.
 .SH SEÇENEKLER
@@ -106,6 +109,9 @@ Genişletilmiş liste gösterme (oluşturma zamanı, değişiklik zamanı, boyut
 .TP
 Eğer hedef nesne belirtilmemişse, deponun kök dizini kullanılacaktır.
 .SS rm
+.TP
+.B --trash
+Remove to trash folder.
 .TP
 .B --poll=<N>
 Asenkron işlem sırasında durum kontrolleri arasındaki süre (saniye).
@@ -212,6 +218,15 @@ Kaydedilmesi gereken nesnelerin seçim kriterleri:
 * Göreceli zamanı seçmek için sayı ve boyut kullanılabilir (örneğin, 7d', '4w', '1m', '1y');
 .br
 * Kopya sayısını seçmek için, boyut olmadan sayı kullanılabilir (örneğin, '31').
+.SS restore
+.TP
+.B --poll=<N>
+Interval (in seconds) between status polls during an asynchronous operation.
+.TP
+.B --async
+Runs a command without waiting for operation to terminate (poll).
+.TP
+In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
 .SH YAPILANDIRMA
 .TP
 Kolaylık sağlamak için ~/.ydcmd.cfg isimli bir yapılandırma dosyası oluşturmak ve bu dosyaya 0600 veya 0400 izinlerini vermek tavsiye edilir. Dosya biçimi:
