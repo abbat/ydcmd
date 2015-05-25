@@ -9,7 +9,10 @@ url='https://github.com/abbat/ydcmd'
 license=('BSD')
 depends=('python>=2.6' 'python-dateutil')
 makedepends=('python>=2.6' 'git')
-optdepends=('ca-certificates: ssl certificates validation')
+optdepends=(
+    'ca-certificates: ssl certificates validation'
+    'python-progressbar: pretty console upload/download progressbar'
+)
 source=("git+https://github.com/abbat/ydcmd.git#tag=v${pkgver}")
 sha256sums=('SKIP')
 

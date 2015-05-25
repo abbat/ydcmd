@@ -12,6 +12,7 @@ Package: ydcmd
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, python-dateutil
 Recommends: ca-certificates
+Suggests: python-progressbar
 Description: Command-line Yandex.Disk client
  Command-line tool to upload, retrieve and manage data in Yandex.Disk
  service (https://disk.yandex.com), designed for use in scripts.

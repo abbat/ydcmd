@@ -31,7 +31,7 @@ except ImportError:
     sys.exit(1)
 
 
-# extras
+# suggests
 try:
     import progressbar as ydProgressBar
 except:

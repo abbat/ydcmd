@@ -13,6 +13,10 @@ BuildRequires: python-devel >= 2.6
 BuildRequires: fdupes
 %endif
 
+%if 0%{?suse_version} > 1000 || 0%{?fedora} > 20
+Suggests: python-progressbar
+%endif
+
 Source0:       https://build.opensuse.org/source/home:antonbatenev:ydcmd/ydcmd/ydcmd_%{version}.tar.bz2
 BuildRoot:     %{_tmppath}/%{name}-%{version}-build
 
