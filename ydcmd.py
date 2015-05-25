@@ -761,7 +761,7 @@ def yd_query_download(options, response, filename):
         bar   = None
 
         try:
-            total = int(response.info().getheader("Content-Length"))
+            total = int(response.info().get("Content-Length"))
             if ydProgressBar:
                 try:
                     widgets = ["--> Download: ", ydProgressBar.Percentage(), " ", ydProgressBar.Bar(left = "[", marker = "=", right = "]"), " ", ydProgressBar.ETA(), " ", ydProgressBar.FileTransferSpeed()]
