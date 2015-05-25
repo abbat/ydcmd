@@ -65,6 +65,7 @@ ydcmd [command] [options] [arguments]
 
 **Options**:
 
+* `--config=<S>` - config filename (if not default);
 * `--timeout=<N>` - timeout (in seconds) for establishing a network connection;
 * `--retries=<N>` - number of attempts of API method invocation before returning an error code;
 * `--delay=<N>` - timeout (in seconds) between attempts of API method invocation;
@@ -146,7 +147,8 @@ ydcmd put <file> [disk:/object]
 * `--exclude-tag=<S>` - exclude contents of directories containing file;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
-* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`).
+* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`);
+* `--progress` - show progress (it is recommended to install python-progressbar module).
 
 If a target object is not specified, then the storage's root directory will be used for uploading a file. If a target object denotes a directory (ends with `/`), then the source file name will be added to the directory's name. If a target object exists, it will be overwritten without a confirmation prompt. Symbolic links are ignored.
 
@@ -161,7 +163,8 @@ ydcmd get <disk:/object> [file]
 * `--rsync` - synchronizes a local tree of files and directories with a tree in the storage;
 * `--no-recursion` - avoid descending automatically in directories;
 * `--skip-md5` - skip md5 integrity checks;
-* `--threads=<N>` - number of worker processes.
+* `--threads=<N>` - number of worker processes;
+* `--progress` - show progress (it is recommended to install python-progressbar module).
 
 If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
 

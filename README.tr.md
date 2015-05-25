@@ -65,6 +65,7 @@ ydcmd [komut] [seçenekler] [argümanlar]
 
 **Seçenekler**:
 
+* `--config=<S>` - config filename (if not default);
 * `--timeout=<N>` - ağ bağlantısı kurmak için zaman aşımı (saniye);
 * `--retries=<N>` - hata kodu almadan önce API yöntemini çağırma denemelerinin sayısı;
 * `--delay=<N>` - api metodunu çağırma denemeleri arasındaki zaman aşımı (saniye);
@@ -146,7 +147,8 @@ ydcmd put <dosya> [disk:/nesne]
 * `--exclude-tag=<S>` - exclude contents of directories containing file;
 * `--skip-md5` - skip md5 integrity checks;
 * `--threads=<N>` - number of worker processes;
-* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`).
+* `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`);
+* `--progress` - show progress (it is recommended to install python-progressbar module).
 
 Eğer hedef nesne belirtilmemişse, dosya yüklemesi için deponun kök dizini kullanılacaktır. Eğer hedef nesne, dizini ("/" ile biten) belirtirse, kaynak dosyasının adı dizinin adına eklenmiş olacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır. Sembolik bağlantılar göz ardı edilir.
 
@@ -161,7 +163,8 @@ ydcmd get <disk:/nesne> [dosya]
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
 * `--no-recursion` - avoid descending automatically in directories;
 * `--skip-md5` - skip md5 integrity checks;
-* `--threads=<N>` - number of worker processes.
+* `--threads=<N>` - number of worker processes;
+* `--progress` - show progress (it is recommended to install python-progressbar module).
 
 Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır.
 

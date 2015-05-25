@@ -60,6 +60,9 @@ Restores file or directory from trash.
 Get OAuth token for application.
 .SH OPTIONS
 .TP
+.B --config=<S>
+Config filename (if not default).
+.TP
 .B --timeout=<N>
 Timeout (in seconds) for establishing a network connection.
 .TP
@@ -161,6 +164,9 @@ Number of worker processes.
 .B --iconv=<S>
 Try to restore file or directory names from the specified encoding if necessary (for example cp1250).
 .TP
+.B --progress
+Show progress (it is recommended to install python-progressbar module).
+.TP
 If a target object is not specified, then the storage's root directory will be used for uploading a file. If a target object denotes a directory (ends with '/'), then the source file name will be added to the directory's name. If a target object exists, it will be overwritten without a confirmation prompt. Symbolic links are ignored.
 .SS get
 .TP
@@ -175,6 +181,9 @@ Skip md5 integrity checks.
 .TP
 .B --threads=<N>
 Number of worker processes.
+.TP
+.B --progress
+Show progress (it is recommended to install python-progressbar module).
 .TP
 If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
 .SS info

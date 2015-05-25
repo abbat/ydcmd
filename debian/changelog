@@ -1,3 +1,10 @@
+ydcmd (2.3) stable; urgency=low
+
+  * Экспериментальная поддержка --progress для get/put;
+  * Экспериментальная поддержка --config.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Tue, 26 May 2015 01:50:00 +0300
+
 ydcmd (2.2) stable; urgency=low
 
   * Поддержка областей trash и app (помимо disk) в путях;
