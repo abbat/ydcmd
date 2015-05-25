@@ -15,6 +15,7 @@ BuildRequires: fdupes
 
 %if 0%{?suse_version} > 1000 || 0%{?fedora} > 20
 Suggests: python-progressbar
+Recommends: ca-certificates
 %endif
 
 Source0:       https://build.opensuse.org/source/home:antonbatenev:ydcmd/ydcmd/ydcmd_%{version}.tar.bz2

@@ -435,13 +435,13 @@ def yd_default_config():
     return result
 
 
-def yd_load_config(config = None, filename = os.path.expanduser("~") + "/.ydcmd.cfg"):
+def yd_load_config(filename, config = None):
     """
     Чтение секции ydcmd INI файла ~/.ydcmd.cfg
 
     Аргументы:
-        config   (dict) -- Базовая конфигурация
         filename (str)  -- Имя INI файла
+        config   (dict) -- Базовая конфигурация
 
     Результат (dict):
         Конфигурация приложения на основе файла конфигурации
@@ -467,7 +467,7 @@ class ydOptions(object):
     """
     Опции приложения
     """
-    def __init__(self, config = yd_load_config()):
+    def __init__(self, config):
         """
         Аргументы:
             config (dict) -- конфигурация приложения
@@ -2436,12 +2436,20 @@ if __name__ == "__main__":
     if argc < 2:
         yd_print_usage()
 
-    config = yd_load_config()
+    regexp  = re.compile("--config=(.*)")
+    cfgfile = [match.group(1) for arg in sys.argv for match in [regexp.search(arg)] if match]
 
-    args = []
+    if len(cfgfile) == 0:
+        cfgfile = os.path.expanduser("~") + "/.ydcmd.cfg"
+    else:
+        cfgfile = cfgfile[0]
+
+    args   = []
+    config = yd_load_config(cfgfile)
+    regexp = re.compile("^--(\S+?)(=(.*)){,1}$")
     for i in range(1, argc):
         arg = sys.argv[i]
-        opt = re.split("^--(\S+?)(=(.*)){,1}$", arg)
+        opt = regexp.split(arg)
         if len(opt) == 5:
             if opt[3] == None:
                 opt[3] = True
