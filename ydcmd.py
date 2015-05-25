@@ -40,7 +40,7 @@ except ImportError:
 try:
     import progressbar as ydProgressBar
 except:
-    pass
+    ydProgressBar = None
 
 
 # PEP-8
