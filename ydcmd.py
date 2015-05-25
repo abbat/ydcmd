@@ -27,12 +27,7 @@ try:
         warnings.filterwarnings("ignore", category = UnicodeWarning)
 
 except ImportError:
-    err = "Python module dateutil not found.\nPlease, install \"{0}\"\n"
-    name = os.uname()[0] if os.name != "nt" else "Windows"
-    if name == "FreeBSD":
-        sys.stderr.write(err.format("devel/py-dateutil"))
-    elif name == "Linux" or name == "Windows":
-        sys.stderr.write(err.format("python-dateutil"))
+    sys.stderr.write("Python module dateutil not found.\nPlease, install \"python-dateutil\"\n")
     sys.exit(1)
 
 
