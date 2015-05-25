@@ -36,6 +36,13 @@ except ImportError:
     sys.exit(1)
 
 
+# extras
+try:
+    import progressbar as ydProgressBar
+except:
+    pass
+
+
 # PEP-8
 try:
     import configparser
@@ -248,9 +255,62 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
                 raise
 
 
+    def request(self, method, url, body = None, headers = {}):
+        """
+        Перегрузка ydHTTPSConnectionBase.request для сохранения Content-Length отправляемого файла
+        """
+        self._content_length = headers["Content-Length"] if "Content-Length" in headers else None
+        self._send_request(method, url, body, headers)
+
+
+    def upload(self, data):
+        """
+        Отправка данных в хранилище (вынесено из send)
+        """
+        if options.progress:
+            written = 0
+            start   = int(time.time())
+            bar     = None
+
+            try:
+                total = int(self._content_length)
+                if ydProgressBar:
+                    try:
+                        widgets = ["--> Upload: ", ydProgressBar.Percentage(), " ", ydProgressBar.Bar(left = "[", marker = "=", right = "]"), " ", ydProgressBar.ETA(), " ", ydProgressBar.FileTransferSpeed()]
+                        bar = ydProgressBar.ProgressBar(widgets = widgets, maxval = total).start()
+                    except:
+                        total = yd_human(total)
+                else:
+                    total = yd_human(total)
+            except:
+                total = "-"
+
+        datablock = data.read(self._options.chunk)
+
+        while datablock:
+            self.sock.sendall(datablock)
+
+            if self._options.progress:
+                written += len(datablock)
+                if bar:
+                    bar.update(written)
+                else:
+                    delta = int(time.time()) - start
+                    if delta > 0:
+                        sys.stderr.write("--> Upload: {0}/{1} ({2}/s){3}\r".format(yd_human(written), total, yd_human(written / delta), " " * 12))
+
+            datablock = data.read(self._options.chunk)
+
+        if self._options.progress:
+            if bar:
+                bar.finish()
+            else:
+                sys.stderr.write("{0}\r".format(" " * 33))
+
+
     def send(self, data):
         """
-        Перегрузка ydHTTPConnection.send для возможности задания размера отсылаемого блока
+        Перегрузка ydHTTPSConnectionBase.send для возможности задания размера отсылаемого блока
         """
         if self.sock is None:
             if self.auto_open:
@@ -259,10 +319,7 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
                 raise ydNotConnected()
 
         if hasattr(data, "read") and not isinstance(data, array.array):
-            datablock = data.read(self._options.chunk)
-            while datablock:
-                self.sock.sendall(datablock)
-                datablock = data.read(self._options.chunk)
+            self.upload(data)
         else:
             self.sock.sendall(data)
 
@@ -354,6 +411,7 @@ def yd_default_config():
         "exclude-tag"      : "",
         "skip-md5"         : "no",
         "threads"          : "0",
+        "progress"         : "no",
         "iconv"            : "",
         "base-url"         : "https://cloud-api.yandex.net/v1/disk",
         "app-id"           : "2415aa2e6ceb4839b1202e15ac83536c",
@@ -436,6 +494,7 @@ class ydOptions(object):
         self.exclude_tag      = str(config["exclude-tag"])
         self.skip_md5         = self._bool(config["skip-md5"])
         self.threads          = int(config["threads"])
+        self.progress         = self._bool(config["progress"]) and not self.quiet
         self.iconv            = str(config["iconv"])
 
         if self.iconv == "":
@@ -687,6 +746,57 @@ def yd_headers(token):
     }
 
 
+def yd_query_download(options, response, filename):
+    """
+    Загрузка файла из хранилища
+
+    Аргументы:
+        options  (ydOptions)    -- Опции приложения
+        response (HTTPResponse) -- HTTP ответ
+        filename (str)          -- Имя локального файла для записи
+    """
+    if options.progress:
+        read  = 0
+        start = int(time.time())
+        bar   = None
+
+        try:
+            total = int(response.info().getheader("Content-Length"))
+            if ydProgressBar:
+                try:
+                    widgets = ["--> Download: ", ydProgressBar.Percentage(), " ", ydProgressBar.Bar(left = "[", marker = "=", right = "]"), " ", ydProgressBar.ETA(), " ", ydProgressBar.FileTransferSpeed()]
+                    bar = ydProgressBar.ProgressBar(widgets = widgets, maxval = total).start()
+                except:
+                    total = yd_human(total)
+            else:
+                total = yd_human(total)
+        except:
+            total = "-"
+
+    with open(filename, "wb") as fd:
+        while True:
+            part = response.read(options.chunk)
+            if not part:
+                break
+
+            fd.write(part)
+
+            if options.progress:
+                read += len(part)
+                if bar:
+                    bar.update(read)
+                else:
+                    delta = int(time.time()) - start
+                    if delta > 0:
+                        sys.stderr.write("--> Download: {0}/{1} ({2}/s){3}\r".format(yd_human(read), total, yd_human(read / delta), " " * 12))
+
+    if options.progress:
+        if bar:
+            bar.finish()
+        else:
+            sys.stderr.write("{0}\r".format(" " * 35))
+
+
 def yd_query_retry(options, method, url, args, headers = None, filename = None, data = None):
     """
     Реализация одной попытки запроса к API
@@ -741,12 +851,7 @@ def yd_query_retry(options, method, url, args, headers = None, filename = None, 
         if code == 204 or code == 201:
             return {}
         elif method == "GET" and filename != None:
-            with open(filename, "wb") as fd:
-                while True:
-                    part = result.read(options.chunk)
-                    if not part:
-                        break
-                    fd.write(part)
+            yd_query_download(options, result, filename)
             return {}
         else:
             def _json_convert(input):
