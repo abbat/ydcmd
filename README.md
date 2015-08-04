@@ -1,4 +1,4 @@
-# ydcmd
+# ydcmd [![Prioritize issues!](http://www.gitfund.org/img/badge/55c120a10a975a4d2448003a.svg)](http://www.gitfund.org/abbat/ydcmd)
 
 [English](https://github.com/abbat/ydcmd/blob/master/README.en.md) | [Türk](https://github.com/abbat/ydcmd/blob/master/README.tr.md)
 
