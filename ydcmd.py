@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "2.3"
+__version__  = "2.4"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -210,6 +210,8 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
         и установки предпочитаемого набора шифров / алгоритма шифрования
         """
         sock = socket.create_connection((self.host, self.port), self.timeout)
+
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
         if getattr(self, "_tunnel_host", None):
             self.sock = sock

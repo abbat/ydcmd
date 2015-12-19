@@ -1,3 +1,9 @@
+ydcmd (2.4) stable; urgency=low
+
+  * Возможное исправление таймаута после загрузки большого файла.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sat, 19 Dec 2015 20:35:00 +0300
+
 ydcmd (2.3) stable; urgency=low
 
   * Экспериментальная поддержка --progress для get/put;
