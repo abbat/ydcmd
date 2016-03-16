@@ -61,6 +61,7 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `du` - dosyaların hafızada kapladığı alanı hesaplama;
 * `clean` - dosya ve dizinleri temizleme;
 * `restore` - restores file or directory from trash;
+* `download` - download file from internet to storage;
 * `token` - almak OAuth token uygulaması için.
 
 **Seçenekler**:
@@ -262,6 +263,28 @@ ydcmd restore <trash:/object> [name]
 * `--async` - runs a command without waiting for operation to terminate (`poll`).
 
 In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
+
+### Download file from internet to storage
+
+```
+ydcmd download <URL> [disk:/object]
+```
+
+**Options**:
+
+* `--poll=<N>` - interval (in seconds) between status polls during asynchronous operations;
+* `--async` - runs a command without waiting for operation to terminate (`poll`);
+* `--no-redirects` - disable redirects.
+
+If target is not specified, target will be root '/' directory with file name extracted from URL (if possible).
+
+### Get OAuth token
+
+```
+ydcmd token [code]
+```
+
+Without argument it shows URL to obtain code. Open URL in your browser, allow access and use code as command argument to obtain OAuth token.
 
 ## Yapılandırma
 

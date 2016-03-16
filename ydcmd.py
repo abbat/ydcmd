@@ -2494,7 +2494,7 @@ def yd_print_usage(cmd = None):
         yd_print("     --async        -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
         yd_print("     --no-redirects -- disable redirects (default: {0})".format(default["no-redirects"]))
         yd_print("")
-        yd_print(" * If target is not specified, target will be root '/' directory")
+        yd_print(" * If target is not specified, target will be root '/' directory with file name extracted from URL (if possible).")
         yd_print("")
     elif cmd == "token":
         yd_print("Usage:")

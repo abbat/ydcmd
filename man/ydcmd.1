@@ -56,6 +56,9 @@ Cleans files and directories.
 .B restore
 Restores file or directory from trash.
 .TP
+.B download
+Download file from internet to storage.
+.TP
 .B token
 Get OAuth token for application.
 .SH OPTIONS
@@ -236,6 +239,18 @@ Interval (in seconds) between status polls during an asynchronous operation.
 Runs a command without waiting for operation to terminate (poll).
 .TP
 In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
+.SS download
+.TP
+.B --poll=<N>
+Interval (in seconds) between status polls during an asynchronous operation.
+.TP
+.B --async
+Runs a command without waiting for operation to terminate (poll).
+.TP
+.B --no-redirects
+Disable redirects.
+.TP
+If target is not specified, target will be root '/' directory with file name extracted from URL (if possible).
 .SH CONFIGURATION
 .TP
 For convenience, we recommend creating a configuration file named ~/.ydcmd.cfg and granting it file permissions 0600 or 0400. File format:

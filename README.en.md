@@ -61,6 +61,7 @@ ydcmd [command] [options] [arguments]
 * `du` - evaluates the disk space used by files within the storage;
 * `clean` - cleans files and directories;
 * `restore` - restores file or directory from trash;
+* `download` - download file from internet to storage;
 * `token` - get oauth token for application.
 
 **Options**:
@@ -262,6 +263,20 @@ ydcmd restore <trash:/object> [name]
 * `--async` - runs a command without waiting for operation to terminate (`poll`).
 
 In case of name coincidence, directories and files will be overwritten. Directories are restored recursively (including sub folders and sub directories).
+
+### Download file from internet to storage
+
+```
+ydcmd download <URL> [disk:/object]
+```
+
+**Options**:
+
+* `--poll=<N>` - interval (in seconds) between status polls during asynchronous operations;
+* `--async` - runs a command without waiting for operation to terminate (`poll`);
+* `--no-redirects` - disable redirects.
+
+If target is not specified, target will be root '/' directory with file name extracted from URL (if possible).
 
 ### Get OAuth token
 
