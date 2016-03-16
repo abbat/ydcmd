@@ -405,6 +405,7 @@ def yd_default_config():
         "rsync"            : "no",
         "no-recursion"     : "no",
         "no-recursion-tag" : "",
+        "no-redirects"     : "no",
         "exclude-tag"      : "",
         "skip-md5"         : "no",
         "threads"          : "0",
@@ -488,6 +489,7 @@ class ydOptions(object):
         self.rsync            = self._bool(config["rsync"])
         self.recursion        = not self._bool(config["no-recursion"])
         self.no_recursion_tag = str(config["no-recursion-tag"])
+        self.redirects        = not self._bool(config["no-redirects"])
         self.exclude_tag      = str(config["exclude-tag"])
         self.skip_md5         = self._bool(config["skip-md5"])
         self.threads          = int(config["threads"])
@@ -1271,6 +1273,33 @@ def yd_restore(options, path, name = None):
 
     method = "PUT"
     url    = options.baseurl + "/trash/resources/restore"
+
+    link = yd_query(options, method, url, args)
+
+    yd_wait(options, link)
+
+
+def yd_download(options, source, target):
+    """
+    Скачивание файла из интернета в хранилище
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        source  (str)       -- URL исходного объекта
+        target  (str)       -- Конечный объект хранилища
+    """
+    yd_verbose("Download: {0} -> {1}".format(source, target), options.verbose)
+
+    args = {
+        "url"  : source,
+        "path" : target
+    }
+
+    if not options.redirects:
+        args["disable_redirects"] = "true"
+
+    method = "POST"
+    url    = options.baseurl + "/resources/upload"
 
     link = yd_query(options, method, url, args)
 
@@ -2209,6 +2238,36 @@ def yd_restore_cmd(options, args):
     yd_restore(options, yd_remote_path(path), name)
 
 
+def yd_download_cmd(options, args):
+    """
+    Обработчик скачивания файла из интернета в хранилище
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        args    (dict)      -- Аргументы командной строки
+    """
+    if len(args) < 1:
+        raise ydError(1, "Source not specified")
+    if len(args) > 2:
+        raise ydError(1, "Too many arguments")
+
+    source = args[0]
+
+    if len(args) == 2:
+        target = args[1]
+    else:
+        target = "/"
+
+    if os.path.basename(target) == "":
+        filename = os.path.basename(source)
+        if filename == "":
+            raise ydError(1, "Can not determine destination file name")
+
+        target += filename
+
+    yd_download(options, source, yd_remote_path(target))
+
+
 def yd_token_cmd(options, args):
     """
     Получение OAuth токена для приложения
@@ -2254,23 +2313,24 @@ def yd_print_usage(cmd = None):
         yd_print("     {0} <command> [options] [args]".format(sys.argv[0]))
         yd_print("")
         yd_print("Commands:")
-        yd_print("     help    -- describe the usage of this program or its subcommands")
-        yd_print("     ls      -- list files and directories")
-        yd_print("     rm      -- remove file or directory")
-        yd_print("     cp      -- copy file or directory")
-        yd_print("     mv      -- move file or directory")
-        yd_print("     put     -- upload file to storage")
-        yd_print("     get     -- download file from storage")
-        yd_print("     mkdir   -- create directory")
-        yd_print("     stat    -- show metainformation about cloud object")
-        yd_print("     info    -- show metainformation about cloud storage")
-        yd_print("     last    -- show metainformation about last uploaded files")
-        yd_print("     share   -- publish uploaded object")
-        yd_print("     revoke  -- unpublish uploaded object")
-        yd_print("     du      -- estimate files space usage")
-        yd_print("     clean   -- delete old files and/or directories")
-        yd_print("     restore -- restore file or directory from trash")
-        yd_print("     token   -- get oauth token for application")
+        yd_print("     help     -- describe the usage of this program or its subcommands")
+        yd_print("     ls       -- list files and directories")
+        yd_print("     rm       -- remove file or directory")
+        yd_print("     cp       -- copy file or directory")
+        yd_print("     mv       -- move file or directory")
+        yd_print("     put      -- upload file to storage")
+        yd_print("     get      -- download file from storage")
+        yd_print("     mkdir    -- create directory")
+        yd_print("     stat     -- show metainformation about cloud object")
+        yd_print("     info     -- show metainformation about cloud storage")
+        yd_print("     last     -- show metainformation about last uploaded files")
+        yd_print("     share    -- publish uploaded object")
+        yd_print("     revoke   -- unpublish uploaded object")
+        yd_print("     du       -- estimate files space usage")
+        yd_print("     clean    -- delete old files and/or directories")
+        yd_print("     restore  -- restore file or directory from trash")
+        yd_print("     download -- download file from internet to storage")
+        yd_print("     token    -- get oauth token for application")
         yd_print("")
         yd_print("Options:")
         yd_print("     --timeout=<N> -- timeout for api requests in seconds (default: {0})".format(default["timeout"]))
@@ -2422,6 +2482,17 @@ def yd_print_usage(cmd = None):
         yd_print("     --poll=<N> -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
         yd_print("     --async    -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
         yd_print("")
+    elif cmd == "download":
+        yd_print("Usage:")
+        yd_print("     {0} download <URL> [disk:/object]".format(sys.argv[0]))
+        yd_print("")
+        yd_print("Options:")
+        yd_print("     --poll=<N>     -- poll time interval in seconds for asynchronous operations (default: {0})".format(default["poll"]))
+        yd_print("     --async        -- do not wait (poll cheks) for completion (default: {0})".format(default["async"]))
+        yd_print("     --no-redirects -- disable redirects (default: {0})".format(default["no-redirects"]))
+        yd_print("")
+        yd_print(" * If target is not specified, target will be root '/' directory")
+        yd_print("")
     elif cmd == "token":
         yd_print("Usage:")
         yd_print("     {0} token [code]".format(sys.argv[0]))
@@ -2509,6 +2580,8 @@ if __name__ == "__main__":
             yd_clean_cmd(options, args)
         elif command == "restore":
             yd_restore_cmd(options, args)
+        elif command == "download":
+            yd_download_cmd(options, args)
         elif command == "token":
             yd_token_cmd(options, args)
         else:
