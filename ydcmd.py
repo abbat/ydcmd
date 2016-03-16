@@ -439,7 +439,7 @@ def yd_default_config():
 
 def yd_load_config(filename, config = None):
     """
-    Чтение секции ydcmd INI файла ~/.ydcmd.cfg
+    Чтение секции __title__ INI файла ~/.__title__.cfg
 
     Аргументы:
         filename (str)  -- Имя INI файла
@@ -458,7 +458,7 @@ def yd_load_config(filename, config = None):
 
     for section in parser.sections():
         name = section.lower()
-        if name == "ydcmd":
+        if name == __title__:
             for option in parser.options(section):
                 config[option.lower()] = parser.get(section, option).strip()
 
@@ -738,7 +738,7 @@ def yd_headers(token):
     """
     return {
         "Accept"        : "application/json",
-        "User-Agent"    : "ydcmd/{0}".format(__version__),
+        "User-Agent"    : "{0}/{1}".format(__title__, __version__),
         "Authorization" : "OAuth {0}".format(token)
     }
 
@@ -1786,7 +1786,7 @@ def yd_clean(options, path):
 
             flist = tlist
     elif len(options.keep) >= 10:   # YYYY-MM-DD
-        relative =  dateutil.parser.parse(options.keep).astimezone(dateutil.tz.tzutc())
+        relative = dateutil.parser.parse(options.keep).astimezone(dateutil.tz.tzutc())
 
         yd_verbose("Clean: <{0}> before {1}".format(options.type, relative.isoformat()), options.verbose)
 
@@ -2442,7 +2442,7 @@ if __name__ == "__main__":
     cfgfile = [match.group(1) for arg in sys.argv for match in [regexp.search(arg)] if match]
 
     if len(cfgfile) == 0:
-        cfgfile = os.path.expanduser("~") + "/.ydcmd.cfg"
+        cfgfile = os.path.expanduser("~") + "/.{0}.cfg".format(__title__)
     else:
         cfgfile = cfgfile[0]
 
@@ -2460,7 +2460,7 @@ if __name__ == "__main__":
             args.append(arg)
 
     if "version" in config:
-        yd_print("ydcmd v{0}".format(__version__))
+        yd_print("{0} v{1}".format(__title__, __version__))
         sys.exit(0)
 
     if len(args) == 0:
