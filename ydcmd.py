@@ -1313,7 +1313,7 @@ def yd_put(options, source, target):
     """
     Реализация нескольких попыток загрузки файла в хранилище (yd_put_retry)
     """
-    yd_verbose("Transfer: {0} -> {1}".format(source, target), options.verbose)
+    yd_verbose("Transfer: {0} ({1}) -> {2}".format(source, yd_human(os.path.getsize(source)), target), options.verbose)
 
     retry = 0
     while True:
