@@ -1,3 +1,11 @@
+ydcmd (2.5) stable; urgency=low
+
+  * Добавление команды download;
+  * Добавление --progress и --config во внутреннюю справку скрипта;
+  * Добавление вывода размера файла во время выполнения put в verbose режиме.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 16 Mar 2016 23:57:14 +0300
+
 ydcmd (2.4) stable; urgency=low
 
   * Возможное исправление таймаута после загрузки большого файла.
