@@ -2,7 +2,7 @@ Name:          ydcmd
 Version:       2.5
 Release:       1
 BuildArch:     noarch
-Summary:       Command line client for Yandex.Disk
+Summary:       Command line Yandex.Disk client
 Group:         Applications/Internet
 License:       BSD-2-Clause
 URL:           https://github.com/abbat/ydcmd
@@ -23,7 +23,8 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-build
 
 
 %description
-Command line client for interacting with cloud storage Yandex.Disk by means of REST API
+Command-line tool to upload, retrieve and manage data in Yandex.Disk service
+(https://disk.yandex.com), designed for use in scripts.
 
 
 %prep
