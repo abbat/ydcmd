@@ -2385,7 +2385,7 @@ def yd_print_usage(cmd = None):
         yd_print("")
     elif cmd == "put":
         yd_print("Usage:")
-        yd_print("     {0} put <file> [disk:/object]".format(sys.argv[0]))
+        yd_print("     {0} put <object> [disk:/object]".format(sys.argv[0]))
         yd_print("")
         yd_print("Options:")
         yd_print("     --rsync                -- sync remote tree with local")
@@ -2404,7 +2404,7 @@ def yd_print_usage(cmd = None):
         yd_print("")
     elif cmd == "get":
         yd_print("Usage:")
-        yd_print("     {0} get <disk:/object> [file]".format(sys.argv[0]))
+        yd_print("     {0} get <disk:/object> [object]".format(sys.argv[0]))
         yd_print("")
         yd_print("Options:")
         yd_print("     --rsync        -- sync local tree with remote")
