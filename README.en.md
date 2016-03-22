@@ -17,6 +17,13 @@ $ git clone https://github.com/abbat/ydcmd.git
 $ sudo cp ydcmd/ydcmd.py /usr/local/bin/ydcmd
 ```
 
+## How to help
+
+* Translate this document or [man page](https://github.com/abbat/ydcmd/blob/master/man/ydcmd.1) to your native language;
+* Proofreading README.md or man page with your native language;
+* Share, Like, RT to your friends;
+* Send PRs if you are developer.
+
 ## Pre-starting procedure
 
 To run the client you need a OAuth token. To obtain one run `ydcmd token` command or [register the application on Yandex](https://oauth.yandex.com/client/new):
