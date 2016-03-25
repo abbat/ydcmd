@@ -1455,6 +1455,8 @@ def yd_ensure_remote(options, path, type, stat):
     Метод проверки возможности создания объекта требуемого типа в хранилище.
     Если объект уже существует и типы не совпадают, производится удаление объекта.
     Если требуемый тип является директорией, то в случае ее отсутствия производится ее создание.
+    Если требуемый тип является файлом, но находится в несуществующей дириктории, полный путь будет
+    создан.
 
     Аргументы:
         options (ydOptions) -- Опции приложения
@@ -1477,6 +1479,18 @@ def yd_ensure_remote(options, path, type, stat):
             return stat
     elif type == "dir":
         yd_create(options, path, True)
+    elif type == "file":
+        cd = path
+        paths = []
+        while 1:
+            ld = cd
+            cd = os.path.dirname(cd)
+            if ld == cd or cd == 'disk:':
+                break
+            paths.append(cd)
+        paths.reverse()
+        for path in paths:
+            yd_create(options, path, True)
 
     return None
 
