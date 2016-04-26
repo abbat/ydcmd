@@ -1485,7 +1485,7 @@ def yd_ensure_remote(options, path, type, stat):
         while 1:
             ld = cd
             cd = os.path.dirname(cd)
-            if ld == cd or cd == 'disk:':
+            if ld == cd or cd == 'disk:' or cd == 'app:':
                 break
             paths.append(cd)
         paths.reverse()
