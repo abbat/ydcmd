@@ -1450,19 +1450,20 @@ def yd_check_hash(options, filename, md5):
     return False
 
 
-def yd_ensure_remote(options, path, type, stat):
+def yd_ensure_remote(options, path, type, stat, recursion):
     """
     Метод проверки возможности создания объекта требуемого типа в хранилище.
     Если объект уже существует и типы не совпадают, производится удаление объекта.
     Если требуемый тип является директорией, то в случае ее отсутствия производится ее создание.
     Если требуемый тип является файлом, но находится в несуществующей дириктории, полный путь будет
-    создан.
+    создан (при значении параметра recursion = True).
 
     Аргументы:
-        options (ydOptions) -- Опции приложения
-        path    (str)       -- Объект в хранилище
-        type    (str)       -- Тип объекта в хранилище (file|dir)
-        stat    (ydItem)    -- Информация об объекте (None если объект отсутствует)
+        options   (ydOptions) -- Опции приложения
+        path      (str)       -- Объект в хранилище
+        type      (str)       -- Тип объекта в хранилище (file|dir)
+        stat      (ydItem)    -- Информация об объекте (None если объект отсутствует)
+        recursion (bool)      -- Флаг рекурсивного создания директорий
 
     Результат (ydItem):
         Метаинформация об объекте, если он уже существует и его тип совпадает с аргументом type.
@@ -1479,18 +1480,20 @@ def yd_ensure_remote(options, path, type, stat):
             return stat
     elif type == "dir":
         yd_create(options, path, True)
-    elif type == "file":
+    elif type == "file" and recursion:
         cd = path
         paths = []
-        while 1:
+        while True:
             ld = cd
             cd = os.path.dirname(cd)
-            if ld == cd or cd == 'disk:' or cd == 'app:':
+            if ld == cd or cd == "disk:" or cd == "app:":
                 break
             paths.append(cd)
+
         paths.reverse()
+
         for path in paths:
-            yd_create(options, path, True)
+            yd_ensure_remote(options, path, "dir", yd_stat(options, path, True), False)
 
     return None
 
@@ -1506,7 +1509,7 @@ def yd_put_file(options, source, target, stat = None):
         stat    (ydItem)    -- Описатель файла в хранилище (None, если файл отсутствует)
     """
     if stat:
-        stat = yd_ensure_remote(options, target, "file", stat)
+        stat = yd_ensure_remote(options, target, "file", stat, False)
     if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
         yd_put(options, source, target)
 
@@ -1567,9 +1570,9 @@ def yd_put_sync(options, source, target, pool = None):
                 if options.recursion and local_recursion:
                     lazy_put_sync.append([sitem + "/", titem + "/"])
                 if pool:
-                    pool.yd_apply_async(yd_ensure_remote, args = (options, titem, "dir", flist[item] if item in flist else None))
+                    pool.yd_apply_async(yd_ensure_remote, args = (options, titem, "dir", flist[item] if item in flist else None, False))
                 else:
-                    yd_ensure_remote(options, titem, "dir", flist[item] if item in flist else None)
+                    yd_ensure_remote(options, titem, "dir", flist[item] if item in flist else None, False)
             elif os.path.isfile(sitem):
                 if pool:
                     pool.yd_apply_async(yd_put_file, args = (options, sitem, titem, flist[item] if item in flist else None))
@@ -2099,7 +2102,7 @@ def yd_put_cmd(options, args):
             if os.path.basename(target) != "":
                 target += "/"
 
-            stat = yd_ensure_remote(options, target, "dir", yd_stat(options, target, True))
+            stat = yd_ensure_remote(options, target, "dir", yd_stat(options, target, True), False)
 
             if options.threads > 0:
                 pool = ydPool(options.threads, initializer = yd_init_worker)
@@ -2116,7 +2119,7 @@ def yd_put_cmd(options, args):
                 yd_put_sync(options, source, target)
 
         elif os.path.isfile(source):
-            stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True))
+            stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True), True)
             if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
                 yd_put(options, source, target)
         else:
