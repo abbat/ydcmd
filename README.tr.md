@@ -146,7 +146,7 @@ ydcmd put <dosya> [disk:/nesne]
 * `--no-recursion` - avoid descending automatically in directories;
 * `--no-recursion-tag=<S>` - avoid descending in directories containing file;
 * `--exclude-tag=<S>` - exclude contents of directories containing file;
-* `--skip-md5` - skip md5 integrity checks;
+* `--skip-hash` - skip md5/sha256 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1254`);
 * `--progress` - show progress (it is recommended to install python-progressbar module).
@@ -163,7 +163,7 @@ ydcmd get <disk:/nesne> [dosya]
 
 * `--rsync` - dosya ve dizinlerin yerel ağaçları ile depo içerisindeki ağacı senkronize eder;
 * `--no-recursion` - avoid descending automatically in directories;
-* `--skip-md5` - skip md5 integrity checks;
+* `--skip-hash` - skip md5/sha256 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--progress` - show progress (it is recommended to install python-progressbar module).
 

@@ -153,7 +153,7 @@ ydcmd put <file> [disk:/object]
 * `--no-recursion` - avoid descending automatically in directories;
 * `--no-recursion-tag=<S>` - avoid descending in directories containing file;
 * `--exclude-tag=<S>` - exclude contents of directories containing file;
-* `--skip-md5` - skip md5 integrity checks;
+* `--skip-hash` - skip md5/sha256 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--iconv=<S>` - try to restore file or directory names from the specified encoding if necessary (for example `--iconv=cp1250`);
 * `--progress` - show progress (it is recommended to install python-progressbar module).
@@ -170,7 +170,7 @@ ydcmd get <disk:/object> [file]
 
 * `--rsync` - synchronizes a local tree of files and directories with a tree in the storage;
 * `--no-recursion` - avoid descending automatically in directories;
-* `--skip-md5` - skip md5 integrity checks;
+* `--skip-hash` - skip md5/sha256 integrity checks;
 * `--threads=<N>` - number of worker processes;
 * `--progress` - show progress (it is recommended to install python-progressbar module).
 

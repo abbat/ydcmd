@@ -407,7 +407,8 @@ def yd_default_config():
         "no-recursion-tag" : "",
         "no-redirects"     : "no",
         "exclude-tag"      : "",
-        "skip-md5"         : "no",
+        "skip-md5"         : "no",   # deprecated, use "skip-hash"
+        "skip-hash"        : "no",
         "threads"          : "0",
         "progress"         : "no",
         "iconv"            : "",
@@ -491,7 +492,8 @@ class ydOptions(object):
         self.no_recursion_tag = str(config["no-recursion-tag"])
         self.redirects        = not self._bool(config["no-redirects"])
         self.exclude_tag      = str(config["exclude-tag"])
-        self.skip_md5         = self._bool(config["skip-md5"])
+        self.skip_md5         = self._bool(config["skip-md5"])   # deprecated, use "skip-hash"
+        self.skip_hash        = self._bool(config["skip-hash"]) or self.skip_md5
         self.threads          = int(config["threads"])
         self.progress         = self._bool(config["progress"]) and not self.quiet
         self.iconv            = str(config["iconv"])
@@ -565,7 +567,7 @@ class ydItem(object):
             info (dict) -- Описатель элемента
         """
         common_attr = ["name", "created", "modified", "path", "type"]
-        file_attr   = ["mime_type", "md5"]
+        file_attr   = ["mime_type", "md5", "sha256"]
 
         for attr in common_attr:
             if attr not in info:
@@ -1408,43 +1410,46 @@ def yd_get(options, source, target):
             time.sleep(options.delay)
 
 
-def yd_md5(options, filename):
+def yd_hash(options, filename):
     """
-    Подсчет md5 хэша файла
+    Подсчет md5/sha256 хэша файла
 
     Аргументы:
         options  (ydOptions) -- Опции приложения
         filename (str)       -- Имя файла
 
     Результат (str):
-        MD5 хэш файла
+        (md5, sha256) хэши файла
     """
-    yd_debug("MD5: " + filename, options.debug)
+    yd_debug("md5/sha256: " + filename, options.debug)
 
     with open(filename, "rb") as fd:
-        hasher = hashlib.md5()
+        hasher_md5    = hashlib.md5()
+        hasher_sha256 = hashlib.sha256()
         while True:
             data = fd.read(options.chunk)
             if not data:
                 break
-            hasher.update(data)
+            hasher_md5.update(data)
+            hasher_sha256.update(data)
 
-        return hasher.hexdigest()
+        return (hasher_md5.hexdigest(), hasher_sha256.hexdigest())
 
 
-def yd_check_hash(options, filename, md5):
+def yd_check_hash(options, filename, md5, sha256):
     """
     Проверка хэша файла
 
     Аргументы:
         options  (ydOptions) -- Опции приложения
         filename (str)       -- Имя файла
-        md5      (str)       -- Сравниваемное значение MD5
+        md5      (str)       -- Сравниваемное значение md5
+        sha256   (str)       -- Сравниваемное значение sha256
 
     Результат (bool):
         Результат сравнения хэша
     """
-    if options.skip_md5 or yd_md5(options, filename) == md5:
+    if options.skip_hash or yd_hash(options, filename) == (md5, sha256):
         return True
 
     return False
@@ -1510,7 +1515,7 @@ def yd_put_file(options, source, target, stat = None):
     """
     if stat:
         stat = yd_ensure_remote(options, target, "file", stat, False)
-    if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
+    if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5, stat.sha256)):
         yd_put(options, source, target)
 
 
@@ -1674,7 +1679,7 @@ def yd_get_file(options, source, target, stat):
         stat    (ydItem)    -- Описатель файла в хранилище
     """
     exists = yd_ensure_local(options, target, "file")
-    if not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
+    if not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5, stat.sha256)):
         yd_get(options, source, target)
 
 
@@ -2120,7 +2125,7 @@ def yd_put_cmd(options, args):
 
         elif os.path.isfile(source):
             stat = yd_ensure_remote(options, target, "file", yd_stat(options, target, True), True)
-            if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5)):
+            if not (stat and stat.isfile() and os.path.getsize(source) == stat.size and yd_check_hash(options, source, stat.md5, stat.sha256)):
                 yd_put(options, source, target)
         else:
             raise ydError(1, "Unsupported filesystem object: {0}".format(source))
@@ -2176,7 +2181,7 @@ def yd_get_cmd(options, args):
 
     elif stat.isfile():
         exists = yd_ensure_local(options, target, "file")
-        if not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5)):
+        if not exists or not (os.path.getsize(target) == stat.size and yd_check_hash(options, target, stat.md5, stat.sha256)):
             yd_get(options, source, target)
 
 
@@ -2409,7 +2414,7 @@ def yd_print_usage(cmd = None):
         yd_print("     --no-recursion         -- avoid descending in directories (default: {0})".format(default["no-recursion"]))
         yd_print("     --no-recursion-tag=<S> -- avoid descending in directories containing file (default: {0})".format("none" if not default["no-recursion-tag"] else default["no-recursion-tag"]))
         yd_print("     --exclude-tag=<S>      -- exclude contents of directories containing file (default: {0})".format("none" if not default["exclude-tag"] else default["exclude-tag"]))
-        yd_print("     --skip-md5             -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
+        yd_print("     --skip-hash            -- skip md5/sha256 integrity checks (default: {0})".format(default["skip-hash"]))
         yd_print("     --threads=<N>          -- number of worker processes (default: {0})".format(default["threads"]))
         yd_print("     --iconv=<S>            -- try to restore file or directory names from the specified encoding if necessary (default: {0})".format("none" if not default["iconv"] else default["iconv"]))
         yd_print("     --progress             -- show progress")
@@ -2426,7 +2431,7 @@ def yd_print_usage(cmd = None):
         yd_print("Options:")
         yd_print("     --rsync        -- sync local tree with remote")
         yd_print("     --no-recursion -- avoid descending automatically in directories (default: {0})".format(default["no-recursion"]))
-        yd_print("     --skip-md5     -- skip md5 integrity checks (default: {0})".format(default["skip-md5"]))
+        yd_print("     --skip-hash    -- skip md5/sha256 integrity checks (default: {0})".format(default["skip-hash"]))
         yd_print("     --threads=<N>  -- number of worker processes (default: {0})".format(default["threads"]))
         yd_print("     --progress     -- show progress")
         yd_print("")
