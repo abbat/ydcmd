@@ -1,3 +1,11 @@
+ydcmd (2.6) stable; urgency=low
+
+  * Рекурсивное создание промежуточных директорий при отправке (put) файла;
+  * Проверка хэшей sha256 (в дополннение к md5), опция --skip-md5 помечена
+    как устаревшая, вместо нее теперь используется --skip-hash.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 18 Jul 2016 01:11:14 +0300
+
 ydcmd (2.5) stable; urgency=low
 
   * Добавление команды download;
