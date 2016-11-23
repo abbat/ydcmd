@@ -174,10 +174,10 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
         try:
             expire = dateutil.parser.parse(notafter).astimezone(dateutil.tz.tzutc())
         except:
-            raise ydCertError("Can not parse cirtificate notAfter field")
+            raise ydCertError("Can not parse certificate notAfter field")
 
         if expire < datetime.datetime.now(dateutil.tz.tzutc()).replace(microsecond = 0):
-            raise ydCertError("Cirtificate expired at {0}".format(notafter))
+            raise ydCertError("Certificate expired at {0}".format(notafter))
 
         san      = cert.get("subjectAltName", ())
         dnsnames = []
