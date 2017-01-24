@@ -1,3 +1,9 @@
+ydcmd (2.7) stable; urgency=low
+
+  * Исправление #17 (request() got an unexpected keyword argument).
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 25 Jan 2017 02:50:26 +0300
+
 ydcmd (2.6) stable; urgency=low
 
   * Рекурсивное создание промежуточных директорий при отправке (put) файла;

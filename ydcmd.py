@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "2.6"
+__version__  = "2.7"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -252,12 +252,12 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
                 raise
 
 
-    def request(self, method, url, body = None, headers = {}):
+    def request(self, method, url, body = None, headers = {}, **kwargs):
         """
         Перегрузка ydHTTPSConnectionBase.request для сохранения Content-Length отправляемого файла
         """
         self._content_length = headers["Content-Length"] if "Content-Length" in headers else None
-        self._send_request(method, url, body, headers)
+        self._send_request(method, url, body, headers, **kwargs)
 
 
     def upload(self, data):
