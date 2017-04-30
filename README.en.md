@@ -59,6 +59,7 @@ ydcmd [command] [options] [arguments]
 * `mv` - moves a file or directory;
 * `put` - uploads a file or directory into the storage;
 * `get` - retrieves a file or directory from the storage;
+* `cat` - display a file from the storage to stdout;
 * `mkdir` - creates a directory;
 * `stat` - returns meta-information about an object;
 * `info` - returns meta-information about a storage;
@@ -175,6 +176,12 @@ ydcmd get <disk:/object> [file]
 * `--progress` - show progress (it is recommended to install python-progressbar module).
 
 If the target file's name is not specified, the file's name within the storage will be used. If a target object exists, it will be overwritten without a confirmation prompt.
+
+### Display a file from the storage to stdout
+
+```
+ydcmd cat <disk:/object>
+```
 
 ### Creating a directory
 

@@ -52,6 +52,7 @@ ydcmd [komut] [seçenekler] [argümanlar]
 * `mv` - dosya veya dizin taşıma;
 * `put` - dosya veya dizini depoya yükleme;
 * `get` - dosya veya dizini depodan alma;
+* `cat` - display a file from the storage to stdout;
 * `mkdir` - dizin oluşturma;
 * `stat` - nesne hakkında meta-bilgi alma;
 * `info` - depo hakkında meta-bilgi alma;
@@ -168,6 +169,12 @@ ydcmd get <disk:/nesne> [dosya]
 * `--progress` - show progress (it is recommended to install python-progressbar module).
 
 Eğer hedef dosyasının adı belirtilmemişse, depoda var olan adı kullanılacaktır. Eğer hedef nesne varsa, onay istemi olmadan üzerine yazılabilir olacaktır.
+
+### Display a file from the storage to stdout
+
+```
+ydcmd cat <disk:/object>
+```
 
 ### Dizin oluşturma
 

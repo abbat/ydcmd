@@ -747,14 +747,14 @@ def yd_headers(token):
     }
 
 
-def yd_query_download(options, response, filename):
+def yd_query_download(options, response, target):
     """
     Загрузка файла из хранилища
 
     Аргументы:
         options  (ydOptions)    -- Опции приложения
         response (HTTPResponse) -- HTTP ответ
-        filename (str)          -- Имя локального файла для записи
+        target   (str|file)     -- Имя локального файла для записи или описатель файла
     """
     if options.progress:
         read  = 0
@@ -774,22 +774,23 @@ def yd_query_download(options, response, filename):
         except:
             total = "-"
 
-    with open(filename, "wb") as fd:
-        while True:
-            part = response.read(options.chunk)
-            if not part:
-                break
+    fd = target if isinstance(target, file) else open(filename, "wb")
 
-            fd.write(part)
+    while True:
+        part = response.read(options.chunk)
+        if not part:
+            break
 
-            if options.progress:
-                read += len(part)
-                if bar:
-                    bar.update(read)
-                else:
-                    delta = int(time.time()) - start
-                    if delta > 0:
-                        sys.stderr.write("--> Download: {0}/{1} ({2}/s){3}\r".format(yd_human(read), total, yd_human(read / delta), " " * 12))
+        fd.write(part)
+
+        if options.progress:
+            read += len(part)
+            if bar:
+                bar.update(read)
+            else:
+                delta = int(time.time()) - start
+                if delta > 0:
+                    sys.stderr.write("--> Download: {0}/{1} ({2}/s){3}\r".format(yd_human(read), total, yd_human(read / delta), " " * 12))
 
     if options.progress:
         if bar:
@@ -798,18 +799,18 @@ def yd_query_download(options, response, filename):
             sys.stderr.write("{0}\r".format(" " * 35))
 
 
-def yd_query_retry(options, method, url, args, headers = None, filename = None, data = None):
+def yd_query_retry(options, method, url, args, headers = None, target = None, data = None):
     """
     Реализация одной попытки запроса к API
 
     Аргументы:
-        options  (ydOptions) -- Опции приложения
-        method   (str)       -- Тип запроса (GET|POST|PUT|DELETE)
-        url      (str)       -- URL запроса
-        args     (dict)      -- Параметры запроса
-        headers  (dict)      -- Заголовки запроса
-        filename (str)       -- Имя файла для отправки / получения
-        data     (str)       -- Данные для тела POST запроса
+        options (ydOptions) -- Опции приложения
+        method  (str)       -- Тип запроса (GET|POST|PUT|DELETE)
+        url     (str)       -- URL запроса
+        args    (dict)      -- Параметры запроса
+        headers (dict)      -- Заголовки запроса
+        target  (str|file)  -- Имя файла для отправки / получения или описатель файла
+        data    (str)       -- Данные для тела POST запроса
 
     Результат (dict):
         Результат вызова API, преобразованный из JSON
@@ -825,8 +826,8 @@ def yd_query_retry(options, method, url, args, headers = None, filename = None, 
 
     if options.debug:
         yd_debug("{0} {1}".format(method, url))
-        if filename != None:
-            yd_debug("File: {0}".format(filename))
+        if target != None:
+            yd_debug("File: {0}".format(target.name)) if isinstance(target, file) else yd_debug("File: {0}".format(target))
 
     # страховка
     if re.match('^https:\/\/[a-z0-9\.\-]+\.yandex\.(net|ru|com|ua|by|kz|az|ee|fr|kg|lt|lv|md|tj|tm|com\.tr|co\.il|com\.am)(:443){,1}\/', url, re.IGNORECASE) == None:
@@ -836,8 +837,8 @@ def yd_query_retry(options, method, url, args, headers = None, filename = None, 
         raise ValueError("Unknown method: {0}".format(method))
 
     fd = None
-    if method == "PUT" and filename != None:
-        fd = open(filename, "rb")
+    if method == "PUT" and target != None:
+        fd = target if isinstance(target, file) else open(target, "rb")
     elif (method == "POST" or method == "PATCH") and data != None:
         fd = data.encode("utf-8")
 
@@ -851,8 +852,8 @@ def yd_query_retry(options, method, url, args, headers = None, filename = None, 
 
         if code == 204 or code == 201:
             return {}
-        elif method == "GET" and filename != None:
-            yd_query_download(options, result, filename)
+        elif method == "GET" and target != None:
+            yd_query_download(options, result, target)
             return {}
         else:
             def _json_convert(input):
@@ -903,14 +904,14 @@ def yd_can_query_retry(e):
         raise e
 
 
-def yd_query(options, method, url, args, headers = None, filename = None, data = None):
+def yd_query(options, method, url, args, headers = None, target = None, data = None):
     """
     Реализация нескольких попыток запроса к API (yd_query_retry)
     """
     retry = 0
     while True:
         try:
-            return yd_query_retry(options, method, url, args, headers, filename, data)
+            return yd_query_retry(options, method, url, args, headers, target, data)
         except (ydURLError, ydBadStatusLine, ydCannotSendRequest, ssl.SSLError, socket.error, ydError) as e:
             yd_can_query_retry(e)
             retry += 1
@@ -1367,7 +1368,7 @@ def yd_get_retry(options, source, target):
     Аргументы:
         options (ydOptions) -- Опции приложения
         source  (str)       -- Имя файла в хранилище
-        target  (str)       -- Имя локального файла
+        target  (str|file)  -- Имя локального файла или описатель файла
     """
     args = {
         "path" : source
@@ -1394,7 +1395,10 @@ def yd_get(options, source, target):
     """
     Реализация нескольких попыток получения файла из хранилища (yd_get_retry)
     """
-    yd_verbose("Transfer: {0} -> {1}".format(source, target), options.verbose)
+    if isinstance(target, file):
+        yd_verbose("Transfer: {0} -> {1}".format(source, target.name), options.verbose)
+    else:
+        yd_verbose("Transfer: {0} -> {1}".format(source, target), options.verbose)
 
     retry = 0
     while True:
@@ -1408,6 +1412,13 @@ def yd_get(options, source, target):
             if retry >= options.retries:
                 raise ydError(1, e)
             time.sleep(options.delay)
+
+
+def yd_cat(options, source):
+    """
+    Реализация нескольких попыток получения файла из хранилища и вывод его в stdout
+    """
+    yd_get(options, source, sys.stdout)
 
 
 def yd_hash(options, filename):
@@ -2185,6 +2196,21 @@ def yd_get_cmd(options, args):
             yd_get(options, source, target)
 
 
+def yd_cat_cmd(options, args):
+    """
+    Обработчик получения файла из хранилища в stdout
+
+    Аргументы:
+        options (ydOptions) -- Опции приложения
+        args    (dict)      -- Аргументы командной строки
+    """
+    if len(args) < 1:
+        raise ydError(1, "Object name not specified")
+
+    for arg in args:
+        yd_cat(options, yd_remote_path(arg))
+
+
 def yd_du_cmd(options, args):
     """
     Обработчик оценки занимаемого места
@@ -2342,6 +2368,7 @@ def yd_print_usage(cmd = None):
         yd_print("     mv       -- move file or directory")
         yd_print("     put      -- upload file to storage")
         yd_print("     get      -- download file from storage")
+        yd_print("     cat      -- display file from storage to stdout")
         yd_print("     mkdir    -- create directory")
         yd_print("     stat     -- show metainformation about cloud object")
         yd_print("     info     -- show metainformation about cloud storage")
@@ -2437,6 +2464,10 @@ def yd_print_usage(cmd = None):
         yd_print("")
         yd_print(" * If target is not specified, source file name will be used")
         yd_print(" * If target exists, it will be silently overwritten")
+        yd_print("")
+    elif cmd == "cat":
+        yd_print("Usage:")
+        yd_print("     {0} cat <disk:/object1> [disk:/object2] ...".format(sys.argv[0]))
         yd_print("")
     elif cmd == "mkdir":
         yd_print("Usage:")
@@ -2587,6 +2618,8 @@ if __name__ == "__main__":
             yd_put_cmd(options, args)
         elif command == "get":
             yd_get_cmd(options, args)
+        elif command == "cat":
+            yd_cat_cmd(options, args)
         elif command == "mkdir":
             yd_mkdir_cmd(options, args)
         elif command == "stat":
