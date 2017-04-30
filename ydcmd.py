@@ -416,7 +416,7 @@ def yd_default_config():
         "app-id"           : "2415aa2e6ceb4839b1202e15ac83536c",
         "app-secret"       : "b8ae32ce025c451f84bd7df17029cb55",
         "ca-file"          : "",
-        "ciphers"          : "HIGH:!aNULL:!MD5:!3DES:!CAMELLIA:!SRP:!PSK:@STRENGTH",
+        "ciphers"          : "kEECDH+AES128:kEECDH+AES256:kRSA+AES128:kRSA+AES256:!aNULL:!MD5",
         "depth"            : "1",
         "dry"              : "no",
         "type"             : "all",
