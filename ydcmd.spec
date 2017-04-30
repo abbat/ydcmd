@@ -1,5 +1,5 @@
 Name:          ydcmd
-Version:       2.7
+Version:       2.8
 Release:       1
 BuildArch:     noarch
 Summary:       Command line Yandex.Disk client
@@ -72,13 +72,13 @@ rm -rf %{buildroot}
 %{_bindir}/ydcmd
 %{python_sitelib}/ydcmd.py*
 
-%doc %{_mandir}/man1/ydcmd.1%{?ext_man}
-%doc %{_mandir}/ru/man1/ydcmd.1%{?ext_man}
-%doc %{_mandir}/tr/man1/ydcmd.1%{?ext_man}
+%doc %{_mandir}/man1/ydcmd.1*
+%doc %{_mandir}/ru/man1/ydcmd.1*
+%doc %{_mandir}/tr/man1/ydcmd.1*
 
 %doc README.md README.en.md README.tr.md ydcmd.cfg
 
 
 %changelog
-* Wed Jan 25 2017 Anton Batenev <antonbatenev@yandex.ru> 2.7-1
+* Sun Apr 30 2017 Anton Batenev <antonbatenev@yandex.ru> 2.8-1
 - Initial RPM release

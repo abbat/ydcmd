@@ -1,3 +1,11 @@
+ydcmd (2.8) stable; urgency=low
+
+  * Добавление команды cat;
+  * Замена cipher sute по умолчанию;
+  * Добавление altnames dns и текущего сертификата.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 30 Apr 2017 17:52:49 +0300
+
 ydcmd (2.7) stable; urgency=low
 
   * Исправление #17 (request() got an unexpected keyword argument).
