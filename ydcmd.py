@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "2.8"
+__version__  = "2.9"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -91,6 +91,14 @@ except ImportError:
     from urllib2        import HTTPError         as ydHTTPError
     from urllib2        import URLError          as ydURLError
     from urllib         import urlencode         as yd_urlencode
+
+
+# six string types
+try:
+    # str and unicode in python 2
+    string_types = basestring
+except NameError:
+    string_types = str
 
 
 class ydError(RuntimeError):
@@ -774,7 +782,7 @@ def yd_query_download(options, response, target):
         except:
             total = "-"
 
-    fd = target if isinstance(target, file) else open(target, "wb")
+    fd = target if not isinstance(target, string_types) else open(target, "wb")
 
     while True:
         part = response.read(options.chunk)
@@ -827,7 +835,7 @@ def yd_query_retry(options, method, url, args, headers = None, target = None, da
     if options.debug:
         yd_debug("{0} {1}".format(method, url))
         if target != None:
-            yd_debug("File: {0}".format(target.name)) if isinstance(target, file) else yd_debug("File: {0}".format(target))
+            yd_debug("File: {0}".format(target.name)) if not isinstance(target, string_types) else yd_debug("File: {0}".format(target))
 
     # страховка
     if re.match('^https:\/\/[a-z0-9\.\-]+\.yandex\.(net|ru|com|ua|by|kz|az|ee|fr|kg|lt|lv|md|tj|tm|com\.tr|co\.il|com\.am)(:443){,1}\/', url, re.IGNORECASE) == None:
@@ -838,7 +846,7 @@ def yd_query_retry(options, method, url, args, headers = None, target = None, da
 
     fd = None
     if method == "PUT" and target != None:
-        fd = target if isinstance(target, file) else open(target, "rb")
+        fd = target if not isinstance(target, string_types) else open(target, "rb")
     elif (method == "POST" or method == "PATCH") and data != None:
         fd = data.encode("utf-8")
 
@@ -1395,10 +1403,10 @@ def yd_get(options, source, target):
     """
     Реализация нескольких попыток получения файла из хранилища (yd_get_retry)
     """
-    if isinstance(target, file):
-        yd_verbose("Transfer: {0} -> {1}".format(source, target.name), options.verbose)
-    else:
+    if isinstance(target, string_types):
         yd_verbose("Transfer: {0} -> {1}".format(source, target), options.verbose)
+    else:
+        yd_verbose("Transfer: {0} -> {1}".format(source, target.name), options.verbose)
 
     retry = 0
     while True:

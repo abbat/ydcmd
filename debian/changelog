@@ -1,3 +1,9 @@
+ydcmd (2.9) stable; urgency=low
+
+  * Исправление "NameError: name 'file' is not defined" для python3.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Fri, 12 May 2017 14:09:56 +0300
+
 ydcmd (2.8) stable; urgency=low
 
   * Добавление команды cat;
