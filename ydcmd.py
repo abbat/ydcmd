@@ -313,6 +313,20 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
                 sys.stderr.write("{0}\r".format(" " * 33))
 
 
+    def _send_output(self, message_body = None, **kwargs):
+        """
+        Перегурзка ydHTTPSConnectionBase._send_output для отправки данных
+        с нужным размером блока и отображения прогресса в python3
+        """
+        self._buffer.extend((b"", b""))
+        msg = b"\r\n".join(self._buffer)
+        del self._buffer[:]
+        self.send(msg)
+
+        if message_body is not None:
+            self.send(message_body)
+
+
     def send(self, data):
         """
         Перегрузка ydHTTPSConnectionBase.send для возможности задания размера отсылаемого блока
