@@ -1,3 +1,11 @@
+ydcmd (2.10) stable; urgency=low
+
+  * Исправления для FreeBSD/MacOS с OpenSSL v0.9.8;
+  * Исправление отправки файлов с требуемым размером блока и
+    отображением прогресса для python3 (thx roand from Arch AUR).
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Tue, 16 May 2017 14:46:23 +0300
+
 ydcmd (2.9) stable; urgency=low
 
   * Исправление "NameError: name 'file' is not defined" для python3.
