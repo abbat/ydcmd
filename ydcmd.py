@@ -8,14 +8,21 @@ __license__  = "BSD"
 
 
 import array, random
-import os, sys, signal, errno
-import socket, ssl
+import os, sys, signal, errno, socket
 import re, codecs, json
 import time, datetime
-import multiprocessing.pool
 import hashlib, shutil
 
 
+# minimum required python version is 2.6
+try:
+    import ssl, multiprocessing.pool
+except ImportError:
+    sys.stderr.write("Python >= 2.6 required\n")
+    sys.exit(1)
+
+
+# required extra python modules
 try:
     import dateutil.parser
     import dateutil.relativedelta
@@ -31,7 +38,7 @@ except ImportError:
     sys.exit(1)
 
 
-# suggests
+# suggested python modules
 try:
     import progressbar as ydProgressBar
 except:
@@ -217,6 +224,15 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
         Перегрузка ydHTTPSConnectionBase.connect для проверки валидности SSL сертификата
         и установки предпочитаемого набора шифров / алгоритма шифрования
         """
+        # FIXME: вынести в отдельный wrapper
+        SSL_SUPPORTS_CIPHERS        = yd_check_python23(7, 0,  2, 0)   # Python >= 2.7    / 3.2, ssl.wrap_socket supports 'ciphers' argument
+        SSL_SUPPORTS_PROTOCOL_TLS   = yd_check_python23(7, 13, 6, 0)   # Python >= 2.7.13 / 3.6, ssl has PROTOCOL_TLS constant
+        SSL_SUPPORTS_VERSION_NUMBER = yd_check_python23(7, 9,  3, 0)   # Python >= 2.7.9  / 3.3, ssl has OPENSSL_VERSION_NUMBER constant
+        SSL_SUPPORTS_CONTEXT        = yd_check_python23(7, 9,  2, 0)   # Python >= 2.7.9  / 3.2, ssl has SSLContext class
+        SSL_PRETTY_TLS_VERSION      = yd_check_python23(7, 9,  5, 0)   # Python >= 2.7.9  / 3.5, ssl has SSLSocket.version() method
+        SSL_SUPPORTS_NO_COMPRESSION = SSL_SUPPORTS_VERSION_NUMBER and ssl.OPENSSL_VERSION_NUMBER >= 0x010000000L   # OpenSSL >= 1.0.0, supports OP_NO_COMPRESSION
+        SSL_DEFAULT_PROTOCOL        = ssl.PROTOCOL_TLS if SSL_SUPPORTS_PROTOCOL_TLS else (ssl.PROTOCOL_SSLv23 if SSL_SUPPORTS_CONTEXT else ssl.PROTOCOL_TLSv1)
+
         sock = socket.create_connection((self.host, self.port), self.timeout)
 
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -226,30 +242,28 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
             self._tunnel()
 
         kwargs = {}
+        kwargs.update(ssl_version = SSL_DEFAULT_PROTOCOL)
+
         if self._options.cafile != None:
             kwargs.update (
                 cert_reqs = ssl.CERT_REQUIRED,
                 ca_certs  = self._options.cafile
             )
 
-        if self._options.ciphers != None and yd_check_python23(7, 0, 2, 0):   # Python >= 2.7 / 3.2
+        if self._options.ciphers != None and SSL_SUPPORTS_CIPHERS:
             kwargs.update(ciphers = self._options.ciphers)
-
-        sslv3_workaround = yd_check_python23(7, 9, 2, 0)   # Python >= 2.7.9 / 3.2
-        if sslv3_workaround:
-            kwargs.update(ssl_version = ssl.PROTOCOL_SSLv23)
-        else:
-            kwargs.update(ssl_version = ssl.PROTOCOL_TLSv1)
 
         self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, **kwargs)
 
-        if sslv3_workaround:
+        if SSL_SUPPORTS_CONTEXT:
             self.sock.context.options |= ssl.OP_NO_SSLv2
             self.sock.context.options |= ssl.OP_NO_SSLv3
+            if SSL_SUPPORTS_NO_COMPRESSION:
+                self.sock.context.options |= ssl.OP_NO_COMPRESSION
 
         if self._options.debug:
             ciphers = self.sock.cipher()
-            yd_debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, self.sock.version() if yd_check_python23(7, 9, 5, 0) else ciphers[1], ciphers[0]))
+            yd_debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, self.sock.version() if SSL_PRETTY_TLS_VERSION else ciphers[1], ciphers[0]))
 
         if self._options.cafile != None:
             try:
