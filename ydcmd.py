@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__    = "ydcmd"
-__version__  = "2.10"
+__version__  = "2.11-alpha"
 __author__   = "Anton Batenev"
 __license__  = "BSD"
 
@@ -106,6 +106,38 @@ try:
     string_types = basestring
 except NameError:
     string_types = str
+
+
+#
+# OpenSSL capabilities
+#
+
+try:
+    # python >= 2.7.9 / 3.2
+    from ssl import SSLContext as ydSSLContext
+except ImportError:
+    ydSSLContext = None
+
+try:
+    # python >= 2.7.13 / 3.6, disable SSLv2 / SSLv3 (POODLE, CVE-2014-3566)
+    from ssl import PROTOCOL_TLS as YD_PROTOCOL_TLS
+except ImportError:
+    YD_PROTOCOL_TLS = ssl.PROTOCOL_SSLv23 if ydSSLContext else ssl.PROTOCOL_TLSv1
+
+try:
+    # python >= 2.7.9 / 3.3, OpenSSL >= 1.0.0, disable compression (CRIME, CVE-2012-4929)
+    from ssl import OP_NO_COMPRESSION as YD_OP_NO_COMPRESSION
+except ImportError:
+    YD_OP_NO_COMPRESSION = None
+
+try:
+    # python >= 2.7.9 / 3.5, ssl.SSLSocket has version() method
+    ydSSLSocket_version = ssl.SSLSocket.version
+except AttributeError:
+    ydSSLSocket_version = None
+
+# python >= 2.7 / 3.2, ssl.wrap_socket supports 'ciphers' argument
+YD_WRAP_SOCKET_CIPHERS = ((2, 7) <= sys.version_info < (3,) or (3, 2) <= sys.version_info)
 
 
 class ydError(RuntimeError):
@@ -224,15 +256,6 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
         Перегрузка ydHTTPSConnectionBase.connect для проверки валидности SSL сертификата
         и установки предпочитаемого набора шифров / алгоритма шифрования
         """
-        # FIXME: вынести в отдельный wrapper
-        SSL_SUPPORTS_CIPHERS        = yd_check_python23(7, 0,  2, 0)   # Python >= 2.7    / 3.2, ssl.wrap_socket supports 'ciphers' argument
-        SSL_SUPPORTS_PROTOCOL_TLS   = yd_check_python23(7, 13, 6, 0)   # Python >= 2.7.13 / 3.6, ssl has PROTOCOL_TLS constant
-        SSL_SUPPORTS_VERSION_NUMBER = yd_check_python23(7, 9,  3, 0)   # Python >= 2.7.9  / 3.3, ssl has OPENSSL_VERSION_NUMBER constant
-        SSL_SUPPORTS_CONTEXT        = yd_check_python23(7, 9,  2, 0)   # Python >= 2.7.9  / 3.2, ssl has SSLContext class
-        SSL_PRETTY_TLS_VERSION      = yd_check_python23(7, 9,  5, 0)   # Python >= 2.7.9  / 3.5, ssl has SSLSocket.version() method
-        SSL_SUPPORTS_NO_COMPRESSION = SSL_SUPPORTS_VERSION_NUMBER and ssl.OPENSSL_VERSION_NUMBER >= 0x010000000L   # OpenSSL >= 1.0.0, supports OP_NO_COMPRESSION
-        SSL_DEFAULT_PROTOCOL        = ssl.PROTOCOL_TLS if SSL_SUPPORTS_PROTOCOL_TLS else (ssl.PROTOCOL_SSLv23 if SSL_SUPPORTS_CONTEXT else ssl.PROTOCOL_TLSv1)
-
         sock = socket.create_connection((self.host, self.port), self.timeout)
 
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -242,7 +265,7 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
             self._tunnel()
 
         kwargs = {}
-        kwargs.update(ssl_version = SSL_DEFAULT_PROTOCOL)
+        kwargs.update(ssl_version = YD_PROTOCOL_TLS)
 
         if self._options.cafile != None:
             kwargs.update (
@@ -250,20 +273,20 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
                 ca_certs  = self._options.cafile
             )
 
-        if self._options.ciphers != None and SSL_SUPPORTS_CIPHERS:
+        if self._options.ciphers != None and YD_WRAP_SOCKET_CIPHERS:
             kwargs.update(ciphers = self._options.ciphers)
 
         self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, **kwargs)
 
-        if SSL_SUPPORTS_CONTEXT:
+        if ydSSLContext:
             self.sock.context.options |= ssl.OP_NO_SSLv2
             self.sock.context.options |= ssl.OP_NO_SSLv3
-            if SSL_SUPPORTS_NO_COMPRESSION:
-                self.sock.context.options |= ssl.OP_NO_COMPRESSION
+            if YD_OP_NO_COMPRESSION:
+                self.sock.context.options |= YD_OP_NO_COMPRESSION
 
         if self._options.debug:
             ciphers = self.sock.cipher()
-            yd_debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, self.sock.version() if SSL_PRETTY_TLS_VERSION else ciphers[1], ciphers[0]))
+            yd_debug("Connected to {0}:{1} ({2} {3})".format(self.host, self.port, self.sock.version() if ydSSLSocket_version else ciphers[1], ciphers[0]))
 
         if self._options.cafile != None:
             try:
@@ -643,22 +666,6 @@ class ydItem(object):
 
     def __repr__(self):
         return "{0!s}({1!r})".format(self.__class__, self.__dict__)
-
-
-def yd_check_python23(py2minor, py2micro, py3minor, py3micro):
-    """
-    Проверка версии Python для обеспечения совместимости
-
-    Аргументы:
-        py2minor (int) -- minor версия для 2.x
-        py2micro (int) -- micro версия для 2.x
-        py3minor (int) -- minor версия для 3.x
-        py3micro (int) -- micro версия для 3.x
-
-    Результат (bool):
-        Соответствие версии >= аргументам
-    """
-    return sys.version_info >= (2, py2minor, py2micro) if sys.version_info < (3, 0) else sys.version_info >= (3, py3minor, py3micro)
 
 
 def yd_init_worker():
