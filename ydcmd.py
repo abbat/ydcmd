@@ -546,7 +546,7 @@ class ydOptions(object):
         self.quiet            = self._bool(config["quiet"])
         self.debug            = self._bool(config["debug"]) and not self.quiet
         self.verbose          = (self._bool(config["verbose"]) or self.debug) and not self.quiet
-        self.async            = self._bool(config["async"])
+        self.async_d          = self._bool(config["async"])
         self.rsync            = self._bool(config["rsync"])
         self.recursion        = not self._bool(config["no-recursion"])
         self.no_recursion_tag = str(config["no-recursion-tag"])
@@ -973,7 +973,7 @@ def yd_wait(options, link):
         options (ydOptions) -- Опции приложения
         link    (dict)      -- Ответ API на запрос операции
     """
-    if options.async or not ("href" in link and "method" in link):
+    if options.async_d or not ("href" in link and "method" in link):
         return
 
     url    = link["href"]
