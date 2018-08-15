@@ -1,3 +1,9 @@
+ydcmd (2.11) stable; urgency=low
+
+  * Совместимость с python 3.7.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 15 Aug 2018 10:22:06 +0300
+
 ydcmd (2.10) stable; urgency=low
 
   * Исправления для FreeBSD/MacOS с OpenSSL v0.9.8;

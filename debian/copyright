@@ -3,7 +3,7 @@ Upstream-Name: ydcmd
 Source: https://github.com/abbat/ydcmd
 
 Files: *
-Copyright: 2014-2016, Anton Batenev <antonbatenev@yandex.ru>
+Copyright: 2014-2018, Anton Batenev <antonbatenev@yandex.ru>
 License: BSD
 
 License: BSD
