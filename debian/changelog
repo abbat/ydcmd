@@ -1,3 +1,12 @@
+ydcmd (2.12) stable; urgency=low
+
+  * Исправление ошибки (опечатки) проявившейся на python 3.6+;
+  * Исправление работы multiprocessing под Windows;
+  * Удаление подавления UnicodeWarning в dateutil под Windows
+    (исправлено в версии dateutil >= 2.5.0).
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Sun, 19 Aug 2018 19:53:52 +0300
+
 ydcmd (2.11) stable; urgency=low
 
   * Совместимость с python 3.7.
