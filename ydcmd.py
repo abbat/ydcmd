@@ -26,13 +26,6 @@ except ImportError:
 try:
     import dateutil.parser
     import dateutil.relativedelta
-
-    # Hide UnicodeWarning in dateutil under Windows
-    # https://bugs.launchpad.net/dateutil/+bug/1227221
-    if os.name == "nt":
-        import warnings
-        warnings.filterwarnings("ignore", category = UnicodeWarning)
-
 except ImportError:
     sys.stderr.write("Python module dateutil not found.\nPlease, install \"python-dateutil\"\n")
     sys.exit(1)
@@ -2605,6 +2598,11 @@ def yd_print_usage(cmd = None):
 
 
 if __name__ == "__main__":
+    # multiprocessing must be frozen to produce a Windows executable
+    if os.name == "nt":
+        from multiprocessing import freeze_support
+        freeze_support()
+
     argc = len(sys.argv)
     if argc < 2:
         yd_print_usage()
