@@ -11,7 +11,7 @@ http://curl.haxx.se/docs/caextract.html
 
 На некоторых системах для работы программы может потребоваться установить
 Microsoft Visual C++ Redistributable Package, который можно скачать по ссылке:
-http://www.microsoft.com/en-us/download/details.aspx?id=29
+https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 
 
 = YDCMD =
@@ -27,4 +27,4 @@ C:\Users\<Your User Name>\.ydcmd.cfg
 
 On some systems, the program may require to install Microsoft Visual C++
 Redistributable Package which can be found at:
-http://www.microsoft.com/en-us/download/details.aspx?id=29
+https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads

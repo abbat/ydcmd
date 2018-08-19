@@ -1,5 +1,5 @@
 SET DST="build"
-SET PYTHON="c:\projects\python34\python.exe"
+SET PYTHON="c:\projects\python37\python.exe"
 SET UNIX2DOS="c:\projects\unix2dos\unix2dos.exe"
 
 RMDIR /S /Q %DST%
