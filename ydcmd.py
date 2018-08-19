@@ -309,7 +309,7 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
         """
         Отправка данных в хранилище (вынесено из send)
         """
-        if options.progress:
+        if self._options.progress:
             written = 0
             start   = int(time.time())
             bar     = None
