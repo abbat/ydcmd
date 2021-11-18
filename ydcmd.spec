@@ -7,7 +7,6 @@ Group:         Applications/Internet
 License:       BSD-2-Clause
 URL:           https://github.com/abbat/ydcmd
 Requires:      python >= 2.6, python-dateutil
-BuildRequires: python-devel >= 2.6
 
 %if 0%{?suse_version}
 BuildRequires: fdupes
@@ -16,6 +15,14 @@ BuildRequires: fdupes
 %if 0%{?suse_version} > 1000 || 0%{?fedora} > 20
 Suggests: python-progressbar
 Recommends: ca-certificates
+%endif
+
+%if 0%{?centos_version} < 800
+BuildRequires: python-devel >= 2.6
+%endif
+
+%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 35
+%define __python /usr/bin/python3
 %endif
 
 Source0:       https://build.opensuse.org/source/home:antonbatenev:ydcmd/ydcmd/ydcmd_%{version}.tar.bz2
@@ -38,6 +45,10 @@ Command-line tool to upload, retrieve and manage data in Yandex.Disk service
 
 install -d %{buildroot}%{_bindir}
 install -d %{buildroot}%{python_sitelib}
+
+%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 35
+sed -i -e 's|env python|env python3|g' ydcmd.py
+%endif
 
 install -m755 ydcmd.py %{buildroot}%{python_sitelib}/ydcmd.py
 
@@ -70,7 +81,7 @@ rm -rf %{buildroot}
 %endif
 
 %{_bindir}/ydcmd
-%{python_sitelib}/ydcmd.py*
+%{python_sitelib}/ydcmd.*
 
 %doc %{_mandir}/man1/ydcmd.1*
 %doc %{_mandir}/ru/man1/ydcmd.1*
