@@ -6,7 +6,13 @@ Summary:       Command line Yandex.Disk client
 Group:         Applications/Internet
 License:       BSD-2-Clause
 URL:           https://github.com/abbat/ydcmd
+
+%if 0%{?centos_version} < 800
+BuildRequires: python-devel >= 2.6
 Requires:      python >= 2.6, python-dateutil
+%else
+Requires:      python36, python36-dateutil
+%endif
 
 %if 0%{?suse_version}
 BuildRequires: fdupes
@@ -15,10 +21,6 @@ BuildRequires: fdupes
 %if 0%{?suse_version} > 1000 || 0%{?fedora} > 20
 Suggests: python-progressbar
 Recommends: ca-certificates
-%endif
-
-%if 0%{?centos_version} < 800
-BuildRequires: python-devel >= 2.6
 %endif
 
 %if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 35
