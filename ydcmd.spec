@@ -11,7 +11,7 @@ URL:           https://github.com/abbat/ydcmd
 BuildRequires: python-devel >= 2.6
 Requires:      python >= 2.6, python-dateutil
 %else
-Requires:      python36, python36-dateutil
+Requires:      python36, python3-dateutil
 %endif
 
 %if 0%{?suse_version}
