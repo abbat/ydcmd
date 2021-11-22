@@ -83,7 +83,11 @@ rm -rf %{buildroot}
 %endif
 
 %{_bindir}/ydcmd
-%{python_sitelib}/ydcmd.*
+%{python_sitelib}/ydcmd.py*
+
+%if 0%{?fedora_version} >= 35
+%{python_sitelib}/__pycache__/ydcmd.*
+%endif
 
 %doc %{_mandir}/man1/ydcmd.1*
 %doc %{_mandir}/ru/man1/ydcmd.1*
