@@ -23,7 +23,7 @@ Suggests: python-progressbar
 Recommends: ca-certificates
 %endif
 
-%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 35
+%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 34
 %define __python /usr/bin/python3
 %endif
 
@@ -48,7 +48,7 @@ Command-line tool to upload, retrieve and manage data in Yandex.Disk service
 install -d %{buildroot}%{_bindir}
 install -d %{buildroot}%{python_sitelib}
 
-%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 35
+%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 34
 sed -i -e 's|env python|env python3|g' ydcmd.py
 %endif
 
@@ -85,7 +85,7 @@ rm -rf %{buildroot}
 %{_bindir}/ydcmd
 %{python_sitelib}/ydcmd.py*
 
-%if 0%{?fedora_version} >= 35
+%if 0%{?fedora_version} >= 34
 %{python_sitelib}/__pycache__/ydcmd.*
 %endif
 
