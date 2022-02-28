@@ -112,10 +112,14 @@ except ImportError:
     ydSSLContext = None
 
 try:
-    # python >= 2.7.13 / 3.6, disable SSLv2 / SSLv3 (POODLE, CVE-2014-3566)
-    from ssl import PROTOCOL_TLS as YD_PROTOCOL_TLS
+    # python >= 3.10
+    from ssl import PROTOCOL_TLS_CLIENT as YD_PROTOCOL_TLS
 except ImportError:
-    YD_PROTOCOL_TLS = ssl.PROTOCOL_SSLv23 if ydSSLContext else ssl.PROTOCOL_TLSv1
+    try:
+        # python >= 2.7.13 / 3.6, disable SSLv2 / SSLv3 (POODLE, CVE-2014-3566)
+        from ssl import PROTOCOL_TLS as YD_PROTOCOL_TLS
+    except ImportError:
+        YD_PROTOCOL_TLS = ssl.PROTOCOL_SSLv23 if ydSSLContext else ssl.PROTOCOL_TLSv1
 
 try:
     # python >= 2.7.9 / 3.3, OpenSSL >= 1.0.0, disable compression (CRIME, CVE-2012-4929)
@@ -258,24 +262,36 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
             self._tunnel()
 
         kwargs = {}
-        kwargs.update(ssl_version = YD_PROTOCOL_TLS)
 
-        if self._options.cafile != None:
-            kwargs.update (
-                cert_reqs = ssl.CERT_REQUIRED,
-                ca_certs  = self._options.cafile
+        if ydSSLContext is not None:
+            kwargs.update(
+                sock=sock,
+                server_hostname= self.host
             )
-
-        if self._options.ciphers != None and YD_WRAP_SOCKET_CIPHERS:
-            kwargs.update(ciphers = self._options.ciphers)
-
-        self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, **kwargs)
-
-        if ydSSLContext:
-            self.sock.context.options |= ssl.OP_NO_SSLv2
-            self.sock.context.options |= ssl.OP_NO_SSLv3
+            context = ydSSLContext(YD_PROTOCOL_TLS)
+            if self._options.cafile is not None:
+                context.load_verify_locations(self._options.cafile)
+                context.check_hostname = True
+            if self.cert_file is not None:
+                context.load_cert_chain(self.cert_file, self.key_file)
+            context.options |= ssl.OP_NO_SSLv2
+            context.options |= ssl.OP_NO_SSLv3
             if YD_OP_NO_COMPRESSION:
-                self.sock.context.options |= YD_OP_NO_COMPRESSION
+                context.options |= YD_OP_NO_COMPRESSION
+            self.sock = context.wrap_socket(**kwargs)
+        else:
+            kwargs.update(ssl_version = YD_PROTOCOL_TLS)
+
+            if self._options.cafile != None:
+                kwargs.update (
+                    cert_reqs = ssl.CERT_REQUIRED,
+                    ca_certs  = self._options.cafile
+                )
+
+            if self._options.ciphers != None and YD_WRAP_SOCKET_CIPHERS:
+                kwargs.update(ciphers = self._options.ciphers)
+
+            self.sock = ssl.wrap_socket(sock, keyfile = self.key_file, certfile = self.cert_file, **kwargs)
 
         if self._options.debug:
             ciphers = self.sock.cipher()
