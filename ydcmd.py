@@ -272,6 +272,7 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
             if self._options.cafile is not None:
                 context.load_verify_locations(self._options.cafile)
                 context.check_hostname = True
+                context.verify_mode = ssl.CERT_REQUIRED
             if self.cert_file is not None:
                 context.load_cert_chain(self.cert_file, self.key_file)
             context.options |= ssl.OP_NO_SSLv2
