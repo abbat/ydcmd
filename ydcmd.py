@@ -498,7 +498,8 @@ def yd_default_config():
         "/etc/pki/tls/certs/ca-bundle.trust.crt",   # CentOS, Fedora (EV certs)
         "/etc/ssl/ca-bundle.pem",                   # OpenSUSE
         "/usr/local/share/certs/ca-root-nss.crt",   # FreeBSD
-        "/usr/local/etc/openssl/cert.pem"           # MacOS and OpenSSL via Homebrew
+        "/usr/local/etc/openssl/cert.pem",          # MacOS and OpenSSL via Homebrew
+        "/usr/local/etc/ca-certificates/cert.pem"   # MacOS and OpenSSL via Homebrew (v2)
     ]
 
     for cafile in cafiles:
