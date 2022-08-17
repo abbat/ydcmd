@@ -1,3 +1,9 @@
+ydcmd (2.12.1) stable; urgency=low
+
+  * Исправление сборки для Debian 11 / Ubuntu 20.04.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Wed, 17 Aug 2022 13:21:26 +0300
+
 ydcmd (2.12) stable; urgency=low
 
   * Исправление ошибки (опечатки) проявившейся на python 3.6+;

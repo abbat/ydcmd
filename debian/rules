@@ -1,7 +1,16 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+CODENAME = $(shell /usr/bin/lsb_release --codename --short)
+
 WITH_PYTHON2 = $(shell test -f /usr/bin/dh_python2 && echo "--with python2")
+WITH_PYTHON3 = $(shell test -f /usr/bin/dh_python3 && echo "--with python3")
+
+ifneq (,$(filter bullseye bookworm focal jammy, $(CODENAME)))
+	WITH_PYTHON = $(WITH_PYTHON3)
+else
+	WITH_PYTHON = $(WITH_PYTHON2)
+endif
 
 %:
-	dh $@ ${WITH_PYTHON2}
+	dh $@ $(WITH_PYTHON)
