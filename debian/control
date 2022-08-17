@@ -10,7 +10,7 @@ Homepage: https://github.com/abbat/ydcmd
 
 Package: ydcmd
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-dateutil
+Depends: ${python:Depends}, ${misc:Depends}, python-dateutil | python3-dateutil
 Recommends: ca-certificates
 Suggests: python-progressbar
 Description: Command-line Yandex.Disk client
