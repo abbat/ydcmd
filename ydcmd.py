@@ -346,7 +346,10 @@ class ydHTTPSConnection(ydHTTPSConnectionBase):
             if self._options.progress:
                 written += len(datablock)
                 if bar:
-                    bar.update(written)
+                    try:
+                        bar.update(written)
+                    except:
+                        pass
                 else:
                     delta = int(time.time()) - start
                     if delta > 0:
