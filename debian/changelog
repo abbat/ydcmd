@@ -1,3 +1,10 @@
+ydcmd (2.12.2) stable; urgency=low
+
+  * Поддержка работы с python 3.12;
+  * Исправление нескольких редких ошибок.
+
+ -- Anton Batenev <antonbatenev@yandex.ru>  Mon, 23 Sep 2024 20:06:48 +0300
+
 ydcmd (2.12.1) stable; urgency=low
 
   * Исправление сборки для Debian 11 / Ubuntu 20.04.
