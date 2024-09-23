@@ -6,29 +6,27 @@ Summary:       Command line Yandex.Disk client
 Group:         Applications/Internet
 License:       BSD-2-Clause
 URL:           https://github.com/abbat/ydcmd
+Source0:       https://build.opensuse.org/source/home:antonbatenev:ydcmd/ydcmd/ydcmd_%{version}.tar.bz2
+BuildRoot:     %{_tmppath}/%{name}-%{version}-build
 
-%if 0%{?centos_version} < 800
-BuildRequires: python-devel >= 2.6
+%if 0%{?suse_version} > 1000 || 0%{?fedora} > 20
+Suggests:      python-progressbar
+Recommends:    ca-certificates
+%endif
+
+%if 0%{?rhel}
 Requires:      python >= 2.6, python-dateutil
+BuildRequires: python-devel >= 2.6
 %else
-Requires:      python36, python3-dateutil
+Requires:      python3, python3-dateutil
+BuildRequires: python3-devel
 %endif
 
 %if 0%{?suse_version}
 BuildRequires: fdupes
 %endif
 
-%if 0%{?suse_version} > 1000 || 0%{?fedora} > 20
-Suggests: python-progressbar
-Recommends: ca-certificates
-%endif
-
-%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 34
 %define __python /usr/bin/python3
-%endif
-
-Source0:       https://build.opensuse.org/source/home:antonbatenev:ydcmd/ydcmd/ydcmd_%{version}.tar.bz2
-BuildRoot:     %{_tmppath}/%{name}-%{version}-build
 
 
 %description
@@ -48,7 +46,7 @@ Command-line tool to upload, retrieve and manage data in Yandex.Disk service
 install -d %{buildroot}%{_bindir}
 install -d %{buildroot}%{python_sitelib}
 
-%if 0%{?centos_version} < 800 || 0%{?fedora_version} < 34
+%if 0%{?rhel}
 sed -i -e 's|env python3|env python|g' ydcmd.py
 %endif
 
@@ -85,7 +83,7 @@ rm -rf %{buildroot}
 %{_bindir}/ydcmd
 %{python_sitelib}/ydcmd.py*
 
-%if 0%{?fedora_version} >= 34
+%if ! 0%{?rhel}
 %{python_sitelib}/__pycache__/ydcmd.*
 %endif
 
