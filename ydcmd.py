@@ -2631,7 +2631,7 @@ if __name__ == "__main__":
 
     args   = []
     config = yd_load_config(cfgfile)
-    regexp = re.compile("^--(\\S+?)(=(.*)){,1}$")
+    regexp = re.compile(r"^--(\S+?)(=(.*)){,1}$")
     for i in range(1, argc):
         arg = sys.argv[i]
         opt = regexp.split(arg)
