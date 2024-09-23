@@ -6,7 +6,7 @@
 
 ## Загрузка / Установка
 
-* [DEB / RPM](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
+* [deb / rpm](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
 * [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
 * [Arch AUR](https://aur.archlinux.org/packages/ydcmd/) (см. так же [AUR Helpers](https://wiki.archlinux.org/index.php/AUR_Helpers_(Русский)))
 * Из исходного кода:
