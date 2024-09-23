@@ -1281,7 +1281,14 @@ def yd_publish(options, path):
 
     yd_query(options, method, url, args)
 
-    return yd_stat(options, path)
+    # wait async publish public url (see #57)
+    while True:
+        result = yd_stat(options, path)
+        if hasattr(result, "public_url"):
+            break
+        time.sleep(1)
+
+    return result
 
 
 def yd_unpublish(options, path):
