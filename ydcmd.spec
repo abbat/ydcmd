@@ -63,7 +63,7 @@ install -m644 man/ydcmd.ru.1 %{buildroot}%{_mandir}/ru/man1/ydcmd.1
 install -m644 man/ydcmd.tr.1 %{buildroot}%{_mandir}/tr/man1/ydcmd.1
 
 %if 0%{?suse_version}
-%py_compile -O %{buildroot}%{python_sitelib}
+%py3_compile -O %{buildroot}%{python_sitelib}
 %fdupes %{buildroot}%{python_sitelib}
 %endif
 
