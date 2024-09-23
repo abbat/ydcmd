@@ -884,10 +884,6 @@ def yd_query_retry(options, method, url, args, headers = None, target = None, da
         if target != None:
             yd_debug("File: {0}".format(target.name)) if not isinstance(target, string_types) else yd_debug("File: {0}".format(target))
 
-    # страховка
-    if re.match('^https:\/\/[a-z0-9\.\-]+\.yandex\.(net|ru|com|ua|by|kz|az|ee|fr|kg|lt|lv|md|tj|tm|com\.tr|co\.il|com\.am)(:443){,1}\/', url, re.IGNORECASE) == None:
-        raise RuntimeError("Malformed URL {0}".format(url))
-
     if method not in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
         raise ValueError("Unknown method: {0}".format(method))
 
@@ -2635,7 +2631,7 @@ if __name__ == "__main__":
 
     args   = []
     config = yd_load_config(cfgfile)
-    regexp = re.compile("^--(\S+?)(=(.*)){,1}$")
+    regexp = re.compile("^--(\\S+?)(=(.*)){,1}$")
     for i in range(1, argc):
         arg = sys.argv[i]
         opt = regexp.split(arg)
