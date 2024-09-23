@@ -6,10 +6,9 @@ Linux/FreeBSD command line client for interacting with cloud storage [Yandex.Dis
 
 ## Download / Install
 
-* [Debian, Ubuntu](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
-* [Fedora, openSUSE, CentOS](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
+* [DEB / RPM](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd)
 * [Ubuntu PPA](https://launchpad.net/~abbat/+archive/ubuntu/ydcmd) - `ppa:abbat/ydcmd`
-* [Arch](http://software.opensuse.org/download.html?project=home:antonbatenev:ydcmd&package=ydcmd), [Arch AUR](https://aur.archlinux.org/packages/ydcmd/) (see also [AUR Helpers](https://wiki.archlinux.org/index.php/AUR_Helpers))
+* [Arch AUR](https://aur.archlinux.org/packages/ydcmd/) (see also [AUR Helpers](https://wiki.archlinux.org/index.php/AUR_Helpers))
 * From source code:
 
 ```
