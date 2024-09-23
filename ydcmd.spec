@@ -48,8 +48,8 @@ Command-line tool to upload, retrieve and manage data in Yandex.Disk service
 install -d %{buildroot}%{_bindir}
 install -d %{buildroot}%{python_sitelib}
 
-%if 0%{?centos_version} >= 800 || 0%{?fedora_version} >= 34
-sed -i -e 's|env python|env python3|g' ydcmd.py
+%if 0%{?centos_version} < 800 || 0%{?fedora_version} < 34
+sed -i -e 's|env python3|env python|g' ydcmd.py
 %endif
 
 install -m755 ydcmd.py %{buildroot}%{python_sitelib}/ydcmd.py
