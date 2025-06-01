@@ -1,3 +1,7 @@
+:warning: EOL
+
+---
+
 # ydcmd
 
 [Русский](https://github.com/abbat/ydcmd/blob/master/README.md) | [Türk](https://github.com/abbat/ydcmd/blob/master/README.tr.md)
